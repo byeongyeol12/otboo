@@ -2,10 +2,8 @@ package com.codeit.otboo.domain.follow.dto;
 
 import java.util.UUID;
 
-public record FollowDto(
+public record UserSummary(
 	UUID id,
-	UserSummary followee,
-	UserSummary follower
+	String name
 ) {
-
 }
