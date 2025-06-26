@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import com.codeit.otboo.domain.follow.entity.Follow;
+import com.codeit.otboo.domain.follow.entity.User;
 
 public interface FollowRepository extends JpaRepository<Follow, UUID> {
 	boolean existsByFollowerIdAndFollowingId(UUID followerId, UUID followingId); // 중복 팔로우 방지 체크
@@ -30,5 +31,8 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
       AND (:nameLike IS NULL OR LOWER(u.name) LIKE LOWER(CONCAT('%', :nameLike, '%')))
     ORDER BY f.id ASC
 """)
-	List<Follow> findFollowers(UUID followeeId, UUID idAfter, String nameLike, Pageable pageable);
+	List<Follow> findFollowers(UUID followeeId, UUID idAfter, String nameLike, Pageable pageable); // 나를 팔로우하는 사람들
+
+	long countByFollowing(User user); // 나를 팔로우하는 사람 수
+	long countByFollower(User user); // 내가 팔로우하는 사람 수
 }
