@@ -1,19 +1,22 @@
 package com.codeit.otboo.domain.follow.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
-import com.codeit.otboo.domain.follow.repository.FollowRepository;
 import com.codeit.otboo.domain.follow.entity.User;
+import com.codeit.otboo.domain.follow.repository.FollowRepository;
 import com.codeit.otboo.domain.user.repository.UserRepository;
+import com.codeit.otboo.domain.user.service.UserService;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
@@ -26,6 +29,7 @@ public class FollowServiceImpl implements FollowService {
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
 	private final ApplicationEventPublisher eventPublisher;
+	private final UserService userService;
 
 	//팔로우 생성
 	@Override
@@ -71,34 +75,38 @@ public class FollowServiceImpl implements FollowService {
 
 	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
 	@Override
-	public List<FollowDto> getFollowings(UUID followerId) {
-		// 1. 내가 팔로우 하는 사람들 목록 전체 조회
-		return followRepository.findAllByFollowerId(followerId).stream()
-			.map(f -> //DTO 변환
-				new FollowDto(
-					f.getId(),
-					new UserSummary(f.getFollower().getId(), f.getFollower().getName(),
-						f.getFollower().getProfileImageUrl()),
-					new UserSummary(f.getFollowing().getId(), f.getFollowing().getName(),
-						f.getFollowing().getProfileImageUrl()))
-			)
-			.toList();
+	public List<FollowDto> getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike) {
+		// 1. 커서 파라미터 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
+		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
+			? UUID.fromString(cursor)
+			: idAfter;
+
+		// 2. Pageable
+		Pageable pageable = PageRequest.of(0,limit);
+
+		// 3. Repository 쿼리 호출
+		List<Follow> followings = followRepository.findFollowings(followerId,effectiveIdAfter,nameLike,pageable);
+
+		// 4. 리스트 반환
+		return followings.stream().map(this::toDto).toList();
 	}
 
 	// 나를 팔로우 하는 사람들 목록 조회
 	@Override
-	public List<FollowDto> getFollowers(UUID followingId) {
-		// 1. 나를 팔로우 하는 사람들 목록 전체 조회
-		return followRepository.findAllByFollowingId(followingId).stream()
-			.map(f -> // 2. DTO 변환
-				new FollowDto(
-					f.getId(),
-					new UserSummary(f.getFollower().getId(), f.getFollower().getName(),
-						f.getFollower().getProfileImageUrl()),
-					new UserSummary(f.getFollowing().getId(), f.getFollowing().getName(),
-						f.getFollowing().getProfileImageUrl()))
-			)
-			.toList();
+	public List<FollowDto> getFollowers(UUID followingId,String cursor,UUID idAfter,int limit,String nameLike) {
+		// 1. 커서 파라미터 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
+		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
+			? UUID.fromString(cursor)
+			: idAfter;
+
+		// 2. Pageable
+		Pageable pageable = PageRequest.of(0,limit);
+
+		// 3. Repository 쿼리 호출
+		List<Follow> followers = followRepository.findFollowings(followingId,effectiveIdAfter,nameLike,pageable);
+
+		// 4. 리스트 반환
+		return followers.stream().map(this::toDto).toList();
 	}
 
 	// 팔로우 취소(매개변수 : 취소 하려는 팔로우의 PK , 현재 로그인한 유저의 ID)
@@ -114,4 +122,10 @@ public class FollowServiceImpl implements FollowService {
 		followRepository.deleteById(followId);
 	}
 
+	// Follow 엔티티 → FollowDto 변환
+	public FollowDto toDto(Follow follow) {
+		UserSummary follower = userService.getUserSummary(follow.getFollowerId());
+		UserSummary followee = userService.getUserSummary(follow.getFollowingId());
+		return new FollowDto(follow.getId(), followee, follower);
+	}
 }
