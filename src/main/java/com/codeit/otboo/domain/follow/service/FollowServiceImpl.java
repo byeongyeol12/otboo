@@ -35,23 +35,25 @@ public class FollowServiceImpl implements FollowService {
 		UUID followingId = request.followeeId();
 
 		// 팔로워 조회
-		User follower = userRepository.findById(followerId).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로워를 찾을 수 없습니다."));
+		User follower = userRepository.findById(followerId)
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "팔로워를 찾을 수 없습니다."));
 		// 대상자 조회
-		User following = userRepository.findById(followingId).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로우할 사람을 찾을 수 없습니다."));
+		User following = userRepository.findById(followingId)
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "팔로우할 사람을 찾을 수 없습니다."));
 
 		// 자기 자신 팔로우 방지
-		if(follower.equals(following)) {
+		if (follower.equals(following)) {
 			throw new CustomException(ErrorCode.FOLLOW_NOT_MYSELF);
 		}
 		// 팔로우 중복 방지
-		if(followRepository.existsByFollowerIdAndFollowingId(followerId,followingId)) {
+		if (followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
 			throw new CustomException(ErrorCode.FOLLOW_ALREADY_USER);
 		}
 
 		//2. 저장
 		Follow follow = Follow.builder()
-			.followerId(followerId)
-			.followingId(followingId)
+			.follower(follower)
+			.following(following)
 			.build();
 
 		followRepository.save(follow);
@@ -62,83 +64,54 @@ public class FollowServiceImpl implements FollowService {
 		//4. 리턴
 		return new FollowDto(
 			follow.getId(),
-			follow.getFollowerId(),
-			follow.getFollowingId()
+			new UserSummary(follower.getId(), follower.getName(), follower.getProfileImageUrl()),
+			new UserSummary(following.getId(), following.getName(), following.getProfileImageUrl())
 		);
 	}
 
 	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
 	@Override
 	public List<FollowDto> getFollowings(UUID followerId) {
+		// 1. 내가 팔로우 하는 사람들 목록 전체 조회
 		return followRepository.findAllByFollowerId(followerId).stream()
-			.map(f-> new FollowDto(f.getId(),f.getFollowingId(),f.getFollowerId()))
+			.map(f -> //DTO 변환
+				new FollowDto(
+					f.getId(),
+					new UserSummary(f.getFollower().getId(), f.getFollower().getName(),
+						f.getFollower().getProfileImageUrl()),
+					new UserSummary(f.getFollowing().getId(), f.getFollowing().getName(),
+						f.getFollowing().getProfileImageUrl()))
+			)
 			.toList();
 	}
 
 	// 나를 팔로우 하는 사람들 목록 조회
 	@Override
 	public List<FollowDto> getFollowers(UUID followingId) {
+		// 1. 나를 팔로우 하는 사람들 목록 전체 조회
 		return followRepository.findAllByFollowingId(followingId).stream()
-			.map(f-> new FollowDto(f.getId(),f.getFollowingId(),f.getFollowerId()))
+			.map(f -> // 2. DTO 변환
+				new FollowDto(
+					f.getId(),
+					new UserSummary(f.getFollower().getId(), f.getFollower().getName(),
+						f.getFollower().getProfileImageUrl()),
+					new UserSummary(f.getFollowing().getId(), f.getFollowing().getName(),
+						f.getFollowing().getProfileImageUrl()))
+			)
 			.toList();
 	}
 
 	// 팔로우 취소(매개변수 : 취소 하려는 팔로우의 PK , 현재 로그인한 유저의 ID)
 	public void cancelFollow(UUID followId, UUID loginUserId) {
 		// 1. 팔로우 존재 여부 확인
-		Follow follow = followRepository.findById(followId).orElseThrow(() -> new CustomException(ErrorCode.FOLLOW_NOT_FOUND,"팔로우 관계를 찾을 수 없습니다."));
+		Follow follow = followRepository.findById(followId)
+			.orElseThrow(() -> new CustomException(ErrorCode.FOLLOW_NOT_FOUND, "팔로우 관계를 찾을 수 없습니다."));
 		// 2. 본인 확인(찾은 팔로우 관계의 팔로우를 건 사람과 현재 로그인 유저 비교)
-		if(!follow.getFollowerId().equals(loginUserId)) {
-			throw new CustomException(ErrorCode.FOLLOW_CANCEL_ONLY_MINE,"본인의 팔로우만 취소할 수 있습니다.");
+		if (!follow.getFollower().getId().equals(loginUserId)) {
+			throw new CustomException(ErrorCode.FOLLOW_CANCEL_ONLY_MINE, "본인의 팔로우만 취소할 수 있습니다.");
 		}
 		// 3. 팔로우 삭제
 		followRepository.deleteById(followId);
 	}
 
-	// // 내가 팔로우 하는 사람들 목록 조회
-	// @Override
-	// public List<FollowDto> getFollowings(UUID followerId) {
-	// 	//1. 내가 팔로우 하는 사람들 리스트
-	// 	List<Follow> followings = followRepository.findAllByFollowingId(followerId);
-	//
-	// 	//2. DTO 변환
-	// 	List<FollowDto> followeeDtos = new ArrayList<>();
-	// 	for(Follow follow : followings) {
-	// 		User follower = userRepository.findById(follow.getFollower().getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로워를 찾을 수 없습니다."));
-	// 		User followee = userRepository.findById(follow.getFollowing().getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로우할 사람을 찾을 수 없습니다."));
-	//
-	// 		FollowDto followDto = new FollowDto(
-	// 			follow.getId(),
-	// 			new UserSummary(follower.getId(),follower.getName(),follower.getProfileImageUrl()),
-	// 			new UserSummary(followee.getId(),followee.getName(),followee.getProfileImageUrl())
-	// 		);
-	// 		followeeDtos.add(followDto);
-	// 	}
-	//
-	// 	//3. 리스트 반환
-	// 	return followeeDtos;
-	// }
-	//
-	// @Override
-	// public List<FollowDto> getFollowers(UUID followerId) {
-	// 	// 1. 나를 팔로우하는 사람들 리스트
-	// 	List<Follow> followers = followRepository.findAllByFollowingId(followeeId);
-	//
-	// 	// 2. DTO 변환
-	// 	List<FollowDto> followerDtos = new ArrayList<>();
-	// 	for(Follow follow : followers) {
-	// 		User follower = userRepository.findById(follow.getFollower().getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로워를 찾을 수 없습니다."));
-	// 		User followee = userRepository.findById(follow.getFollowing().getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로우할 사람을 찾을 수 없습니다."));
-	//
-	// 		FollowDto followDto = new FollowDto(
-	// 			follow.getId(),
-	// 			new UserSummary(follower.getId(),follower.getName(),follower.getProfileImageUrl()),
-	// 			new UserSummary(followee.getId(),followee.getName(),followee.getProfileImageUrl())
-	// 		);
-	// 		followerDtos.add(followDto);
-	// 	}
-	//
-	// 	//3. 리스트 반환
-	// 	return followerDtos;
-	// }
 }
