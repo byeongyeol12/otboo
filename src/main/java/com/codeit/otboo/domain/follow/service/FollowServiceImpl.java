@@ -1,5 +1,7 @@
 package com.codeit.otboo.domain.follow.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -10,7 +12,7 @@ import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
-import com.codeit.otboo.domain.user.entity.User;
+import com.codeit.otboo.domain.follow.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
@@ -25,6 +27,7 @@ public class FollowServiceImpl implements FollowService {
 	private final UserRepository userRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
+	//팔로우 생성
 	@Override
 	public FollowDto createFollow(FollowCreateRequest request) {
 		UUID followerId = request.followerId();
@@ -58,8 +61,55 @@ public class FollowServiceImpl implements FollowService {
 
 		return new FollowDto(
 			follow.getId(),
-			new UserSummary(followerId,follower.getName(),follower.getProfileImgUrl());
-			new UserSummary(followeeId,followee.getName(),followee.getProfileImgUrl());
+			new UserSummary(followerId,follower.getName(),follower.getProfileImageUrl()),
+			new UserSummary(followeeId,followee.getName(),followee.getProfileImageUrl())
 		);
+	}
+
+	// 내가 팔로우 하는 사람들 목록 조회
+	@Override
+	public List<FollowDto> getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike) {
+		//1. 내가 팔로우 하는 사람들 리스트
+		List<Follow> followees = followRepository.findAllByFollowingId(followerId);
+
+		//2. DTO 변환
+		List<FollowDto> followeeDtos = new ArrayList<>();
+		for(Follow follow : followees) {
+			User follower = userRepository.findById(follow.getFollower().getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로워를 찾을 수 없습니다."));
+			User followee = userRepository.findById(follow.getFollowing().getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로우할 사람을 찾을 수 없습니다."));
+
+			FollowDto followDto = new FollowDto(
+				follow.getId(),
+				new UserSummary(follower.getId(),follower.getName(),follower.getProfileImageUrl()),
+				new UserSummary(followee.getId(),followee.getName(),followee.getProfileImageUrl())
+			);
+			followeeDtos.add(followDto);
+		}
+
+		//3. 리스트 반환
+		return followeeDtos;
+	}
+
+	@Override
+	public List<FollowDto> getFollowers(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike) {
+		// 1. 나를 팔로우하는 사람들 리스트
+		List<Follow> followers = followRepository.findAllByFollowingId(followeeId);
+
+		// 2. DTO 변환
+		List<FollowDto> followerDtos = new ArrayList<>();
+		for(Follow follow : followers) {
+			User follower = userRepository.findById(follow.getFollower().getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로워를 찾을 수 없습니다."));
+			User followee = userRepository.findById(follow.getFollowing().getId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND,"팔로우할 사람을 찾을 수 없습니다."));
+
+			FollowDto followDto = new FollowDto(
+				follow.getId(),
+				new UserSummary(follower.getId(),follower.getName(),follower.getProfileImageUrl()),
+				new UserSummary(followee.getId(),followee.getName(),followee.getProfileImageUrl())
+			);
+			followerDtos.add(followDto);
+		}
+
+		//3. 리스트 반환
+		return followerDtos;
 	}
 }

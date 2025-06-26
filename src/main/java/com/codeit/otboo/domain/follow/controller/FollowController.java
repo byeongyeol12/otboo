@@ -1,10 +1,15 @@
 package com.codeit.otboo.domain.follow.controller;
 
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
@@ -25,4 +30,20 @@ public class FollowController {
 		FollowDto followDto = followService.createFollow(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(followDto);
 	}
+	//팔로우 요약 정보 조회
+
+	//팔로잉 목록 조회(내가 팔로우한 사람들)
+	@GetMapping("/followings")
+	public ResponseEntity<List<FollowDto>> getFollowings(
+		@RequestParam UUID followerId,
+		@RequestParam(required = false) String cursor,
+		@RequestParam(required = false) UUID idAfter,
+		@RequestParam int limit,
+		@RequestParam(required = false) String nameLike
+	) {
+		List<FollowDto> followingList = followService.getFollowings(followerId,cursor,idAfter,limit,nameLike);
+		return ResponseEntity.status(HttpStatus.OK).body(followingList);
+	}
+	//팔로워 목록 조회
+	//팔로우 취소
 }

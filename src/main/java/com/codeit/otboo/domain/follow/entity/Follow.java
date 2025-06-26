@@ -2,8 +2,6 @@ package com.codeit.otboo.domain.follow.entity;
 
 import java.util.UUID;
 
-import com.codeit.otboo.domain.user.entity.User;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
