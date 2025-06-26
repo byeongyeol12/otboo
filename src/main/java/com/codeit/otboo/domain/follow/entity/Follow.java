@@ -4,12 +4,7 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,22 +17,27 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Follow {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(nullable = false)
 	private UUID id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "followerId", nullable = false)
-	private User follower;
+	@Column(nullable = false)
+	private UUID followerId; // 나를 팔로우 한 사람
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "followingId", nullable = false)
-	private User following;
+	@Column(nullable = false)
+	private UUID followingId; // 내가 팔로우 한 사람
+
+	// @ManyToOne(fetch = FetchType.LAZY)
+	// @JoinColumn(name = "followerId", nullable = false)
+	// private User follower;
+	//
+	// @ManyToOne(fetch = FetchType.LAZY)
+	// @JoinColumn(name = "followingId", nullable = false)
+	// private User following;
 
 	@Builder
-	public Follow(UUID id, User follower, User following) {
-		this.id = id;
-		this.follower = follower;
-		this.following = following;
+	public Follow(UUID followerId, UUID followingId) {
+		this.id = UUID.randomUUID();
+		this.followerId = followerId;
+		this.followingId = followingId;
 	}
 }
