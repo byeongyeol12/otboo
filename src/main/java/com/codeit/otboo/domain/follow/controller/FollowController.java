@@ -5,7 +5,9 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,5 +50,11 @@ public class FollowController {
 		List<FollowDto> followerList = followService.getFollowers(followingId);
 		return ResponseEntity.status(HttpStatus.OK).body(followerList);
 	}
+
 	//팔로우 취소
+	@DeleteMapping("/{followId}")
+	public ResponseEntity<Void> cancelFollow(@PathVariable UUID followId,@RequestParam UUID loginUserId) { // 추후 JWT 에서 추출
+		followService.cancelFollow(followId, loginUserId);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
 }

@@ -83,6 +83,18 @@ public class FollowServiceImpl implements FollowService {
 			.toList();
 	}
 
+	// 팔로우 취소(매개변수 : 취소 하려는 팔로우의 PK , 현재 로그인한 유저의 ID)
+	public void cancelFollow(UUID followId, UUID loginUserId) {
+		// 1. 팔로우 존재 여부 확인
+		Follow follow = followRepository.findById(followId).orElseThrow(() -> new CustomException(ErrorCode.FOLLOW_NOT_FOUND,"팔로우 관계를 찾을 수 없습니다."));
+		// 2. 본인 확인(찾은 팔로우 관계의 팔로우를 건 사람과 현재 로그인 유저 비교)
+		if(!follow.getFollowerId().equals(loginUserId)) {
+			throw new CustomException(ErrorCode.FOLLOW_CANCEL_ONLY_MINE,"본인의 팔로우만 취소할 수 있습니다.");
+		}
+		// 3. 팔로우 삭제
+		followRepository.deleteById(followId);
+	}
+
 	// // 내가 팔로우 하는 사람들 목록 조회
 	// @Override
 	// public List<FollowDto> getFollowings(UUID followerId) {
