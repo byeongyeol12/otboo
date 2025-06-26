@@ -37,17 +37,25 @@ public class FollowController {
 	//팔로잉 목록 조회(내가 팔로우한 사람들)
 	@GetMapping("/followings")
 	public ResponseEntity<List<FollowDto>> getFollowings(
-		@RequestParam UUID followerId
+		@RequestParam UUID followerId,
+		@RequestParam(required = false) String cursor,
+		@RequestParam(required = false) UUID idAfter,
+		@RequestParam int limit,
+		@RequestParam(required = false) String nameLike
 	) {
-		List<FollowDto> followingList = followService.getFollowings(followerId);
+		List<FollowDto> followingList = followService.getFollowings(followerId,cursor,idAfter,limit,nameLike);
 		return ResponseEntity.status(HttpStatus.OK).body(followingList);
 	}
 	//팔로워 목록 조회
 	@GetMapping("/followers")
 	public ResponseEntity<List<FollowDto>> getFollowers(
-		@RequestParam UUID followingId
+		@RequestParam UUID followeeId,
+		@RequestParam(required = false) String cursor,
+		@RequestParam(required = false) UUID idAfter,
+		@RequestParam int limit,
+		@RequestParam(required = false) String nameLike
 	) {
-		List<FollowDto> followerList = followService.getFollowers(followingId);
+		List<FollowDto> followerList = followService.getFollowers(followeeId,cursor,idAfter,limit,nameLike);
 		return ResponseEntity.status(HttpStatus.OK).body(followerList);
 	}
 
