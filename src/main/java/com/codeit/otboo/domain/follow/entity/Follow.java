@@ -37,7 +37,8 @@ public class Follow {
 	private User following;
 
 	@Builder
-	public Follow(User follower, User following) {
+	public Follow(UUID id, User follower, User following) {
+		this.id = id;
 		this.follower = follower;
 		this.following = following;
 	}
