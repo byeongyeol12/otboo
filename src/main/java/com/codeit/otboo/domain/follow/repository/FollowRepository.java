@@ -1,6 +1,7 @@
 package com.codeit.otboo.domain.follow.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
@@ -35,4 +36,8 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 
 	long countByFollowing(User user); // 나를 팔로우하는 사람 수
 	long countByFollower(User user); // 내가 팔로우하는 사람 수
+
+	Optional<Follow> findByFollowerAndFollowing(User follower, User following);
+
+	boolean existsByFollowerAndFollowing(User follower, User following);
 }
