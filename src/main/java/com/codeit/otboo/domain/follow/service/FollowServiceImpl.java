@@ -1,8 +1,8 @@
 package com.codeit.otboo.domain.follow.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
+import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.entity.User;
@@ -72,6 +73,33 @@ public class FollowServiceImpl implements FollowService {
 			new UserSummary(following.getId(), following.getName(), following.getProfileImageUrl())
 		);
 	}
+
+	// 팔로우 요약 정보 조회
+	@Override
+	public FollowSummaryDto getFollowSummary(UUID followeeId, UUID myUserId) {
+		//1. 유저 정보 조회
+		User followee = userService.getUserById(followeeId); // 요약 정보를 조회할 대상
+		User me = userService.getUserById(myUserId);
+
+		//2. 팔로워 수 조회
+		long followerCount = followRepository.countByFollower(followee); // 대상을 팔로우하는 수
+		long followingCount = followRepository.countByFollowing(followee); // 대상이 팔로우하고 있는 수
+
+		//3. 팔로우 중인지 확인
+		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowing(me,followee); // 내가 이 유저를 팔로우하고 있는지
+		boolean followingMe = followRepository.existsByFollowerAndFollowing(followee,me); // 상대가 나를 팔로우하고 있는지
+
+		//4. return
+		return new FollowSummaryDto(
+			followeeId,
+			followerCount,
+			followingCount,
+			followedByMe.isPresent(),
+			followedByMe.map(Follow::getId).orElse(null),
+			followingMe
+		);
+	}
+
 
 	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
 	@Override
