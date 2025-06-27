@@ -37,28 +37,28 @@ public class FollowServiceImpl implements FollowService {
 	public FollowDto createFollow(FollowCreateRequest request) {
 		//1. 팔로우, 팔로워 조회 및 예외 처리
 		UUID followerId = request.followerId();
-		UUID followingId = request.followeeId();
+		UUID followeeId = request.followeeId();
 
 		// 팔로워 조회
 		User follower = userRepository.findById(followerId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "팔로워를 찾을 수 없습니다."));
 		// 대상자 조회
-		User following = userRepository.findById(followingId)
+		User followee = userRepository.findById(followeeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "팔로우할 사람을 찾을 수 없습니다."));
 
 		// 자기 자신 팔로우 방지
-		if (follower.equals(following)) {
+		if (follower.equals(followee)) {
 			throw new CustomException(ErrorCode.FOLLOW_NOT_MYSELF);
 		}
 		// 팔로우 중복 방지
-		if (followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
+		if (followRepository.existsByFollowerIdAndFolloweeId(followerId, followeeId)) {
 			throw new CustomException(ErrorCode.FOLLOW_ALREADY_USER);
 		}
 
 		//2. 저장
 		Follow follow = Follow.builder()
 			.follower(follower)
-			.following(following)
+			.followee(followee)
 			.build();
 
 		followRepository.save(follow);
@@ -70,7 +70,7 @@ public class FollowServiceImpl implements FollowService {
 		return new FollowDto(
 			follow.getId(),
 			new UserSummary(follower.getId(), follower.getName(), follower.getProfileImageUrl()),
-			new UserSummary(following.getId(), following.getName(), following.getProfileImageUrl())
+			new UserSummary(followee.getId(), followee.getName(), followee.getProfileImageUrl())
 		);
 	}
 
@@ -83,27 +83,27 @@ public class FollowServiceImpl implements FollowService {
 
 		//2. 팔로워 수 조회
 		long followerCount = followRepository.countByFollower(followee); // 대상을 팔로우하는 수
-		long followingCount = followRepository.countByFollowing(followee); // 대상이 팔로우하고 있는 수
+		long followeeCount = followRepository.countByFollowee(followee); // 대상이 팔로우하고 있는 수
 
 		//3. 팔로우 중인지 확인
-		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowing(me,followee); // 내가 이 유저를 팔로우하고 있는지
-		boolean followingMe = followRepository.existsByFollowerAndFollowing(followee,me); // 상대가 나를 팔로우하고 있는지
+		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowee(me,followee); // 내가 이 유저를 팔로우하고 있는지
+		boolean followeeMe = followRepository.existsByFollowerAndFollowee(followee,me); // 상대가 나를 팔로우하고 있는지
 
 		//4. return
 		return new FollowSummaryDto(
 			followeeId,
 			followerCount,
-			followingCount,
+			followeeCount,
 			followedByMe.isPresent(),
 			followedByMe.map(Follow::getId).orElse(null),
-			followingMe
+			followeeMe
 		);
 	}
 
 
 	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
 	@Override
-	public List<FollowDto> getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike) {
+	public List<FollowDto> getfollowees(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike) {
 		// 1. 커서 파라미터 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
@@ -113,15 +113,15 @@ public class FollowServiceImpl implements FollowService {
 		Pageable pageable = PageRequest.of(0,limit);
 
 		// 3. Repository 쿼리 호출
-		List<Follow> followings = followRepository.findFollowings(followerId,effectiveIdAfter,nameLike,pageable);
+		List<Follow> followees = followRepository.findFollowees(followerId,effectiveIdAfter,nameLike,pageable);
 
 		// 4. 리스트 반환
-		return followings.stream().map(this::toDto).toList();
+		return followees.stream().map(this::toDto).toList();
 	}
 
 	// 나를 팔로우 하는 사람들 목록 조회
 	@Override
-	public List<FollowDto> getFollowers(UUID followingId,String cursor,UUID idAfter,int limit,String nameLike) {
+	public List<FollowDto> getFollowers(UUID followeeId,String cursor,UUID idAfter,int limit,String nameLike) {
 		// 1. 커서 파라미터 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
@@ -131,7 +131,7 @@ public class FollowServiceImpl implements FollowService {
 		Pageable pageable = PageRequest.of(0,limit);
 
 		// 3. Repository 쿼리 호출
-		List<Follow> followers = followRepository.findFollowings(followingId,effectiveIdAfter,nameLike,pageable);
+		List<Follow> followers = followRepository.findFollowees(followeeId,effectiveIdAfter,nameLike,pageable);
 
 		// 4. 리스트 반환
 		return followers.stream().map(this::toDto).toList();
@@ -153,7 +153,7 @@ public class FollowServiceImpl implements FollowService {
 	// Follow 엔티티 → FollowDto 변환
 	public FollowDto toDto(Follow follow) {
 		UserSummary follower = userService.getUserSummary(follow.getFollowerId());
-		UserSummary followee = userService.getUserSummary(follow.getFollowingId());
+		UserSummary followee = userService.getUserSummary(follow.getFolloweeId());
 		return new FollowDto(follow.getId(), followee, follower);
 	}
 }

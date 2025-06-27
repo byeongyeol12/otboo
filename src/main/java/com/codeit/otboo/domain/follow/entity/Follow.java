@@ -29,12 +29,12 @@ public class Follow {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "followingId", nullable = false)
-	private User following; // 내가 팔로우 한 사람
+	private User followee; // 내가 팔로우 한 사람
 
 	@Builder
-	public Follow(User follower, User following) {
+	public Follow(User follower, User followee) {
 		this.id = UUID.randomUUID();
 		this.follower = follower;
-		this.following = following;
+		this.followee = followee;
 	}
 }
