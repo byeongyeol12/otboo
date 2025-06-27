@@ -40,7 +40,7 @@ public class FollowController {
 		@RequestParam UUID userId,
 		@RequestParam UUID myUserId // 추후 JWT 에서 추출
 	) {
-		List<FollowSummaryDto> followSummaryDtoList = followService.getFollowSummary(userId);
+		List<FollowSummaryDto> followSummaryDtoList = followService.getFollowSummary(userId,myUserId);
 		return ResponseEntity.status(HttpStatus.OK).body(followSummaryDtoList);
 	}
 
