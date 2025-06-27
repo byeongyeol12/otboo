@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
+import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.service.FollowService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,16 @@ public class FollowController {
 		FollowDto followDto = followService.createFollow(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(followDto);
 	}
+
 	//팔로우 요약 정보 조회
+	@GetMapping("/summary")
+	public ResponseEntity<List<FollowSummaryDto>> getFollowsSummary(
+		@RequestParam UUID userId,
+		@RequestParam UUID myUserId // 추후 JWT 에서 추출
+	) {
+		List<FollowSummaryDto> followSummaryDtoList = followService.getFollowSummary(userId);
+		return ResponseEntity.status(HttpStatus.OK).body(followSummaryDtoList);
+	}
 
 	//팔로잉 목록 조회(내가 팔로우한 사람들)
 	@GetMapping("/followings")
