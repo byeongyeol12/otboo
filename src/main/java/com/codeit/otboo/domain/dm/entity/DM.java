@@ -24,11 +24,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "dm")
+@Table(name = "DirectMessages")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class Dm {
+public class DM {
 
 	@Id
 	@GeneratedValue
@@ -58,7 +58,7 @@ public class Dm {
 	private Instant updatedAt;
 
 	@Builder
-	public Dm(User sender, User receiver, String content) {
+	public DM(User sender, User receiver, String content) {
 		this.sender   = sender;
 		this.receiver = receiver;
 		this.content  = content;

@@ -38,7 +38,8 @@ public class FollowController {
 	@GetMapping("/summary")
 	public ResponseEntity<FollowSummaryDto> getFollowsSummary(
 		@RequestParam UUID userId, // 대상 유저 id
-		@RequestParam UUID myUserId // 내 id 추후 JWT 에서 추출
+		@RequestParam UUID myUserId
+		//@AuthenticationPrincipal CustomUserDetails currentUser //JWT 기반 인증
 	) {
 		FollowSummaryDto followSummaryDtoList = followService.getFollowSummary(userId,myUserId);
 		return ResponseEntity.status(HttpStatus.OK).body(followSummaryDtoList);

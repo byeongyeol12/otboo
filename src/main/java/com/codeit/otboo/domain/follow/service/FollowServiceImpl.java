@@ -64,7 +64,7 @@ public class FollowServiceImpl implements FollowService {
 		followRepository.save(follow);
 
 		//3. 알림 이벤트 발생
-		eventPublisher.publishFollowCreatedEvent(follow);
+		//eventPublisher.publishFollowCreatedEvent(follow);
 
 		//4. 리턴
 		return new FollowDto(
@@ -103,7 +103,7 @@ public class FollowServiceImpl implements FollowService {
 
 	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
 	@Override
-	public List<FollowDto> getfollowees(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike) {
+	public List<FollowDto> getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike) {
 		// 1. 커서 파라미터 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
@@ -152,8 +152,15 @@ public class FollowServiceImpl implements FollowService {
 
 	// Follow 엔티티 → FollowDto 변환
 	public FollowDto toDto(Follow follow) {
-		UserSummary follower = userService.getUserSummary(follow.getFollowerId());
-		UserSummary followee = userService.getUserSummary(follow.getFolloweeId());
-		return new FollowDto(follow.getId(), followee, follower);
+		UserSummary followee = toSummary(follow);
+		UserSummary follower = toSummary(follow);
+		return new FollowDto(
+			follow.getId(), followee,follower
+		);
+	}
+	public UserSummary toSummary(Follow follow) {
+		return new UserSummary(
+			follow.getId(), follow.getFollower().getName(), follow.getFollowee().getName()
+		);
 	}
 }
