@@ -9,8 +9,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -28,43 +29,38 @@ import lombok.NoArgsConstructor;
 public class Notification {
 
 	@Id
-	@GeneratedValue
 	@Column(nullable = false)
 	private UUID id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
-	private User user;
-
-	@Column(length = 100, nullable = false)
+	@Column(nullable = false, length = 100)
 	private String title;
 
-	@Column(columnDefinition = "TEXT", nullable = false)
+	@Column(nullable = false, columnDefinition = "TEXT")
 	private String content;
 
-	@Column(length = 10, nullable = false)
-	private String level;
-
-	@Column(nullable = false)
-	private Boolean confirmed = false;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false,length = 10)
+	private NotificationLevel level;
 
 	@CreatedDate
-	@Column(name = "created_at",
-		nullable = false, updatable = false,
-		columnDefinition = "TIMESTAMPTZ")
+	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
-	// @LastModifiedDate
-	// @Column(name = "updated_at",
-	// 	columnDefinition = "TIMESTAMPTZ")
-	// private Instant updatedAt;
+	@Column(nullable = false)
+	private boolean confirmed = false; //읽음 여부
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="user_id",nullable = false)
+	private User receiver; // 알림 대상(수신자)
 
 	@Builder
-	public Notification(User user, String title, String content, String level) {
-		this.user = user;
+	public Notification(User receiver, String title, String content, NotificationLevel level,boolean confirmed) {
+		this.id = UUID.randomUUID();
+		this.receiver = receiver;
 		this.title = title;
 		this.content = content;
 		this.level = level;
 		this.confirmed = false;
+		this.createdAt = Instant.now();
 	}
 }
