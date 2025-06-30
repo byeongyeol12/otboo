@@ -9,15 +9,15 @@ import org.mapstruct.factory.Mappers;
 
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
-import com.codeit.otboo.domain.follow.dto.UserSummaryTemp;
+import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
 
 @Mapper(componentModel = "spring")
 public interface FollowMapper {
 	FollowMapper INSTANCE = Mappers.getMapper(FollowMapper.class);
 
-	@Mapping(target = "followee", expression = "java(toUserSummaryTemp(follow.getFollowee()))")
-	@Mapping(target = "follower", expression = "java(toUserSummaryTemp(follow.getFollower()))")
+	@Mapping(target = "followee", expression = "java(toUserSummary(follow.getFollowee()))")
+	@Mapping(target = "follower", expression = "java(toUserSummary(follow.getFollower()))")
 	FollowDto toFollowDto(Follow follow);
 
 	List<FollowDto> toFollowDtoList(List<Follow> follows);
@@ -31,16 +31,9 @@ public interface FollowMapper {
 		Boolean followingMe
 	);
 
-	default UserSummaryTemp toUserSummaryTemp(User user) {
+	default UserSummary toUserSummary(User user) {
 		if (user == null) return null;
-		String imgUrl = null;
-		if (user.getProfile() != null) {
-			imgUrl = user.getProfile().getProfileImgUrl();
-		}
-		return new UserSummaryTemp(
-			user.getId(),
-			user.getName(),
-			imgUrl
-		);
+		String profileImgUrl = (user.getProfile() != null) ? user.getProfile().getProfileImgUrl() : null;
+		return new UserSummary(user.getId(), user.getName(), profileImgUrl);
 	}
 }

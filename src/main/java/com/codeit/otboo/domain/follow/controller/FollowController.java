@@ -1,6 +1,5 @@
 package com.codeit.otboo.domain.follow.controller;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
+import com.codeit.otboo.domain.follow.dto.FollowListResponse;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.service.FollowService;
 
@@ -47,26 +47,30 @@ public class FollowController {
 
 	//팔로잉 목록 조회(내가 팔로우한 사람들)
 	@GetMapping("/followings")
-	public ResponseEntity<List<FollowDto>> getFollowings(
+	public ResponseEntity<FollowListResponse> getFollowings(
 		@RequestParam UUID followerId,
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam int limit,
-		@RequestParam(required = false) String nameLike
+		@RequestParam(required = false) String nameLike,
+		@RequestParam(required = false) String sortBy,
+		@RequestParam(required = false) String sortDirection
 	) {
-		List<FollowDto> followingList = followService.getFollowings(followerId,cursor,idAfter,limit,nameLike);
+		FollowListResponse followingList = followService.getFollowings(followerId,cursor,idAfter,limit,nameLike,sortBy,sortDirection);
 		return ResponseEntity.status(HttpStatus.OK).body(followingList);
 	}
 	//팔로워 목록 조회
 	@GetMapping("/followers")
-	public ResponseEntity<List<FollowDto>> getFollowers(
+	public ResponseEntity<FollowListResponse> getFollowers(
 		@RequestParam UUID followeeId,
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam int limit,
-		@RequestParam(required = false) String nameLike
+		@RequestParam(required = false) String nameLike,
+		@RequestParam(required = false) String sortBy,
+		@RequestParam(required = false) String sortDirection
 	) {
-		List<FollowDto> followerList = followService.getFollowers(followeeId,cursor,idAfter,limit,nameLike);
+		FollowListResponse followerList = followService.getFollowers(followeeId,cursor,idAfter,limit,nameLike,sortBy,sortDirection);
 		return ResponseEntity.status(HttpStatus.OK).body(followerList);
 	}
 

@@ -8,9 +8,9 @@ public record FollowDto(
 	@NotNull(message = "팔로우 ID는 필수입니다.")
 	UUID id,
 	@NotNull(message = "팔로이(팔로우 대상) 정보는 필수입니다.")
-	UserSummaryTemp followee,
+	UserSummary followee,
 	@NotNull(message = "팔로워(팔로우 요청자) 정보는 필수입니다.")
-	UserSummaryTemp follower
+	UserSummary follower
 ) {
 
 }

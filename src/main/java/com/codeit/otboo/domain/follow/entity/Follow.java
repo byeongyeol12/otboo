@@ -48,5 +48,6 @@ public class Follow {
 		this.id = UUID.randomUUID();
 		this.follower = follower;
 		this.followee = followee;
+		this.createdAt = Instant.now();
 	}
 }

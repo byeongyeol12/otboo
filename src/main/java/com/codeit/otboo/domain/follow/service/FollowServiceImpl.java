@@ -7,12 +7,13 @@ import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
+import com.codeit.otboo.domain.follow.dto.FollowListResponse;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
-import com.codeit.otboo.domain.follow.dto.UserSummaryTemp;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.entity.Profile;
 import com.codeit.otboo.domain.follow.entity.User;
@@ -102,38 +103,84 @@ public class FollowServiceImpl implements FollowService {
 
 	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
 	@Override
-	public List<FollowDto> getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike) {
-		// 1. 커서 파라미터 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
+	public FollowListResponse getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
+		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
 
-		// 2. Pageable
-		Pageable pageable = PageRequest.of(0,limit);
+		//2. 정렬
+		Sort.Direction direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+		String sort = (sortBy != null && !sortBy.isBlank()) ? sortBy : "id";
+		Pageable pageable = PageRequest.of(0, limit+1, Sort.by(direction, sort));
 
-		// 3. Repository 쿼리 호출
-		List<Follow> followees = followRepository.findFollowees(followerId,effectiveIdAfter,nameLike,pageable);
+		//3. repository query
+		List<Follow> follows = followRepository.findFollowees(followerId,effectiveIdAfter,nameLike,pageable);
 
-		// 4. 리스트 반환
-		return followMapper.toFollowDtoList(followees);
+		//4. hasNext, nextCursor
+		boolean hasNext = follows.size() > limit;
+		List<Follow> pagedList = hasNext ? follows.subList(0, limit) : follows;
+
+		String nextCursor = hasNext ? pagedList.get(pagedList.size() - 1).getId().toString() : null;
+		UUID nextIdAfter = hasNext ? pagedList.get(pagedList.size() - 1).getId() : null;
+
+		// 5. 전체 카운트
+		long totalCount = followRepository.countByFollowerId(followerId);
+
+		//6. dto 변환
+		List<FollowDto> dtoList = followMapper.toFollowDtoList(follows);
+
+		//7. return
+		return new FollowListResponse(
+			dtoList,
+			nextCursor,
+			nextIdAfter,
+			hasNext,
+			totalCount,
+			sortBy,
+			sortDirection
+		);
 	}
 
 	// 나를 팔로우 하는 사람들 목록 조회
 	@Override
-	public List<FollowDto> getFollowers(UUID followeeId,String cursor,UUID idAfter,int limit,String nameLike) {
-		// 1. 커서 파라미터 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
+	public FollowListResponse getFollowers(UUID followeeId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
+		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
 
-		// 2. Pageable
-		Pageable pageable = PageRequest.of(0,limit);
+		//2. 정렬
+		Sort.Direction direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+		String sort = (sortBy != null && !sortBy.isBlank()) ? sortBy : "id";
+		Pageable pageable = PageRequest.of(0, limit+1, Sort.by(direction, sort));
 
-		// 3. Repository 쿼리 호출
-		List<Follow> followers = followRepository.findFollowers(followeeId,effectiveIdAfter,nameLike,pageable);
+		//3. repository query
+		List<Follow> follows = followRepository.findFollowers(followeeId,effectiveIdAfter,nameLike,pageable);
 
-		// 4. 리스트 반환
-		return followMapper.toFollowDtoList(followers);
+		//4. hasNext, nextCursor
+		boolean hasNext = follows.size() > limit;
+		List<Follow> pagedList = hasNext ? follows.subList(0, limit) : follows;
+
+		String nextCursor = hasNext ? pagedList.get(pagedList.size() - 1).getId().toString() : null;
+		UUID nextIdAfter = hasNext ? pagedList.get(pagedList.size() - 1).getId() : null;
+
+		// 5. 전체 카운트
+		long totalCount = followRepository.countByFolloweeId(followeeId);
+
+		//6. dto 변환
+		List<FollowDto> dtoList = followMapper.toFollowDtoList(pagedList);
+
+		//7. return
+		return new FollowListResponse(
+			dtoList,
+			nextCursor,
+			nextIdAfter,
+			hasNext,
+			totalCount,
+			sortBy,
+			sortDirection
+		);
 	}
 
 	// 팔로우 취소(매개변수 : 취소 하려는 팔로우의 PK , 현재 로그인한 유저의 ID)
