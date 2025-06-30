@@ -29,17 +29,19 @@ public class Follow {
 	@Column(nullable = false)
 	private UUID id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "followerId", nullable = false)
-	private User follower; // 나를 팔로우 한 사람
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "followeeId", nullable = false)
-	private User followee; // 내가 팔로우 한 사람
-
 	@CreatedDate
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "follower_id", nullable = false)
+	private User follower; // 나를 팔로우 한 사람
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "followee_id", nullable = false)
+	private User followee; // 내가 팔로우 한 사람
+
+
 
 	@Builder
 	public Follow(User follower, User followee) {
