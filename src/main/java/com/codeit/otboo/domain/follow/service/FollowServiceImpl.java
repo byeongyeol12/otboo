@@ -16,6 +16,7 @@ import com.codeit.otboo.domain.follow.dto.UserSummaryTemp;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.entity.Profile;
 import com.codeit.otboo.domain.follow.entity.User;
+import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.domain.user.service.UserService;
@@ -32,6 +33,7 @@ public class FollowServiceImpl implements FollowService {
 	private final UserRepository userRepository;
 	private final ApplicationEventPublisher eventPublisher;
 	private final UserService userService;
+	private final FollowMapper followMapper;
 
 	//팔로우 생성
 	@Override
@@ -68,15 +70,7 @@ public class FollowServiceImpl implements FollowService {
 		//eventPublisher.publishFollowCreatedEvent(follow);
 
 		//4. 리턴
-		return new FollowDto(
-			follow.getId(),
-			new UserSummaryTemp(follower.getId(), follower.getName(), Optional.ofNullable(follower.getProfile())
-				.map(Profile::getProfileImgUrl)
-				.orElse(null)),
-			new UserSummaryTemp(followee.getId(), followee.getName(),Optional.ofNullable(follower.getProfile())
-				.map(Profile::getProfileImgUrl)
-				.orElse(null))
-		);
+		return followMapper.toFollowDto(follow);
 	}
 
 	// 팔로우 요약 정보 조회
@@ -95,7 +89,7 @@ public class FollowServiceImpl implements FollowService {
 		boolean followeeMe = followRepository.existsByFollowerAndFollowee(followee,me); // 상대가 나를 팔로우하고 있는지
 
 		//4. return
-		return new FollowSummaryDto(
+		return followMapper.toFollowSummaryDto(
 			followeeId,
 			followerCount,
 			followeeCount,
@@ -121,7 +115,7 @@ public class FollowServiceImpl implements FollowService {
 		List<Follow> followees = followRepository.findFollowees(followerId,effectiveIdAfter,nameLike,pageable);
 
 		// 4. 리스트 반환
-		return followees.stream().map(this::toDto).toList();
+		return followMapper.toFollowDtoList(followees);
 	}
 
 	// 나를 팔로우 하는 사람들 목록 조회
@@ -139,7 +133,7 @@ public class FollowServiceImpl implements FollowService {
 		List<Follow> followers = followRepository.findFollowers(followeeId,effectiveIdAfter,nameLike,pageable);
 
 		// 4. 리스트 반환
-		return followers.stream().map(this::toDto).toList();
+		return followMapper.toFollowDtoList(followers);
 	}
 
 	// 팔로우 취소(매개변수 : 취소 하려는 팔로우의 PK , 현재 로그인한 유저의 ID)
@@ -153,19 +147,5 @@ public class FollowServiceImpl implements FollowService {
 		}
 		// 3. 팔로우 삭제
 		followRepository.deleteById(followId);
-	}
-
-	// Follow 엔티티 → FollowDto 변환
-	public FollowDto toDto(Follow follow) {
-		UserSummaryTemp followee = toSummary(follow);
-		UserSummaryTemp follower = toSummary(follow);
-		return new FollowDto(
-			follow.getId(), followee,follower
-		);
-	}
-	public UserSummaryTemp toSummary(Follow follow) {
-		return new UserSummaryTemp(
-			follow.getId(), follow.getFollower().getName(), follow.getFollowee().getName()
-		);
 	}
 }
