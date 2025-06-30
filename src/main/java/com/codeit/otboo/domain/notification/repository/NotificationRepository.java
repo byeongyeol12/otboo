@@ -1,5 +1,11 @@
 package com.codeit.otboo.domain.notification.repository;
 
-public class NotificationRepository {
+import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.codeit.otboo.domain.notification.entity.Notification;
+
+public interface NotificationRepository extends JpaRepository<Notification, UUID> {
 
 }
