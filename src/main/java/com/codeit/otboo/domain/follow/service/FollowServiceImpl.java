@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
-import com.codeit.otboo.domain.follow.dto.UserSummary;
+import com.codeit.otboo.domain.follow.dto.UserSummaryTemp;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.entity.Profile;
 import com.codeit.otboo.domain.follow.entity.User;
@@ -70,10 +70,10 @@ public class FollowServiceImpl implements FollowService {
 		//4. 리턴
 		return new FollowDto(
 			follow.getId(),
-			new UserSummary(follower.getId(), follower.getName(), Optional.ofNullable(follower.getProfile())
+			new UserSummaryTemp(follower.getId(), follower.getName(), Optional.ofNullable(follower.getProfile())
 				.map(Profile::getProfileImgUrl)
 				.orElse(null)),
-			new UserSummary(followee.getId(), followee.getName(),Optional.ofNullable(follower.getProfile())
+			new UserSummaryTemp(followee.getId(), followee.getName(),Optional.ofNullable(follower.getProfile())
 				.map(Profile::getProfileImgUrl)
 				.orElse(null))
 		);
@@ -157,14 +157,14 @@ public class FollowServiceImpl implements FollowService {
 
 	// Follow 엔티티 → FollowDto 변환
 	public FollowDto toDto(Follow follow) {
-		UserSummary followee = toSummary(follow);
-		UserSummary follower = toSummary(follow);
+		UserSummaryTemp followee = toSummary(follow);
+		UserSummaryTemp follower = toSummary(follow);
 		return new FollowDto(
 			follow.getId(), followee,follower
 		);
 	}
-	public UserSummary toSummary(Follow follow) {
-		return new UserSummary(
+	public UserSummaryTemp toSummary(Follow follow) {
+		return new UserSummaryTemp(
 			follow.getId(), follow.getFollower().getName(), follow.getFollowee().getName()
 		);
 	}

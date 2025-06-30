@@ -2,7 +2,8 @@ package com.codeit.otboo.domain.follow.dto;
 
 import java.util.UUID;
 
-public record UserSummary(
+//임시로 사용
+public record UserSummaryTemp(
 	UUID id,
 	String name,
 	String profileImageUrl
