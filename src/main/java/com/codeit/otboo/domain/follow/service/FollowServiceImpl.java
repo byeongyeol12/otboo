@@ -14,6 +14,7 @@ import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
+import com.codeit.otboo.domain.follow.entity.Profile;
 import com.codeit.otboo.domain.follow.entity.User;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
 import com.codeit.otboo.domain.user.repository.UserRepository;
@@ -69,8 +70,12 @@ public class FollowServiceImpl implements FollowService {
 		//4. 리턴
 		return new FollowDto(
 			follow.getId(),
-			new UserSummary(follower.getId(), follower.getName(), follower.getProfileImageUrl()),
-			new UserSummary(followee.getId(), followee.getName(), followee.getProfileImageUrl())
+			new UserSummary(follower.getId(), follower.getName(), Optional.ofNullable(follower.getProfile())
+				.map(Profile::getProfileImgUrl)
+				.orElse(null)),
+			new UserSummary(followee.getId(), followee.getName(),Optional.ofNullable(follower.getProfile())
+				.map(Profile::getProfileImgUrl)
+				.orElse(null))
 		);
 	}
 
@@ -131,7 +136,7 @@ public class FollowServiceImpl implements FollowService {
 		Pageable pageable = PageRequest.of(0,limit);
 
 		// 3. Repository 쿼리 호출
-		List<Follow> followers = followRepository.findFollowees(followeeId,effectiveIdAfter,nameLike,pageable);
+		List<Follow> followers = followRepository.findFollowers(followeeId,effectiveIdAfter,nameLike,pageable);
 
 		// 4. 리스트 반환
 		return followers.stream().map(this::toDto).toList();

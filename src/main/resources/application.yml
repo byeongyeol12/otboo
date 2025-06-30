@@ -1,3 +1,15 @@
 spring:
   application:
     name: otboo
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true        # 실행되는 쿼리 콘솔에 출력
+    properties:
+      hibernate:
+        format_sql: true  # 쿼리 예쁘게 보기 좋게
+  logging:
+    level:
+      org.hibernate.SQL: debug       # SQL 쿼리
+      org.hibernate.type: trace      # 파라미터 값

@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.codeit.otboo.domain.follow.entity.User;
@@ -24,7 +23,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "notification")
+@Table(name = "notifications")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -57,10 +56,10 @@ public class Notification {
 		columnDefinition = "TIMESTAMPTZ")
 	private Instant createdAt;
 
-	@LastModifiedDate
-	@Column(name = "updated_at",
-		columnDefinition = "TIMESTAMPTZ")
-	private Instant updatedAt;
+	// @LastModifiedDate
+	// @Column(name = "updated_at",
+	// 	columnDefinition = "TIMESTAMPTZ")
+	// private Instant updatedAt;
 
 	@Builder
 	public Notification(User user, String title, String content, String level) {
