@@ -35,10 +35,14 @@ dependencies {
 	implementation 'org.springframework.kafka:spring-kafka'
 	compileOnly 'org.projectlombok:lombok'
 
-	implementation 'org.postgresql:postgresql:42.7.3'
-	runtimeOnly 'org.postgresql:postgresql'
+//	implementation 'org.postgresql:postgresql:42.7.3'
+//	runtimeOnly 'org.postgresql:postgresql'
 
 	annotationProcessor 'org.projectlombok:lombok'
+
+	implementation("org.mapstruct:mapstruct:1.5.3.Final")
+	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.batch:spring-batch-test'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
