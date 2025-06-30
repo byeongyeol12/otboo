@@ -15,8 +15,6 @@ import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowListResponse;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.entity.Follow;
-import com.codeit.otboo.domain.follow.entity.Profile;
-import com.codeit.otboo.domain.follow.entity.User;
 import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
 import com.codeit.otboo.domain.user.repository.UserRepository;
@@ -78,16 +76,16 @@ public class FollowServiceImpl implements FollowService {
 	@Override
 	public FollowSummaryDto getFollowSummary(UUID followeeId, UUID myUserId) {
 		//1. 유저 정보 조회
-		User followee = userService.getUserById(followeeId); // 요약 정보를 조회할 대상
+		User user = userService.getUserById(followeeId); // 요약 정보를 조회할 대상
 		User me = userService.getUserById(myUserId);
 
 		//2. 팔로워 수 조회
-		long followerCount = followRepository.countByFollower(followee); // 대상을 팔로우하는 수
-		long followeeCount = followRepository.countByFollowee(followee); // 대상이 팔로우하고 있는 수
+		long followerCount = followRepository.countByFolloweeId(user.getId()); // 대상을 팔로우하는 수
+		long followeeCount = followRepository.countByFollowerId(user.getId()); // 대상이 팔로우하고 있는 수
 
 		//3. 팔로우 중인지 확인
-		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowee(me,followee); // 내가 이 유저를 팔로우하고 있는지
-		boolean followeeMe = followRepository.existsByFollowerAndFollowee(followee,me); // 상대가 나를 팔로우하고 있는지
+		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowee(me,user); // 내가 이 유저를 팔로우하고 있는지
+		boolean followeeMe = followRepository.existsByFollowerAndFollowee(user,me); // 상대가 나를 팔로우하고 있는지
 
 		//4. return
 		return followMapper.toFollowSummaryDto(

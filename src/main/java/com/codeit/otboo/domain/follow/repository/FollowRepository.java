@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import com.codeit.otboo.domain.follow.entity.Follow;
-import com.codeit.otboo.domain.follow.entity.User;
 
 public interface FollowRepository extends JpaRepository<Follow, UUID> {
 	boolean existsByFollowerIdAndFolloweeId(UUID followerId, UUID followeeId); // 중복 팔로우 방지 체크

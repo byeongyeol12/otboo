@@ -9,7 +9,3 @@ spring:
     properties:
       hibernate:
         format_sql: true  # 쿼리 예쁘게 보기 좋게
-  logging:
-    level:
-      org.hibernate.SQL: debug       # SQL 쿼리
-      org.hibernate.type: trace      # 파라미터 값

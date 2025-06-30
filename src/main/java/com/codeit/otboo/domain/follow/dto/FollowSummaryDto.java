@@ -15,7 +15,7 @@ public record FollowSummaryDto(
 	Long followingCount,
 
 	@NotNull
-	Boolean followerdByMe,
+	Boolean followedByMe,
 
 	//내가 해당 사용자를 팔로우 하지 않은 경우 : null
 	UUID followedByMeId,
