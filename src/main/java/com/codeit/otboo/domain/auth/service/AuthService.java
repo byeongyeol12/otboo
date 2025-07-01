@@ -23,6 +23,7 @@ public class AuthService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final TokenCacheService tokenCacheService;
 
 	public LoginResponse login(LoginRequest request) {
 
@@ -41,6 +42,9 @@ public class AuthService {
 		);
 
 		String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId());
+
+		tokenCacheService.invalidateRefreshToken(user.getId());
+		tokenCacheService.saveRefreshToken(user.getId(), refreshToken);
 
 		Instant expiresAt = Instant.now().plusMillis(jwtTokenProvider.getTokenValidityInMilliseconds());
 
