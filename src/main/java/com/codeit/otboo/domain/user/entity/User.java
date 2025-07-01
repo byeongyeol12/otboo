@@ -52,4 +52,67 @@ public class User {
 	@LastModifiedDate
 	@Column(columnDefinition = "timestamp with time zone", name = "updated_at")
 	private Instant updatedAt;
+
+	public User() {
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
+	}
+
+	public void setLocked(boolean locked) {
+		this.locked = locked;
+	}
+
+	public void setRole(Role role) {
+		this.role = role;
+	}
+
+	public void setPasswordHash(String passwordHash) {
+		this.passwordHash = passwordHash;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public UUID getId() {
+		return id;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Role getRole() {
+		return role;
+	}
+
+	public boolean isLocked() {
+		return locked;
+	}
+
+	public String getPasswordHash() {
+		return passwordHash;
+	}
+
+	public Instant getCreatedAt() {
+		return createdAt;
+	}
+
+	public Instant getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void updateRole(Role role) {
+		this.role = role;
+	}
 }
