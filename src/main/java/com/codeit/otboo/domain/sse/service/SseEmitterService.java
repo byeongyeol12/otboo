@@ -11,8 +11,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.sse.repository.SseEmitterRepository;
-import com.codeit.otboo.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +24,7 @@ public class SseEmitterService {
 	private long timeout;
 
 	private final SseEmitterRepository sseEmitterRepository;
-
+	private final NotificationService notificationService;
 	/*
 	sse 를 통한 구독 기능 정의
 	 */
