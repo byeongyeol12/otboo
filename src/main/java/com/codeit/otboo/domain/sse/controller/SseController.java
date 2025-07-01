@@ -26,6 +26,6 @@ public class SseController {
 		@RequestParam(value = "LastEventId",required = false) UUID lastEventId // 해당 사용자에 대한 미수신 알림을 보내주기 위해
 	){
 		UUID userId = otbooUserDetails.getUserDto().id();
-		return sseEmitterService.subscribe(userId);
+		return sseEmitterService.subscribe(userId,lastEventId);
 	}
 }
