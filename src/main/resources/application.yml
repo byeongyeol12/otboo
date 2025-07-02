@@ -2,10 +2,28 @@ spring:
   application:
     name: otboo
 
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: true        # 실행되는 쿼리 콘솔에 출력
+      ddl-auto: update
     properties:
       hibernate:
-        format_sql: true  # 쿼리 예쁘게 보기 좋게
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+api:
+  kma:
+    base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
+    service-key: "${API_KMA_SERVICE_KEY}"
+
+logging:
+  level:
+    org.springframework.web.reactive.function.client: DEBUG
+
