@@ -15,7 +15,7 @@ import com.codeit.otboo.domain.notification.entity.Notification;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.mapper.NotificationMapper;
 import com.codeit.otboo.domain.notification.repository.NotificationRepository;
-import com.codeit.otboo.domain.sse.service.SseEmitterService;
+import com.codeit.otboo.domain.sse.service.SseEmitterServiceImpl;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
@@ -29,7 +29,7 @@ public class NotificationServiceImpl implements NotificationService {
 	private final NotificationRepository notificationRepository;
 	private final NotificationMapper notificationMapper;
 	private final UserRepository userRepository;
-	private final SseEmitterService sseEmitterService;
+	private final SseEmitterServiceImpl sseEmitterServiceImpl;
 
 	//마지막 알림 이후 미확인 알림 반환
 	public List<NotificationDto> findUnreceived(UUID receiverId, UUID lastEventId) {
@@ -59,7 +59,7 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationRepository.save(notification);
 
 		// 알림 전송
-		sseEmitterService.send(receiverId,"notifications",notificationDto);
+		sseEmitterServiceImpl.send(receiverId,"notifications",notificationDto);
 
 		//반환
 		return notificationDto;
