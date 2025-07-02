@@ -18,6 +18,8 @@ import com.codeit.otboo.domain.notification.repository.NotificationRepository;
 import com.codeit.otboo.domain.sse.service.SseEmitterService;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
+import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -62,6 +64,7 @@ public class NotificationServiceImpl implements NotificationService {
 		return notificationDto;
 	}
 
+
 	// 알림 조회
 	@Override
 	public NotificationDtoCursorResponse getNotifications(UUID receiverId, String cursor, UUID idAfter, int limit) {
@@ -88,6 +91,25 @@ public class NotificationServiceImpl implements NotificationService {
 		return new NotificationDtoCursorResponse(
 			notificationDtoList,"string",nextIdAfter,hasNext,notificationDtoList.size(),"createdAt","DESC"
 		);
+	}
+	// 알림 읽음
+	@Override
+	public void readNotifications(UUID notificationId, UUID receiverId) {
+		// 해당 알림 찾음
+		Notification notification = notificationRepository.findById(notificationId).orElseThrow(
+			()->new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND)
+		);
+
+		// 같은 유저인지 확인
+		if(!notification.getReceiver().getId().equals(receiverId)) {
+			throw new CustomException(ErrorCode.USER_NOT_FOUND,"알림의 유저와 로그인한 유저가 같지 않습니다.");
+		}
+
+		// 알림 상태 변경 : false->true
+		notification.confirmedChange();
+
+		// 저장
+		notificationRepository.save(notification);
 	}
 
 }

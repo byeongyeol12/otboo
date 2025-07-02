@@ -6,6 +6,9 @@ import java.util.UUID;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.error.ErrorCode;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -62,5 +65,14 @@ public class Notification {
 		this.level = level;
 		this.confirmed = false;
 		this.createdAt = Instant.now();
+	}
+
+	// confirmed false -> true
+	public void confirmedChange(){
+		//true -> 예외
+		if(this.confirmed){
+			throw new CustomException(ErrorCode.NOTIFICATION_ALREADY_READ);
+		}
+		this.confirmed = true;
 	}
 }

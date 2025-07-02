@@ -11,4 +11,5 @@ public interface NotificationService {
 	List<NotificationDto> findUnreceived(UUID receiverId, UUID lastEventId);
 	NotificationDtoCursorResponse getNotifications(UUID userId, String cursor, UUID idAfter, int limit);
 	NotificationDto createAndSend(UUID receiverId, String title, String content, NotificationLevel level);
+	void readNotifications(UUID notificationId, UUID receiverId);
 }
