@@ -9,6 +9,6 @@ import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 
 public interface NotificationService {
 	List<NotificationDto> findUnreceived(UUID receiverId, UUID lastEventId);
-	NotificationDtoCursorResponse getNotifications(UUID userId, String cursor, String idAfter, int limit);
+	NotificationDtoCursorResponse getNotifications(UUID userId, String cursor, UUID idAfter, int limit);
 	NotificationDto createAndSend(UUID receiverId, String title, String content, NotificationLevel level);
 }

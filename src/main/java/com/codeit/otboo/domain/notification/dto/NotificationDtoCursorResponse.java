@@ -1,6 +1,7 @@
 package com.codeit.otboo.domain.notification.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.validation.constraints.NotNull;
 
@@ -8,11 +9,11 @@ public record NotificationDtoCursorResponse(
 	@NotNull
 	List<NotificationDto> data,
 	String nextCursor,
-	String nextIdAfter,
+	UUID nextIdAfter,
 	@NotNull
 	boolean hasNext,
 	@NotNull
-	Long totalCount,
+	int totalCount,
 	String sortBy,
 	String sortDirection
 ) {

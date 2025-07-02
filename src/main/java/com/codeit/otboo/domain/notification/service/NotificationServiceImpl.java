@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
@@ -59,9 +62,32 @@ public class NotificationServiceImpl implements NotificationService {
 		return notificationDto;
 	}
 
+	// 알림 조회
 	@Override
-	public NotificationDtoCursorResponse getNotifications(UUID userId, String cursor, String idAfter, int limit) {
+	public NotificationDtoCursorResponse getNotifications(UUID receiverId, String cursor, UUID idAfter, int limit) {
+		// 커서 변환
+		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank()) ? UUID.fromString(cursor) : idAfter;
 
+		// pageable
+		Pageable pageable = PageRequest.of(0,limit, Sort.Direction.DESC, "createdAt");
+
+		// repository 조회
+		List<Notification> list = new ArrayList<>();
+		if(effectiveIdAfter != null) {
+			list = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(receiverId,effectiveIdAfter,pageable);
+		}else{
+			list = notificationRepository.findByReceiverIdAndConfirmedFalse(receiverId,pageable);
+		}
+		List<NotificationDto> notificationDtoList = notificationMapper.toNotificationDtoList(list);
+
+		// hasNext,nextCursor
+		boolean hasNext = list.size() > limit;
+		UUID nextIdAfter = hasNext ? notificationDtoList.get(notificationDtoList.size()-1).id() : null;
+
+		// 반환
+		return new NotificationDtoCursorResponse(
+			notificationDtoList,"string",nextIdAfter,hasNext,notificationDtoList.size(),"createdAt","DESC"
+		);
 	}
 
 }

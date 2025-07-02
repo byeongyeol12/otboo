@@ -15,4 +15,6 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
 	List<Notification> findByReceiverIdAndConfirmedFalse(UUID receiverId);
 
 	List<Notification> findByReceiverIdAndIdGreaterThanOrderByCreatedAt(UUID receiverId,UUID idAfter, Pageable pageable);
+	List<Notification> findByReceiverIdAndConfirmedFalse(UUID receiverId, Pageable pageable);
+
 }
