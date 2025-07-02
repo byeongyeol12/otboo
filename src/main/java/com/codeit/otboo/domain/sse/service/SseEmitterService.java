@@ -11,7 +11,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
-import com.codeit.otboo.domain.notification.service.NotificationServiceImpl;
 import com.codeit.otboo.domain.sse.repository.SseEmitterRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -20,15 +19,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SseEmitterService {
 
-	@Value("300_000") //300,000 milliseconds, 5분
+	@Value("300000") //300,000 milliseconds, 5분
 	private long timeout;
 
 	private final SseEmitterRepository sseEmitterRepository;
-	private final NotificationServiceImpl notificationServiceImpl;
-
 
 	//sse 를 통한 구독 기능 정의
-	public SseEmitter subscribe(UUID receiverId,UUID lastEventId) {
+	public SseEmitter subscribe(UUID receiverId,List<NotificationDto> missedNotifications) {
 		SseEmitter sseEmitter = new SseEmitter(timeout);
 		sseEmitterRepository.save(receiverId,sseEmitter);
 
@@ -52,7 +49,6 @@ public class SseEmitterService {
 		send(receiverId,"dummy", new NotificationDto(UUID.randomUUID(), Instant.now(),receiverId,"dummy","dummy", NotificationLevel.INFO));
 
 		//미수신한 Event 목록이 존재할 경우 전송
-		List<NotificationDto> missedNotifications = notificationServiceImpl.findUnreceived(receiverId,lastEventId);
 		for (NotificationDto notificationDto : missedNotifications) {
 			send(receiverId,"notifications",notificationDto);
 		}

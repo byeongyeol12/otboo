@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,6 +18,7 @@ import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
+import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.domain.user.service.UserService;
 import com.codeit.otboo.exception.CustomException;
@@ -67,7 +67,7 @@ public class FollowServiceImpl implements FollowService {
 		followRepository.save(follow);
 
 		//3. 알림 이벤트 발생
-		notificationService.createAndSend(followeeId,"팔로우","새 팔로워 ["+follower.getName()+"] 님이 회원님을 팔로우 했습니다.",
+		notificationService.createAndSend(followeeId,"팔로우","새 팔로워 ["+follower.getName()+"] 님이 ["+followee.getName()"] 님을 팔로우 했습니다.",
 			NotificationLevel.INFO);
 
 		//4. 리턴
