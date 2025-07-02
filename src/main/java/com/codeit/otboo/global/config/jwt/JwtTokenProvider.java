@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.codeit.otboo.domain.auth.service.JwtBlacklistService;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
@@ -30,12 +31,16 @@ public class JwtTokenProvider {
 	@Value("${jwt.refresh-token-validity-in-ms}")
 	private long refreshTokenValidityInMilliseconds;
 
+	private final JwtBlacklistService blacklistService;
+
 	public JwtTokenProvider(
 		@Value("${jwt.secret}") String secret,
-		@Value("${jwt.expiration}") long tokenValidityInMilliseconds
+		@Value("${jwt.expiration}") long tokenValidityInMilliseconds,
+		JwtBlacklistService blacklistService
 	) {
 		this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 		this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
+		this.blacklistService = blacklistService;
 	}
 
 	public String generateToken(UUID userId, String email, String name, String role) {
@@ -106,4 +111,15 @@ public class JwtTokenProvider {
 			.compact();
 	}
 
+	public void invalidateUserTokens(String accessToken) {
+		long remainingMillis = getRemainingMillis(accessToken);
+		blacklistService.blacklistToken(accessToken, remainingMillis);
+	}
+
+	private long getRemainingMillis(String token) {
+		Claims claims = getClaims(token);
+		long exp = claims.getExpiration().getTime();
+		long now = System.currentTimeMillis();
+		return Math.max(exp - now, 0);
+	}
 }
