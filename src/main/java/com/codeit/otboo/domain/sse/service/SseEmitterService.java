@@ -20,14 +20,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SseEmitterService {
 
-	@Value("300_000")
+	@Value("300_000") //300,000 milliseconds, 5분
 	private long timeout;
 
 	private final SseEmitterRepository sseEmitterRepository;
 	private final NotificationServiceImpl notificationServiceImpl;
-	/*
-	sse 를 통한 구독 기능 정의
-	 */
+
+
+	//sse 를 통한 구독 기능 정의
 	public SseEmitter subscribe(UUID receiverId,UUID lastEventId) {
 		SseEmitter sseEmitter = new SseEmitter(timeout);
 		sseEmitterRepository.save(receiverId,sseEmitter);
