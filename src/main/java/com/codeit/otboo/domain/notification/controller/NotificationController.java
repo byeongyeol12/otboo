@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,20 +28,24 @@ public class NotificationController {
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam int limit,
-		@RequestParam(required = false) UUID userId // 추후 인증 토큰에서 추출
-
-	) {
-		NotificationDtoCursorResponse notificationDtoCursorResponse = notificationService.getNotifications(userId,cursor,idAfter,limit);
+		@RequestParam(required = false) UUID userId // test
+		//@AuthenticationPrincipal OtbooUserDetails userDetails,
+		) {
+		NotificationDtoCursorResponse notificationDtoCursorResponse = notificationService.getNotifications(userId,cursor,idAfter,limit); //test
+		//NotificationDtoCursorResponse notificationDtoCursorResponse = notificationService.getNotifications(userDetails.getUserDto().id(),cursor,idAfter,limit);
 		return ResponseEntity.status(HttpStatus.OK).body(notificationDtoCursorResponse);
 	}
 
 	//알림 읽음 처리
 	@DeleteMapping("/{notificationId}")
 	public ResponseEntity<Void> readNotifications(
-		@AuthenticationPrincipal OtbooUserDetails userDetails,
-		@PathVariable UUID notificationId
+		@PathVariable UUID notificationId,
+		//@AuthenticationPrincipal OtbooUserDetails userDetails,
+		@RequestParam(required = false) UUID userId// 추후 인증 토큰에서 추출
 	) {
-		notificationService.readNotifications(notificationId,userDetails.getUserDto().id());
+		notificationService.readNotifications(notificationId,userId); //test
+		//notificationService.readNotifications(notificationId,userDetails.getUserDto().id());
+
 		return ResponseEntity.noContent().build();
 	}
 }
