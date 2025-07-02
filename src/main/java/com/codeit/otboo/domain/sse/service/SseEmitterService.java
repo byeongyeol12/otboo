@@ -29,9 +29,6 @@ public class SseEmitterService {
 	sse 를 통한 구독 기능 정의
 	 */
 	public SseEmitter subscribe(UUID receiverId,UUID lastEventId) {
-		// 유실된 데이터의 시점을 파악해 key 값 비교를 통해 유실된 데이터 재전송
-		String id = receiverId+"_"+System.currentTimeMillis();
-
 		SseEmitter sseEmitter = new SseEmitter(timeout);
 		sseEmitterRepository.save(receiverId,sseEmitter);
 
