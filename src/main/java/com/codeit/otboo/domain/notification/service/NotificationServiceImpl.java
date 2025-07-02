@@ -48,7 +48,8 @@ public class NotificationServiceImpl implements NotificationService {
 	@Override
 	public NotificationDto createAndSend(UUID receiverId, String title, String content, NotificationLevel level) {
 		// 알림 받는 사람, 알림 생성
-		User receiver = userRepository.findById(receiverId);
+		User receiver = userRepository.findById(receiverId).orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND,"알림 받는 유저를 찾을 수 없습니다."));
+
 		Notification notification = new Notification(
 			receiver,title,content,level,false
 		);
@@ -72,7 +73,7 @@ public class NotificationServiceImpl implements NotificationService {
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank()) ? UUID.fromString(cursor) : idAfter;
 
 		// pageable
-		Pageable pageable = PageRequest.of(0,limit, Sort.Direction.DESC, "createdAt");
+		Pageable pageable = PageRequest.of(0,limit+1, Sort.Direction.DESC, "createdAt");
 
 		// repository 조회
 		List<Notification> list = new ArrayList<>();
@@ -81,15 +82,22 @@ public class NotificationServiceImpl implements NotificationService {
 		}else{
 			list = notificationRepository.findByReceiverIdAndConfirmedFalse(receiverId,pageable);
 		}
-		List<NotificationDto> notificationDtoList = notificationMapper.toNotificationDtoList(list);
 
-		// hasNext,nextCursor
+		// hasNext,nextCursor,nextIdAfter
 		boolean hasNext = list.size() > limit;
-		UUID nextIdAfter = hasNext ? notificationDtoList.get(notificationDtoList.size()-1).id() : null;
+		List<Notification> pageList = hasNext ? list.subList(0,limit) : list;
+		List<NotificationDto> notificationDtoList = notificationMapper.toNotificationDtoList(pageList);
+
+		UUID nextIdAfter = hasNext && !notificationDtoList.isEmpty() ? notificationDtoList.get(notificationDtoList.size()-1).id() : null;
+
+		String nextCursor = nextIdAfter!= null ? nextIdAfter.toString() : null;
+
+		// 전체 건수
+		long totalCount = notificationRepository.countByReceiverId(receiverId);
 
 		// 반환
 		return new NotificationDtoCursorResponse(
-			notificationDtoList,"string",nextIdAfter,hasNext,notificationDtoList.size(),"createdAt","DESC"
+			notificationDtoList,nextCursor,nextIdAfter,hasNext,totalCount,"createdAt","DESCENDING"
 		);
 	}
 	// 알림 읽음

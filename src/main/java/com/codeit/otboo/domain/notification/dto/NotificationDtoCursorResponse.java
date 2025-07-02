@@ -13,7 +13,7 @@ public record NotificationDtoCursorResponse(
 	@NotNull
 	boolean hasNext,
 	@NotNull
-	int totalCount,
+	long totalCount,
 	String sortBy,
 	String sortDirection
 ) {
