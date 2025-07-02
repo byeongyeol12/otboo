@@ -10,6 +10,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.error.ErrorCode;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -36,7 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			String token = authorizationHeader.substring(7);
 
 			try {
-				jwtTokenProvider.validateToken(token); // 유효하지 않으면 CustomException 발생
+				if (jwtTokenProvider.isBlacklisted(token)) {
+					throw new CustomException(ErrorCode.INVALID_TOKEN);
+				}
+
+				jwtTokenProvider.validateToken(token);
 				Claims claims = jwtTokenProvider.getClaims(token);
 
 				String email = claims.get("email", String.class);

@@ -122,4 +122,8 @@ public class JwtTokenProvider {
 		long now = System.currentTimeMillis();
 		return Math.max(exp - now, 0);
 	}
+
+	public boolean isBlacklisted(String token) {
+		return blacklistService.isBlacklisted(token);
+	}
 }
