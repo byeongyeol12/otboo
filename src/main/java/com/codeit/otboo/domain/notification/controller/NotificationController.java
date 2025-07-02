@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
+import com.codeit.otboo.domain.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 
