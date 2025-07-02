@@ -19,6 +19,7 @@ import com.codeit.otboo.domain.user.mapper.ProfileMapper;
 import com.codeit.otboo.domain.user.mapper.UserMapper;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.config.jwt.JwtTokenProvider;
 import com.codeit.otboo.global.enumType.Role;
 import com.codeit.otboo.global.error.ErrorCode;
 
@@ -34,6 +35,7 @@ public class UserService {
 	private final ProfileMapper profileMapper;
 	private final PasswordEncoder passwordEncoder;
 	private final TokenCacheService tokenCacheService;
+	private final JwtTokenProvider jwtTokenProvider;
 
 	@Transactional
 	public UserDto create(UserCreateRequest request) {
@@ -99,4 +101,14 @@ public class UserService {
 		return userMapper.toDto(user);
 	}
 
+	@Transactional
+	public User updateUserLock(UUID userId, boolean locked, String accessToken) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+		user.setLocked(locked);
+		jwtTokenProvider.invalidateUserTokens(accessToken);
+
+		return user;
+	}
 }
