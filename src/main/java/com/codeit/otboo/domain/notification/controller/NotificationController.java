@@ -28,7 +28,7 @@ public class NotificationController {
 	public ResponseEntity<NotificationDtoCursorResponse> getNotifications(
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
-		int limit,
+		@RequestParam int limit,
 		@RequestParam(required = false) UUID userId // 추후 인증 토큰에서 추출
 
 	) {
