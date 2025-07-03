@@ -19,6 +19,7 @@ import com.codeit.otboo.domain.follow.dto.FollowListResponse;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.service.FollowService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -29,7 +30,7 @@ public class FollowController {
 
 	//팔로우 생성
 	@PostMapping
-	public ResponseEntity<FollowDto> createFollow(@RequestBody FollowCreateRequest request) {
+	public ResponseEntity<FollowDto> createFollow(@Valid @RequestBody FollowCreateRequest request) {
 		FollowDto followDto = followService.createFollow(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(followDto);
 	}
