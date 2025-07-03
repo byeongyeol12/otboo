@@ -34,4 +34,15 @@ public class AttributeDef {
 	@CollectionTable(name = "attribute_def_selectable_values", joinColumns = @JoinColumn(name = "attribute_def_id"))
 	@Column
 	private List<String> selectableValues;
+
+	public AttributeDef(String name, List<String> selectableValues) {
+		this.name = name;
+		this.selectableValues = selectableValues;
+	}
+
+	public void update(String name, List<String> selectableValues) {
+		this.name = name;
+		this.selectableValues = selectableValues;
+	}
+
 }
