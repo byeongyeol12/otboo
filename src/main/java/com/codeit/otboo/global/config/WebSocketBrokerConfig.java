@@ -25,9 +25,9 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry){
 		// /sub : 메시지를 구독(수신)하는 요청 엔드포인트
-		registry.enableSimpleBroker("/sub/direct-messages_{DM_Key}");
+		registry.enableSimpleBroker("/sub");
 		// /pub : 메시지를 발행(송신)하는 엔드포인트
-		registry.setApplicationDestinationPrefixes("/pub/direct-messages_send");
+		registry.setApplicationDestinationPrefixes("/pub");
 
 	}
 }
