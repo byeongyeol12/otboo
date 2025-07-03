@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.follow.service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +17,7 @@ import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.user.entity.User;
@@ -67,8 +69,16 @@ public class FollowServiceImpl implements FollowService {
 		followRepository.save(follow);
 
 		//3. 알림 이벤트 발생
-		notificationService.createAndSend(followeeId,"팔로우","새 팔로워 ["+follower.getName()+"] 님이 ["+followee.getName()"] 님을 팔로우 했습니다.",
-			NotificationLevel.INFO);
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				followeeId,
+				"팔로우",
+				"새 팔로워 ["+follower.getName()+"] 님이 ["+followee.getName()"] 님을 팔로우 했습니다.",
+				NotificationLevel.INFO
+			)
+		);
 
 		//4. 리턴
 		return followMapper.toFollowDto(follow);
