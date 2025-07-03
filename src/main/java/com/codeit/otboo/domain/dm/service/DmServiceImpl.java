@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
 import com.codeit.otboo.domain.dm.entity.Dm;
+import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
 import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
@@ -30,6 +31,7 @@ public class DmServiceImpl implements DmService {
 	private final UserRepository userRepository;
 	private final SimpMessagingTemplate simpMessagingTemplate;
 	private final NotificationService notificationService;
+	private final DirectMessageMapper directMessageMapper;
 
 	@Override
 	public DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
@@ -40,13 +42,7 @@ public class DmServiceImpl implements DmService {
 			ErrorCode.USER_NOT_FOUND,"수신자를 찾을 수 없습니다."));
 
 		Dm dm = new Dm(sender,receiver,directMessageCreateRequest.content());
-		DirectMessageDto directMessageDto = new DirectMessageDto(
-			UUID.randomUUID(),
-			Instant.now(),
-			new UserSummary(sender.getId(),sender.getName(),sender.getProfileImageUrl()),
-			new UserSummary(receiver.getId(),receiver.getName(),receiver.getProfileImageUrl()),
-			directMessageCreateRequest.content()
-		);
+		DirectMessageDto directMessageDto = directMessageMapper.toDirectMessageDto(dm);
 
 		// 실시간 전송
 		String dmKey = makeDmKey(sender.getId,receiver.getId());
