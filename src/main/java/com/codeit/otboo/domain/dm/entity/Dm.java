@@ -12,7 +12,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -30,9 +29,15 @@ import lombok.NoArgsConstructor;
 public class Dm {
 
 	@Id
-	@GeneratedValue
 	@Column(nullable = false, updatable = false)
 	private UUID id;
+
+	@CreatedDate
+	@Column(name = "created_at",
+		nullable = false, updatable = false,
+		columnDefinition = "TIMESTAMPTZ")
+	private Instant createdAt;
+
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "sender_id",   nullable = false)
@@ -45,19 +50,10 @@ public class Dm {
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String content;
 
-	@CreatedDate
-	@Column(name = "created_at",
-		nullable = false, updatable = false,
-		columnDefinition = "TIMESTAMPTZ")
-	private Instant createdAt;
-
-	// @LastModifiedDate
-	// @Column(name = "updated_at",
-	// 	columnDefinition = "TIMESTAMPTZ")
-	// private Instant updatedAt;
-
 	@Builder
 	public Dm(User sender, User receiver, String content) {
+		this.id = UUID.randomUUID();
+		this.createdAt = Instant.now();
 		this.sender   = sender;
 		this.receiver = receiver;
 		this.content  = content;
