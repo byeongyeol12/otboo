@@ -35,11 +35,11 @@ public class ClothesController {
 	@GetMapping
 	public ResponseEntity<ClothesDtoCursorResponse> getClothesList(
 		@RequestParam("ownerId") UUID ownerId,
-		@RequestParam(value = "idAfter", required = false) UUID idAfter,
+		@RequestParam(value = "cursor", required = false) String cursor,
 		@RequestParam(value = "limit", defaultValue = "10") int limit,
 		@RequestParam(value = "typeEqual", required = false) String typeEqual) {
 
-		ClothesDtoCursorResponse response = clothesService.getClothesList(ownerId, idAfter, limit, typeEqual);
+		ClothesDtoCursorResponse response = clothesService.getClothesList(ownerId, cursor, limit, typeEqual);
 		return ResponseEntity.ok(response);
 	}
 

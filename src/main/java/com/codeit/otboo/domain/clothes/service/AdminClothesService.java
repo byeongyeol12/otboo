@@ -1,6 +1,8 @@
 package com.codeit.otboo.domain.clothes.service;
 
+import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -91,15 +93,14 @@ public class AdminClothesService {
 
 	@Transactional(readOnly = true)
 	public ClothesAttributeDefDtoCursorResponse getAttributeDefsWithCursor(
-		UUID idAfter, int limit, String sortBy, String sortDirection, String keywordLike) {
+		String cursor, int limit, String sortBy, String sortDirection, String keywordLike) {
+
+		UUID idAfter = Optional.ofNullable(cursor)
+			.map(c -> UUID.fromString(new String(Base64.getDecoder().decode(c))))
+			.orElse(null);
 
 		Sort.Direction direction =
 			sortDirection.equalsIgnoreCase("DESCENDING") ? Sort.Direction.DESC : Sort.Direction.ASC;
-
-		List<String> allowedSortFields = List.of("name", "createdAt");
-		if (!allowedSortFields.contains(sortBy)) {
-			throw new CustomException(ErrorCode.ATTRIBUTE_DEF_INVALID_SORT_FIELD);
-		}
 
 		List<AttributeDef> result = attributeDefRepository.findPagedAttributeDefs(
 			idAfter, limit + 1, sortBy, direction, keywordLike
@@ -114,6 +115,10 @@ public class AdminClothesService {
 		List<ClothesAttributeDefDto> dtoList = result.stream()
 			.map(def -> new ClothesAttributeDefDto(def.getId(), def.getName(), def.getSelectableValues()))
 			.toList();
+
+		String nextCursor = Optional.ofNullable(nextIdAfter)
+			.map(id -> Base64.getEncoder().encodeToString(id.toString().getBytes()))
+			.orElse(null);
 
 		long total = attributeDefRepository.count();
 

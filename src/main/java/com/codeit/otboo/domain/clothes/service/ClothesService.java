@@ -1,7 +1,9 @@
 package com.codeit.otboo.domain.clothes.service;
 
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -41,7 +43,7 @@ public class ClothesService {
 		Clothes newClothes = Clothes.builder()
 			.ownerId(ownerId)
 			.name(request.name())
-			.type(ClothesType.valueOf(request.type().trim().toUpperCase()))
+			.type(convertToClothesType(request.type()))
 			.imageUrl(imageUrl)
 			.build();
 
@@ -57,8 +59,12 @@ public class ClothesService {
 		return convertToDto(savedClothes);
 	}
 
-	public ClothesDtoCursorResponse getClothesList(UUID ownerId, UUID idAfter, int limit, String typeEqual) {
-		ClothesType type = StringUtils.hasText(typeEqual) ? ClothesType.valueOf(typeEqual.toUpperCase()) : null;
+	public ClothesDtoCursorResponse getClothesList(UUID ownerId, String cursor, int limit, String typeEqual) {
+		UUID idAfter = Optional.ofNullable(cursor)
+			.map(c -> UUID.fromString(new String(Base64.getDecoder().decode(c))))
+			.orElse(null);
+
+		ClothesType type = StringUtils.hasText(typeEqual) ? convertToClothesType(typeEqual) : null;
 
 		List<Clothes> clothesList = clothesRepository.findClothesByOwnerWithCursor(ownerId, idAfter, limit + 1, type);
 
@@ -68,21 +74,13 @@ public class ClothesService {
 		}
 
 		List<ClothesDto> data = clothesList.stream().map(this::convertToDto).toList();
+		UUID nextIdAfter = hasNext && !data.isEmpty() ? data.get(data.size() - 1).id() : null;
 
-		UUID nextIdAfter = null;
-		if (hasNext && !data.isEmpty()) {
-			nextIdAfter = data.get(data.size() - 1).id();
-		}
+		String nextCursor = Optional.ofNullable(nextIdAfter)
+			.map(id -> Base64.getEncoder().encodeToString(id.toString().getBytes()))
+			.orElse(null);
 
-		return new ClothesDtoCursorResponse(
-			data,
-			null,
-			nextIdAfter,
-			hasNext,
-			0L,
-			"id", // 정렬 기준
-			"ASCENDING" // 정렬 방향
-		);
+		return new ClothesDtoCursorResponse(data, nextCursor, nextIdAfter, hasNext, 0L, "id", "ASCENDING");
 	}
 
 	@Transactional
@@ -99,7 +97,7 @@ public class ClothesService {
 			imageUrl = imageUploadService.upload(image);
 		}
 
-		clothesToUpdate.update(request.name(), ClothesType.valueOf(request.type().toUpperCase()), imageUrl);
+		clothesToUpdate.update(request.name(), convertToClothesType(request.type()), imageUrl);
 
 		clothesToUpdate.clearAttributes();
 		if (request.attributes() != null) {
@@ -151,4 +149,16 @@ public class ClothesService {
 			attributeDtos
 		);
 	}
+
+	private ClothesType convertToClothesType(String type) {
+		if (!StringUtils.hasText(type)) {
+			throw new CustomException(ErrorCode.CLOTHES_INVALID_TYPE);
+		}
+		try {
+			return ClothesType.valueOf(type.trim().toUpperCase());
+		} catch (IllegalArgumentException e) {
+			throw new CustomException(ErrorCode.CLOTHES_INVALID_TYPE);
+		}
+	}
+
 }

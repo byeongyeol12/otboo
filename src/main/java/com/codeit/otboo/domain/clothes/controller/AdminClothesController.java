@@ -40,14 +40,14 @@ public class AdminClothesController {
 
 	@GetMapping
 	public ResponseEntity<ClothesAttributeDefDtoCursorResponse> getAttributeDefs(
-		@RequestParam(required = false) UUID idAfter,
+		@RequestParam(required = false) String cursor,
 		@RequestParam(defaultValue = "10") int limit,
 		@RequestParam(defaultValue = "createdAt") String sortBy,
 		@RequestParam(defaultValue = "DESC") String sortDirection,
 		@RequestParam(required = false) String keywordLike
 	) {
 		ClothesAttributeDefDtoCursorResponse response = adminClothesService.getAttributeDefsWithCursor(
-			idAfter, limit, sortBy, sortDirection, keywordLike
+			cursor, limit, sortBy, sortDirection, keywordLike
 		);
 		return ResponseEntity.ok(response);
 	}
