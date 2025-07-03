@@ -38,7 +38,6 @@ public class Dm {
 		columnDefinition = "TIMESTAMPTZ")
 	private Instant createdAt;
 
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "sender_id",   nullable = false)
 	private User sender;
