@@ -1,0 +1,73 @@
+package com.codeit.otboo.domain.dm.service;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+
+import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
+import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
+import com.codeit.otboo.domain.dm.entity.Dm;
+import com.codeit.otboo.domain.follow.dto.UserSummary;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
+import com.codeit.otboo.domain.user.entity.User;
+import com.codeit.otboo.domain.user.repository.UserRepository;
+import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.error.ErrorCode;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class DmServiceImpl implements DmService {
+
+	private final UserRepository userRepository;
+	private final SimpMessagingTemplate simpMessagingTemplate;
+	private final NotificationService notificationService;
+
+	@Override
+	public DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
+		//유저 체크
+		User sender = userRepository.findById(directMessageCreateRequest.senderId()).orElseThrow(() -> new CustomException(
+			ErrorCode.USER_NOT_FOUND,"발신자를 찾을 수 없습니다."));
+		User receiver = userRepository.findById(directMessageCreateRequest.receiverId()).orElseThrow(() -> new CustomException(
+			ErrorCode.USER_NOT_FOUND,"수신자를 찾을 수 없습니다."));
+
+		Dm dm = new Dm(sender,receiver,directMessageCreateRequest.content());
+		DirectMessageDto directMessageDto = new DirectMessageDto(
+			UUID.randomUUID(),
+			Instant.now(),
+			new UserSummary(sender.getId(),sender.getName(),sender.getProfileImageUrl()),
+			new UserSummary(receiver.getId(),receiver.getName(),receiver.getProfileImageUrl()),
+			directMessageCreateRequest.content()
+		);
+
+		// 실시간 전송
+		String dmKey = makeDmKey(sender.getId,receiver.getId());
+		simpMessagingTemplate.convertAndSend("/sub/direct-messages_"+dmKey, directMessageDto);
+
+		// 알림 전송
+		notificationService.createAndSend(new NotificationDto(
+			UUID.randomUUID(),
+			Instant.now(),
+			receiver.getId(),
+			"DM",
+			"["+sender.getName()+"] 님이 DM 을 보냈습니다.",
+			NotificationLevel.INFO
+		));
+
+		return directMessageDto;
+	}
+
+	private String makeDmKey(UUID senderId, UUID receiverId) {
+		List<UUID> ids = List.of(senderId, receiverId);
+		ids.sort(Comparator.naturalOrder()); //오름차순 정렬
+		return ids.get(0)+"_"+ids.get(1);
+	}
+}
