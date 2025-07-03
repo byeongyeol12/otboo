@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,6 +16,9 @@ import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
+import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.domain.user.service.UserService;
 import com.codeit.otboo.exception.CustomException;
@@ -30,10 +32,9 @@ public class FollowServiceImpl implements FollowService {
 
 	private final FollowRepository followRepository;
 	private final UserRepository userRepository;
-	private final ApplicationEventPublisher eventPublisher;
 	private final UserService userService;
 	private final FollowMapper followMapper;
-
+	private final NotificationService notificationService;
 	//팔로우 생성
 	@Override
 	public FollowDto createFollow(FollowCreateRequest request) {
@@ -41,7 +42,7 @@ public class FollowServiceImpl implements FollowService {
 		UUID followerId = request.followerId();
 		UUID followeeId = request.followeeId();
 
-		// 팔로워 조회
+		// 팔로워(=나) 조회
 		User follower = userRepository.findById(followerId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "팔로워를 찾을 수 없습니다."));
 		// 대상자 조회
@@ -49,7 +50,7 @@ public class FollowServiceImpl implements FollowService {
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "팔로우할 사람을 찾을 수 없습니다."));
 
 		// 자기 자신 팔로우 방지
-		if (follower.equals(followee)) {
+		if (follower.getId().equals(followee.getId())) {
 			throw new CustomException(ErrorCode.FOLLOW_NOT_MYSELF);
 		}
 		// 팔로우 중복 방지
@@ -66,7 +67,8 @@ public class FollowServiceImpl implements FollowService {
 		followRepository.save(follow);
 
 		//3. 알림 이벤트 발생
-		//eventPublisher.publishFollowCreatedEvent(follow);
+		notificationService.createAndSend(followeeId,"팔로우","새 팔로워 ["+follower.getName()+"] 님이 ["+followee.getName()"] 님을 팔로우 했습니다.",
+			NotificationLevel.INFO);
 
 		//4. 리턴
 		return followMapper.toFollowDto(follow);
