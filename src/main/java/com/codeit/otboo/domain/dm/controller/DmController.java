@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
-import com.codeit.otboo.domain.dm.service.DmServiceImpl;
+import com.codeit.otboo.domain.dm.service.DmService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class DmController {
-	private final DmServiceImpl dmService;
+	private final DmService dmService;
 
 	//메시지 목록 조회
 	@GetMapping("/api/direct-messages")
@@ -28,7 +28,7 @@ public class DmController {
 		@RequestParam UUID idAfter,
 		@RequestParam int limit
 	){
-		return ResponseEntity.status(HttpStatus.OK).body();
+		DirectMessageDtoCursorResponse dmList = dmService.getDms(userId,cursor,idAfter,limit);
+		return ResponseEntity.status(HttpStatus.OK).body(dmList);
 	}
-
 }
