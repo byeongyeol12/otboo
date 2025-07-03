@@ -1,7 +1,6 @@
 package com.codeit.otboo.domain.dm.service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -13,7 +12,7 @@ import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
 import com.codeit.otboo.domain.dm.entity.Dm;
 import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
-import com.codeit.otboo.domain.follow.dto.UserSummary;
+import com.codeit.otboo.domain.dm.repository.DmRepository;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
@@ -32,6 +31,7 @@ public class DmServiceImpl implements DmService {
 	private final SimpMessagingTemplate simpMessagingTemplate;
 	private final NotificationService notificationService;
 	private final DirectMessageMapper directMessageMapper;
+	private final DmRepository dmRepository;
 
 	@Override
 	public DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
@@ -41,7 +41,10 @@ public class DmServiceImpl implements DmService {
 		User receiver = userRepository.findById(directMessageCreateRequest.receiverId()).orElseThrow(() -> new CustomException(
 			ErrorCode.USER_NOT_FOUND,"수신자를 찾을 수 없습니다."));
 
+		//dm 생성 및 저장
 		Dm dm = new Dm(sender,receiver,directMessageCreateRequest.content());
+		dmRepository.save(dm);
+
 		DirectMessageDto directMessageDto = directMessageMapper.toDirectMessageDto(dm);
 
 		// 실시간 전송
