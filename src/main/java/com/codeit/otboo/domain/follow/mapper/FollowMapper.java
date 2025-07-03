@@ -11,6 +11,7 @@ import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
+import com.codeit.otboo.domain.user.entity.User;
 
 @Mapper(componentModel = "spring")
 public interface FollowMapper {
