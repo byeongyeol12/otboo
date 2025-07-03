@@ -4,7 +4,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
-import com.codeit.otboo.domain.dm.service.DmServiceImpl;
+import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
+import com.codeit.otboo.domain.dm.service.DmService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DmWebSocketController {
 
-	private final DmServiceImpl dmService;
+	private final DmService dmService;
 
 	@MessageMapping("/direct-messages_send")
-	public DirectMessageCreateRequest sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
-		dmService.sendDirectMessage(directMessageCreateRequest);
+	public DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
+		DirectMessageDto directMessageDto = dmService.sendDirectMessage(directMessageCreateRequest);
+		return directMessageDto;
 	}
 }
