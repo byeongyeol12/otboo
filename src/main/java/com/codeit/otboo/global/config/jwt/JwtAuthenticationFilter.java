@@ -1,7 +1,7 @@
 package com.codeit.otboo.global.config.jwt;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.UUID;
 
 import org.apache.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,6 +10,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.config.security.UserPrincipal;
+import com.codeit.otboo.global.enumType.Role;
 import com.codeit.otboo.global.error.ErrorCode;
 
 import io.jsonwebtoken.Claims;
@@ -44,15 +46,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				jwtTokenProvider.validateToken(token);
 				Claims claims = jwtTokenProvider.getClaims(token);
 
+				String userId = claims.get("userId", String.class);
 				String email = claims.get("email", String.class);
 				String role = claims.get("role", String.class);
 
-				// 간단한 인증 객체 생성 (Principal: email, Authorities: ROLE_XXX)
+				UserPrincipal userPrincipal = new UserPrincipal(
+					UUID.fromString(userId),
+					email,
+					null, // password not required here
+					Role.valueOf(role)
+				);
+
 				UsernamePasswordAuthenticationToken authentication =
 					new UsernamePasswordAuthenticationToken(
-						email,
+						userPrincipal,
 						null,
-						Collections.singleton(() -> "ROLE_" + role)
+						userPrincipal.getAuthorities()
 					);
 
 				authentication.setDetails(
@@ -60,8 +69,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				);
 
 				SecurityContextHolder.getContext().setAuthentication(authentication);
+
 			} catch (CustomException e) {
-				// ❗ 필터에서 발생한 예외는 직접 응답 처리해줘야 함
 				response.setStatus(e.getErrorCode().getStatus());
 				response.setContentType("application/json");
 				response.getWriter().write("""
@@ -74,7 +83,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			}
 		}
 
-		// 다음 필터로 넘김
 		filterChain.doFilter(request, response);
+	}
+
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) {
+		String path = request.getRequestURI();
+
+		return path.equals("/api/users") ||
+			path.startsWith("/api/auth") ||
+			path.startsWith("/h2-console");
 	}
 }

@@ -3,6 +3,7 @@ package com.codeit.otboo.domain.auth.controller;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codeit.otboo.domain.auth.dto.request.LoginRequest;
 import com.codeit.otboo.domain.auth.dto.response.AccessTokenResponse;
+import com.codeit.otboo.domain.auth.dto.response.CsrfTokenResponse;
 import com.codeit.otboo.domain.auth.dto.response.LoginResponse;
 import com.codeit.otboo.domain.auth.service.AuthService;
 import com.codeit.otboo.exception.CustomException;
@@ -34,13 +36,12 @@ public class AuthController {
 	public ResponseEntity<LoginResponse> signIn(@RequestBody @Valid LoginRequest request) {
 		LoginResponse response = authService.login(request);
 
-		// ✅ 리프레시 토큰을 HttpOnly 쿠키로 설정
 		ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
 			.httpOnly(true)
 			.secure(false)
 			.path("/")
-			.maxAge(7 * 24 * 60 * 60) // 7일
-			.sameSite("Strict") // 필요에 따라 Lax 또는 None
+			.maxAge(7 * 24 * 60 * 60)
+			.sameSite("Strict")
 			.build();
 
 		return ResponseEntity.ok()
@@ -67,6 +68,15 @@ public class AuthController {
 		String refreshToken = extractRefreshTokenFromCookie(request);
 		String newAccessToken = authService.refreshAccessToken(refreshToken);
 		return ResponseEntity.ok(new AccessTokenResponse(newAccessToken));
+	}
+
+	@GetMapping("/csrf-token")
+	public CsrfTokenResponse getCsrfToken(CsrfToken csrfToken) {
+		return new CsrfTokenResponse(
+			csrfToken.getHeaderName(),
+			csrfToken.getParameterName(),
+			csrfToken.getToken()
+		);
 	}
 
 	private String extractRefreshTokenFromCookie(HttpServletRequest request) {
