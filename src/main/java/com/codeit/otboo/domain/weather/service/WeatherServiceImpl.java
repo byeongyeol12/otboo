@@ -39,7 +39,7 @@ public class WeatherServiceImpl implements WeatherService {
         // 3. 조회된 Entity 목록을 DTO 목록으로 변환하여 반환합니다.
         return weathers.stream()
                 .map(this::mapToWeatherDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

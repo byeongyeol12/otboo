@@ -30,7 +30,7 @@ public class BatchController {
             jobLauncher.run(fetchWeatherJob, jobParameters);
             return ResponseEntity.ok("Batch job 'fetchWeatherJob' has been started successfully.");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Failed to start batch job: " + e.getMessage());
+             return ResponseEntity.internalServerError().body("Failed to start batch job: " + e.getMessage());
         }
     }
 }
