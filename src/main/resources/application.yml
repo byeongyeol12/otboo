@@ -1,16 +1,39 @@
 spring:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+  application:
+    name: otboo
+
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: raymond
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
   data:
     redis:
       host: localhost
       port: 6379
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+  batch:
+    jdbc:
+      initialize-schema: NEVER
+
+api:
+  kma:
+    base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
+    service-key: "${API_KMA_SERVICE_KEY}"
+
+logging:
+  level:
+    org.springframework.web.reactive.function.client: DEBUG
 
 jwt:
   secret: MySuperSecretJwtKeyThatShouldBeLongEnough123

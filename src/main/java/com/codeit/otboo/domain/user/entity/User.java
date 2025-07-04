@@ -17,6 +17,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -52,6 +53,12 @@ public class User {
 	@LastModifiedDate
 	@Column(columnDefinition = "timestamp with time zone", name = "updated_at")
 	private Instant updatedAt;
+	@OneToOne(mappedBy = "user")
+	private Profile profile;
+
+	public Profile getProfile() {
+		return profile;
+	}
 
 	public User() {
 	}

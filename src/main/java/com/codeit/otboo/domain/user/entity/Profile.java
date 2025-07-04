@@ -60,4 +60,8 @@ public class Profile {
 	@LastModifiedDate
 	@Column(columnDefinition = "timestamp with time zone", name = "updated_at")
 	private Instant updatedAt;
+
+	public String getProfileImgUrl() {
+		return profileImgUrl;
+	}
 }
