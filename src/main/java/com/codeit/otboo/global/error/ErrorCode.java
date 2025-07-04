@@ -36,20 +36,23 @@ public enum ErrorCode {
 	// FEED
 	FEED_NOT_FOUND(404, "F001", "피드 정보를 찾을 수 없습니다."),
 
-  // FOLLOW
-  FOLLOW_NOT_FOUND(404, "FL001", "팔로우 정보를 찾을 수 없습니다."),
-  FOLLOW_NOT_MYSELF(400, "FL002", "자기 자신을 팔로우할 수 없습니다."),
-  FOLLOW_ALREADY_USER(400, "FL003", "이미 팔로우한 사람입니다."),
-  FOLLOW_CANCEL_ONLY_MINE(400, "FL004", "본인의 팔로우만 취소할 수 있습니다."),
-  // DM
-  DM_NOT_FOUND(404, "D001", "DM 정보를 찾을 수 없습니다."),
+	// FOLLOW
+	FOLLOW_NOT_FOUND(404, "FL001", "팔로우 정보를 찾을 수 없습니다."),
+	FOLLOW_NOT_MYSELF(400, "FL002", "자기 자신을 팔로우할 수 없습니다."),
+	FOLLOW_ALREADY_USER(400, "FL003", "이미 팔로우한 사람입니다."),
+	FOLLOW_CANCEL_ONLY_MINE(400, "FL004", "본인의 팔로우만 취소할 수 있습니다."),
+	// DM
+	DM_NOT_FOUND(404, "D001", "DM 정보를 찾을 수 없습니다."),
 
-  // NOTIFICATION
-  NOTIFICATION_NOT_FOUND(404, "N001", "알림 정보를 찾을 수 없습니다."),
-  NOTIFICATION_ALREADY_READ(400,"N002", "알림을 이미 읽은 상태입니다."),
-  // RECOMMENDATION
-  RECOMMENDATION_NOT_FOUND(404, "R001", "추천 정보를 찾을 수 없습니다."),
-  ;
+	// NOTIFICATION
+	NOTIFICATION_NOT_FOUND(404, "N001", "알림 정보를 찾을 수 없습니다."),
+	NOTIFICATION_ALREADY_READ(400, "N002", "알림을 이미 읽은 상태입니다."),
+	// RECOMMENDATION
+	RECOMMENDATION_NOT_FOUND(404, "R001", "추천 정보를 찾을 수 없습니다."),
+
+	// PROFILE
+	PROFILE_IMAGE_UPLOAD_FAILED(500, "P002", "프로필 이미지 업로드에 실패했습니다."),
+	;
 
 	private final int status;
 	private final String code;

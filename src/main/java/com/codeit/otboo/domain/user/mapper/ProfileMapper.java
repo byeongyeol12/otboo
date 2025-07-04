@@ -1,6 +1,7 @@
 package com.codeit.otboo.domain.user.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import com.codeit.otboo.domain.user.dto.request.ProfileUpdateRequest;
@@ -15,6 +16,9 @@ public interface ProfileMapper {
 	@Mapping(target = "user", ignore = true)*/
 	Profile toEntity(UserCreateRequest request);
 
+	@Mapping(source = "user.id", target = "userId")
+	@Mapping(source = "user.name", target = "name")
+	@Mapping(source = "locationNames", target = "location")
 	ProfileDto toDto(Profile profile);
 
 	void updateProfileFromRequest(ProfileUpdateRequest request, @MappingTarget Profile profile);

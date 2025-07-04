@@ -1,12 +1,14 @@
 package com.codeit.otboo.domain.user.dto.request;
 
+import java.time.Instant;
+
 import com.codeit.otboo.global.enumType.Gender;
 
 public record ProfileUpdateRequest(
-	String name,
+	String nickname,
 	Gender gender,
-	String birthDate,
-	Object location,
+	Instant birthDate,
+	String locationName,
 	Integer temperatureSensitivity
 ) {
 }

@@ -20,11 +20,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.Builder;
+import lombok.Getter;
 
 @Entity
 @Table(name = "profiles")
 @EntityListeners(AuditingEntityListener.class)
+@Getter
 public class Profile {
 
 	@Id
@@ -39,13 +40,16 @@ public class Profile {
 	@Column(length = 10)
 	private Gender gender;
 
+	@Column(name = "birth_date")
+	private Instant birthDate;
+
 	private Double latitude;
 	private Double longitude;
 	private Integer x;
 	private Integer y;
 
 	@Column(name = "location_names", columnDefinition = "TEXT")
-	private String locationNames; // JSON 또는 CSV 저장 → List 변환은 서비스/Mapper에서 처리
+	private String locationNames;
 
 	@Column(name = "temp_sensitivity", nullable = false)
 	private Integer temperatureSensitivity = 3;
@@ -65,52 +69,34 @@ public class Profile {
 	@Column(name = "updated_at", columnDefinition = "TIMESTAMPTZ")
 	private Instant updatedAt;
 
-	protected Profile() {
+	public Profile() {
 	}
 
-	public UUID getId() {
-		return id;
-	}
-
-	public String getNickname() {
-		return nickname;
-	}
-
-	public Gender getGender() {
-		return gender;
-	}
-
-	public String getLocationNames() {
-		return locationNames;
-	}
-
-	public Integer getTemperatureSensitivity() {
-		return temperatureSensitivity;
-	}
-
-	public User getUser() {
-		return user;
-	}
-
-	public String getProfileImageUrl() {
-		return profileImageUrl;
-	}
-
-	// Builder 패턴 생성자
-	@Builder
-	public Profile(User user, String nickname, Gender gender,
-		Double latitude, Double longitude, Integer x, Integer y,
-		String locationNames, Integer temperatureSensitivity, String profileImageUrl) {
+	public Profile(User user, String nickname, Gender gender) {
 		this.user = user;
 		this.nickname = nickname;
 		this.gender = gender;
-		this.latitude = latitude;
-		this.longitude = longitude;
-		this.x = x;
-		this.y = y;
+		this.temperatureSensitivity = 3;
+		this.latitude = null;
+		this.longitude = null;
+		this.x = null;
+		this.y = null;
+		this.locationNames = "";
+		this.profileImageUrl = null;
+	}
+
+	public void updateProfile(String nickname, Gender gender, Instant birthDate,
+		String locationNames, Integer temperatureSensitivity, String profileImageUrl) {
+		this.nickname = nickname;
+		this.gender = gender;
+		this.birthDate = birthDate;
 		this.locationNames = locationNames;
 		this.temperatureSensitivity = temperatureSensitivity;
 		this.profileImageUrl = profileImageUrl;
+	}
+
+	public void profileImageUrlUpdate(String imageUrl) {
+		this.profileImageUrl = imageUrl;
 	}
 }
 

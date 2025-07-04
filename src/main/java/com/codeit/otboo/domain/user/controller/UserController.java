@@ -3,6 +3,7 @@ package com.codeit.otboo.domain.user.controller;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.codeit.otboo.domain.user.dto.request.PasswordRequest;
 import com.codeit.otboo.domain.user.dto.request.ProfileUpdateRequest;
@@ -84,13 +87,14 @@ public class UserController {
 		return ResponseEntity.ok(profileDto);
 	}
 
-	@PatchMapping("/{userId}/profiles")
+	@PatchMapping(value = "/{userId}/profiles", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ProfileDto> updateProfile(
 		@PathVariable UUID userId,
-		@RequestBody @Valid ProfileUpdateRequest request
-	) {
-		ProfileDto profileDto = userService.updateProfile(userId, request);
-		return ResponseEntity.ok(profileDto);
+		@RequestPart("request") @Valid ProfileUpdateRequest request,
+		@RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+
+		ProfileDto updated = userService.updateProfile(userId, request, profileImage);
+		return ResponseEntity.ok(updated);
 	}
 
 	@PatchMapping("/{userId}/password")
@@ -102,4 +106,5 @@ public class UserController {
 		userService.changePassword(userId, request, principal);
 		return ResponseEntity.noContent().build();
 	}
+
 }

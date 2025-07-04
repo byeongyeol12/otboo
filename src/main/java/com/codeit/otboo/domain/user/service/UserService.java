@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.codeit.otboo.domain.auth.service.TokenCacheService;
 import com.codeit.otboo.domain.user.dto.request.PasswordRequest;
@@ -44,6 +45,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final TokenCacheService tokenCacheService;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final ImageStorageService imageStorageService;
 
 	@Transactional
 	public UserDto create(UserCreateRequest request) {
@@ -58,18 +60,11 @@ public class UserService {
 		user.setPasswordHash(passwordEncoder.encode(request.password()));
 		userRepository.save(user);
 
-		Profile profile = Profile.builder()
-			.user(user)
-			.gender(Gender.OTHER)
-			.nickname(request.name())
-			.temperatureSensitivity(1) // 기본값: NORMAL
-			.latitude(null)
-			.longitude(null)
-			.x(null)
-			.y(null)
-			.locationNames("") // TEXT 필드: 빈 문자열로 저장
-			.profileImageUrl(null)
-			.build();
+		Profile profile = new Profile(
+			user,
+			request.name(),
+			Gender.MALE
+		);
 		profileRepository.save(profile);
 
 		return userMapper.toDto(user);
@@ -140,11 +135,25 @@ public class UserService {
 		return profileMapper.toDto(profile);
 	}
 
-	public ProfileDto updateProfile(UUID userId, ProfileUpdateRequest request) {
+	@Transactional
+	public ProfileDto updateProfile(UUID userId, ProfileUpdateRequest request, MultipartFile profileImage) {
 		Profile profile = profileRepository.findByUserId(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
 
-		profileMapper.updateProfileFromRequest(request, profile);
+		String imageUrl = profile.getProfileImageUrl();
+
+		if (profileImage != null && !profileImage.isEmpty()) {
+			imageUrl = imageStorageService.upload(profileImage);
+		}
+
+		profile.updateProfile(
+			request.nickname(),
+			request.gender(),
+			request.birthDate(),
+			request.locationName(),
+			request.temperatureSensitivity(),
+			imageUrl
+		);
 
 		return profileMapper.toDto(profile);
 	}
