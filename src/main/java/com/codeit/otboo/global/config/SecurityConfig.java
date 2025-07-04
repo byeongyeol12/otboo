@@ -23,6 +23,7 @@ public class SecurityConfig {
                         // "/api/weathers/**" 경로의 모든 요청은 인증 없이 허용합니다.
                         // '/**'는 하위 모든 경로를 포함한다는 의미입니다.
                         .requestMatchers("/api/weathers/**").permitAll()
+                        .requestMatchers("/api/batch/**").permitAll() // 배치 실행 API 허용
 
                         // 그 외 나머지 모든 요청은 반드시 인증(로그인)이 필요합니다.
                         .anyRequest().authenticated()
