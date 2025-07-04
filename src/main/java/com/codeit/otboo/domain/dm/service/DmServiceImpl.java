@@ -5,11 +5,15 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
+import com.codeit.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
 import com.codeit.otboo.domain.dm.entity.Dm;
 import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
 import com.codeit.otboo.domain.dm.repository.DmRepository;
@@ -62,6 +66,41 @@ public class DmServiceImpl implements DmService {
 		));
 
 		return directMessageDto;
+	}
+
+	@Override
+	public DirectMessageDtoCursorResponse getDms(UUID userId, String cursor, UUID idAfter, int limit) {
+		// 1. 커서 변환
+		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
+			? UUID.fromString(cursor)
+			: idAfter;
+		// 2. 정렬(createdAt)
+		Pageable pageable = PageRequest.of(0,limit+1, Sort.by("createdAr").ascending());
+
+		// 3. repository
+		List<Dm> dms = dmRepository.findAllByUserIdAfterCursor(userId,effectiveIdAfter,pageable);
+
+		// 4. hasNext,nextCursor
+		boolean hasNext = dms.size() > limit;
+		List<Dm> pagedDms = hasNext ? dms.subList(0,limit) : dms;
+
+		String nextCusor = hasNext ? pagedDms.get(pagedDms.size() -1).getId().toString() : null;
+		UUID nextIdAfter = hasNext ? pagedDms.get(pagedDms.size() -1).getId() : null;
+
+		//5. dto 변환
+		List<DirectMessageDto> directMessageDtoList = pagedDms.stream()
+			.map(dm->directMessageMapper.toDirectMessageDto(dm))
+			.toList();
+
+		return new DirectMessageDtoCursorResponse(
+			directMessageDtoList,
+			nextCusor,
+			nextIdAfter,
+			hasNext,
+			directMessageDtoList.size(),
+			"createdAt",
+			"ASCENDING"
+		);
 	}
 
 	private String makeDmKey(UUID senderId, UUID receiverId) {

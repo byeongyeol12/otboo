@@ -24,8 +24,8 @@ public class DmController {
 	@GetMapping("/api/direct-messages")
 	public ResponseEntity<DirectMessageDtoCursorResponse> getDms(
 		@RequestParam UUID userId,
-		@RequestParam String cursor,
-		@RequestParam UUID idAfter,
+		@RequestParam(required = false) String cursor,
+		@RequestParam(required = false) UUID idAfter,
 		@RequestParam int limit
 	){
 		DirectMessageDtoCursorResponse dmList = dmService.getDms(userId,cursor,idAfter,limit);
