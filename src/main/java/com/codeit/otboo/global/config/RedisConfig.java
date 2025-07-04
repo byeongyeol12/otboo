@@ -23,7 +23,7 @@ public class RedisConfig {
 
 	// Redis 서버의 포트 번호
 	@Value("${spring.data.redis.port}")
-	private String redisPort;
+	private int redisPort;
 
 	// Redis 에서 메시지를 수신하고 리스너에 전달하는 컨테이너 설정
 	@Bean
@@ -53,7 +53,7 @@ public class RedisConfig {
 	// Redis 의 pub/sub 메시징을 위한 채널 토픽을 설정
 	@Bean
 	public ChannelTopic channelTopic() {
-		return new ChannelTopic("chatroom");
+		return new ChannelTopic("chatRoom");
 	}
 
 	// Redis에 채팅방/메시지/기타 객체를 저장, 조회, 수정, 삭제할 때 사용
@@ -67,9 +67,8 @@ public class RedisConfig {
 		template.setHashKeySerializer(new StringRedisSerializer());
 
 		// 값을 위한 직렬화
-		Jackson2JsonRedisSerializer<ChatRoom> serializer = new Jackson2JsonRedisSerializer<>(ChatRoom.class);
-		template.setValueSerializer(serializer);
-		template.setHashValueSerializer(serializer);
+		template.setValueSerializer(new Jackson2JsonRedisSerializer<>(String.class));
+		template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(String.class));
 
 		return template;
 	}
