@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
+	// 클라이언트가 웹소켓 서버에 연결할 수 있는 엔트포인트 설정
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry){
 		registry
@@ -22,6 +23,7 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 			.setAllowedOrigins("*"); // CORS 허용
 	}
 
+	// 클라이언트로부터의 메시지를 처리하고 응답을 전달하는 방법 설정
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry){
 		// /sub : 메시지를 구독(수신)하는 요청 엔드포인트
