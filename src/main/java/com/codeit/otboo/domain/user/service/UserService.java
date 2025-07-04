@@ -8,18 +8,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.codeit.otboo.domain.auth.service.TokenCacheService;
+import com.codeit.otboo.domain.user.dto.request.PasswordRequest;
+import com.codeit.otboo.domain.user.dto.request.ProfileUpdateRequest;
 import com.codeit.otboo.domain.user.dto.request.UserCreateRequest;
 import com.codeit.otboo.domain.user.dto.request.UserRoleUpdateRequest;
 import com.codeit.otboo.domain.user.dto.request.UserSearchRequest;
+import com.codeit.otboo.domain.user.dto.response.ProfileDto;
 import com.codeit.otboo.domain.user.dto.response.UserDto;
 import com.codeit.otboo.domain.user.dto.response.UserDtoCursorResponse;
 import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
+import com.codeit.otboo.domain.user.entity.Profile;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.mapper.ProfileMapper;
 import com.codeit.otboo.domain.user.mapper.UserMapper;
+import com.codeit.otboo.domain.user.repository.ProfileRepository;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.config.jwt.JwtTokenProvider;
+import com.codeit.otboo.global.config.security.UserPrincipal;
 import com.codeit.otboo.global.enumType.Role;
 import com.codeit.otboo.global.error.ErrorCode;
 
@@ -31,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final ProfileRepository profileRepository;
 	private final UserMapper userMapper;
 	private final ProfileMapper profileMapper;
 	private final PasswordEncoder passwordEncoder;
@@ -110,5 +117,37 @@ public class UserService {
 		jwtTokenProvider.invalidateUserTokens(accessToken);
 
 		return user;
+	}
+
+	public ProfileDto getProfile(UUID userId) {
+		Profile profile = profileRepository.findByUserId(userId)
+			.orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+		return profileMapper.toDto(profile);
+	}
+
+	public ProfileDto updateProfile(UUID userId, ProfileUpdateRequest request) {
+		Profile profile = profileRepository.findByUserId(userId)
+			.orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+
+		profileMapper.updateProfileFromRequest(request, profile);
+
+		return profileMapper.toDto(profile);
+	}
+
+	@Transactional(readOnly = false)
+	public void changePassword(UUID userId, PasswordRequest request, UserPrincipal principal) {
+		if (!userId.equals(principal.getId())) {
+			throw new CustomException(ErrorCode.FORBIDDEN); // 또는 ErrorCode.NOT_SELF_REQUEST
+		}
+
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+		if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+			throw new CustomException(ErrorCode.SAME_AS_OLD_PASSWORD);
+		}
+
+		String encodedPassword = passwordEncoder.encode(request.newPassword());
+		user.changePassword(encodedPassword);
 	}
 }
