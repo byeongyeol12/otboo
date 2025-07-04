@@ -75,7 +75,7 @@ public class FollowServiceImpl implements FollowService {
 				Instant.now(),
 				followeeId,
 				"팔로우",
-				"새 팔로워 ["+follower.getName()+"] 님이 ["+followee.getName()"] 님을 팔로우 했습니다.",
+				"새 팔로워 ["+follower.getName()+"] 님이 [" +followee.getName()+ "] 님을 팔로우 했습니다.",
 				NotificationLevel.INFO
 			)
 		);
