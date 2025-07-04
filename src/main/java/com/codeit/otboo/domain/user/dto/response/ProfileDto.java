@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.user.dto.response;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.codeit.otboo.global.enumType.Gender;
@@ -13,4 +14,12 @@ public record ProfileDto(
 	Integer temperatureSensitivity,
 	String profileImageUrl
 ) {
+	public record LocationDto(
+		Double latitude,
+		Double longitude,
+		Integer x,
+		Integer y,
+		List<String> locationNames
+	) {
+	}
 }
