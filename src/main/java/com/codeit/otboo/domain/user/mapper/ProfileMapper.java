@@ -13,7 +13,7 @@ public interface ProfileMapper {
 
 	/*@Mapping(target = "id", expression = "java(UUID.randomUUID())")
 	@Mapping(target = "user", ignore = true)*/
-	Profile toProfileEntity(UserCreateRequest request);
+	Profile toEntity(UserCreateRequest request);
 
 	ProfileDto toDto(Profile profile);
 

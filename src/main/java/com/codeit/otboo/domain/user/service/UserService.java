@@ -26,6 +26,7 @@ import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.config.jwt.JwtTokenProvider;
 import com.codeit.otboo.global.config.security.UserPrincipal;
+import com.codeit.otboo.global.enumType.Gender;
 import com.codeit.otboo.global.enumType.Role;
 import com.codeit.otboo.global.error.ErrorCode;
 
@@ -56,6 +57,20 @@ public class UserService {
 		user.setLocked(false);
 		user.setPasswordHash(passwordEncoder.encode(request.password()));
 		userRepository.save(user);
+
+		Profile profile = Profile.builder()
+			.user(user)
+			.gender(Gender.OTHER)
+			.nickname(request.name())
+			.temperatureSensitivity(1) // 기본값: NORMAL
+			.latitude(null)
+			.longitude(null)
+			.x(null)
+			.y(null)
+			.locationNames("") // TEXT 필드: 빈 문자열로 저장
+			.profileImageUrl(null)
+			.build();
+		profileRepository.save(profile);
 
 		return userMapper.toDto(user);
 	}
