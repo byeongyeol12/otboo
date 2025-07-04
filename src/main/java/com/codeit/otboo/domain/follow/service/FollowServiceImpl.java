@@ -80,8 +80,8 @@ public class FollowServiceImpl implements FollowService {
 	@Override
 	public FollowSummaryDto getFollowSummary(UUID followeeId, UUID myUserId) {
 		//1. 유저 정보 조회
-		User user = userService.getUserById(followeeId); // 요약 정보를 조회할 대상
-		User me = userService.getUserById(myUserId);
+		User user = userRepository.getUserById(followeeId); // 요약 정보를 조회할 대상
+		User me = userRepository.getUserById(myUserId);
 
 		//2. 팔로워 수 조회
 		long followerCount = followRepository.countByFolloweeId(user.getId()); // 대상을 팔로우하는 수
