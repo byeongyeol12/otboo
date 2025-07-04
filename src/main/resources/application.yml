@@ -18,6 +18,11 @@ spring:
         format_sql: true
     show-sql: true
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
 api:
   kma:
     base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
