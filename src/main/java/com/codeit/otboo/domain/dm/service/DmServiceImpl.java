@@ -8,7 +8,7 @@ import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
@@ -16,7 +16,9 @@ import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
 import com.codeit.otboo.domain.dm.entity.Dm;
 import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
+import com.codeit.otboo.domain.dm.redis.RedisPublisher;
 import com.codeit.otboo.domain.dm.repository.DmRepository;
+import com.codeit.otboo.domain.dm.util.DmKeyUtil;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
@@ -24,6 +26,7 @@ import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,14 +35,16 @@ import lombok.RequiredArgsConstructor;
 public class DmServiceImpl implements DmService {
 
 	private final UserRepository userRepository;
-	private final SimpMessagingTemplate simpMessagingTemplate;
 	private final NotificationService notificationService;
 	private final DirectMessageMapper directMessageMapper;
 	private final DmRepository dmRepository;
+	private final RedisTemplate redisTemplate;
+	private final ObjectMapper objectMapper;
+	private final RedisPublisher redisPublisher;
 
 	@Override
 	public DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
-		//유저 체크
+		//유저 조회/검증
 		User sender = userRepository.findById(directMessageCreateRequest.senderId()).orElseThrow(() -> new CustomException(
 			ErrorCode.USER_NOT_FOUND,"발신자를 찾을 수 없습니다."));
 		User receiver = userRepository.findById(directMessageCreateRequest.receiverId()).orElseThrow(() -> new CustomException(
@@ -49,21 +54,30 @@ public class DmServiceImpl implements DmService {
 		Dm dm = new Dm(sender,receiver,directMessageCreateRequest.content());
 		dmRepository.save(dm);
 
+		//dto 변환
 		DirectMessageDto directMessageDto = directMessageMapper.toDirectMessageDto(dm);
 
-		// 실시간 전송
-		String dmKey = makeDmKey(sender.getId,receiver.getId());
-		simpMessagingTemplate.convertAndSend("/sub/direct-messages_"+dmKey, directMessageDto);
+		// DM Key 생성( = 방 역할)
+		String dmKey = DmKeyUtil.makeDmKey(sender.getId(), receiver.getId());
+
+		// Redis pub/sub 발생
+		try{
+			redisPublisher.publish("dm:"+dmKey,objectMapper.writeValueAsString(directMessageDto));
+		} catch (Exception e) {
+			throw new CustomException(ErrorCode.DM_Redis_MESSAGE_ERROR,e.getMessage());
+		}
 
 		// 알림 전송
-		notificationService.createAndSend(new NotificationDto(
-			UUID.randomUUID(),
-			Instant.now(),
-			receiver.getId(),
-			"DM",
-			"["+sender.getName()+"] 님이 DM 을 보냈습니다.",
-			NotificationLevel.INFO
-		));
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				receiver.getId(),
+				"DM",
+				"["+sender.getName()+"] 님이 DM 을 보냈습니다.",
+				NotificationLevel.INFO
+			)
+		);
 
 		return directMessageDto;
 	}

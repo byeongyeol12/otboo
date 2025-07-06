@@ -10,8 +10,9 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import com.codeit.otboo.domain.dm.redis.RedisSubscriber;
 
 @Configuration
 @EnableRedisRepositories
@@ -58,17 +59,15 @@ public class RedisConfig {
 
 	// Redis에 채팅방/메시지/기타 객체를 저장, 조회, 수정, 삭제할 때 사용
 	@Bean
-	public RedisTemplate<String, Object> chatRoomRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
-		RedisTemplate<String, Object> template = new RedisTemplate<>();
+	public RedisTemplate<String, String> chatRoomRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+		RedisTemplate<String, String> template = new RedisTemplate<>();
 		template.setConnectionFactory(redisConnectionFactory);
 
 		// 키를 위한 직렬화
 		template.setKeySerializer(new StringRedisSerializer());
-		template.setHashKeySerializer(new StringRedisSerializer());
 
 		// 값을 위한 직렬화
-		template.setValueSerializer(new Jackson2JsonRedisSerializer<>(String.class));
-		template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(String.class));
+		template.setValueSerializer(new StringRedisSerializer());
 
 		return template;
 	}

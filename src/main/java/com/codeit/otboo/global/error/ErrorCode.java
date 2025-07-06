@@ -38,7 +38,7 @@ public enum ErrorCode {
   FOLLOW_CANCEL_ONLY_MINE(400, "FL004", "본인의 팔로우만 취소할 수 있습니다."),
   // DM
   DM_NOT_FOUND(404, "D001", "DM 정보를 찾을 수 없습니다."),
-
+  DM_Redis_MESSAGE_ERROR(400, "D002", "Redis 메시지 발행 실패"),
   // NOTIFICATION
   NOTIFICATION_NOT_FOUND(404, "N001", "알림 정보를 찾을 수 없습니다."),
   NOTIFICATION_ALREADY_READ(400,"N002", "알림을 이미 읽은 상태입니다."),
