@@ -11,12 +11,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+
+  batch:
+    jdbc:
+      initialize-schema: NEVER
 
 api:
   kma:
@@ -26,4 +30,3 @@ api:
 logging:
   level:
     org.springframework.web.reactive.function.client: DEBUG
-
