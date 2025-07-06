@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -96,7 +97,6 @@ public class WeatherParser {
         );
     }
 
-
     private double parseDouble(String value) {
         if (value == null || !value.matches("[-+]?\\d*\\.?\\d+([eE][-+]?\\d+)?")) {
             return 0.0;
@@ -104,10 +104,14 @@ public class WeatherParser {
         return Double.parseDouble(value);
     }
 
-    private OffsetDateTime parseDateTime(String date, String time) {
+    /**
+     * 날짜와 시간 문자열을 받아, 한국 시간(KST) 기준으로 해석한 뒤
+     * 세계 표준시(UTC)인 Instant 타입으로 변환합니다.
+     */
+    private Instant parseDateTime(String date, String time) {
         LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
         LocalTime localTime = LocalTime.parse(time, DateTimeFormatter.ofPattern("HHmm"));
-        return OffsetDateTime.of(localDate, localTime, ZoneOffset.ofHours(9));
+        return OffsetDateTime.of(localDate, localTime, ZoneOffset.ofHours(9)).toInstant();
     }
 
     private SkyStatus mapToSkyStatus(String skyCode) {
