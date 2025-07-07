@@ -45,6 +45,7 @@ CREATE TABLE profiles (
                           id UUID PRIMARY KEY,
                           nickname VARCHAR(50) NOT NULL,
                           gender VARCHAR(10),
+                          birth_date TIMESTAMPTZ,
                           latitude DOUBLE PRECISION,
                           longitude DOUBLE PRECISION,
                           x INTEGER,

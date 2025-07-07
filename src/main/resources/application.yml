@@ -8,10 +8,14 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -30,3 +34,8 @@ api:
 logging:
   level:
     org.springframework.web.reactive.function.client: DEBUG
+
+jwt:
+  secret: MySuperSecretJwtKeyThatShouldBeLongEnough123
+  expiration: 600000 # 10? (??? ??)
+  refresh-token-validity-in-ms: 604800000
