@@ -5,17 +5,15 @@ import java.util.UUID;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
-import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
+import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
 import com.codeit.otboo.domain.user.entity.User;
 
 @Mapper(componentModel = "spring")
 public interface FollowMapper {
-	FollowMapper INSTANCE = Mappers.getMapper(FollowMapper.class);
 
 	@Mapping(target = "followee", expression = "java(toUserSummary(follow.getFollowee()))")
 	@Mapping(target = "follower", expression = "java(toUserSummary(follow.getFollower()))")
@@ -32,10 +30,10 @@ public interface FollowMapper {
 		Boolean followingMe
 	);
 
-	default UserSummary toUserSummary(User user) {
+	default UserSummaryDto toUserSummary(User user) {
 		if (user == null)
 			return null;
 		String profileImgUrl = (user.getProfile() != null) ? user.getProfile().getProfileImageUrl() : null;
-		return new UserSummary(user.getId(), user.getName(), profileImgUrl);
+		return new UserSummaryDto(user.getId(), user.getName(), profileImgUrl);
 	}
 }
