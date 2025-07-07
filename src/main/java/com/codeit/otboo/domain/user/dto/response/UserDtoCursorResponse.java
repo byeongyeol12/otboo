@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record UserDtoCursorResponse(
-	List<UserSummaryDto> data,
+	List<UserDto> data,
 	String nextCursor,
 	UUID nextIdAfter,
 	boolean hasNext,

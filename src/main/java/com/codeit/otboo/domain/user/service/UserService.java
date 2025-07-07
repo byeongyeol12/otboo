@@ -17,7 +17,6 @@ import com.codeit.otboo.domain.user.dto.request.UserSearchRequest;
 import com.codeit.otboo.domain.user.dto.response.ProfileDto;
 import com.codeit.otboo.domain.user.dto.response.UserDto;
 import com.codeit.otboo.domain.user.dto.response.UserDtoCursorResponse;
-import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
 import com.codeit.otboo.domain.user.entity.Profile;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.mapper.ProfileMapper;
@@ -77,8 +76,8 @@ public class UserService {
 		List<User> users = userRepository.search(request);
 
 		// 2. 데이터 변환
-		List<UserSummaryDto> dtos = users.stream()
-			.map(UserSummaryDto::from)
+		List<UserDto> dtos = users.stream()
+			.map(UserDto::from)
 			.toList();
 
 		// 3. 커서 정보 계산
