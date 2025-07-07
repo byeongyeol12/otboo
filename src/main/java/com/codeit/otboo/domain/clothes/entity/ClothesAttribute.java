@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "clothes_attribute")
+@Table(name = "clothes_attribute_values")
 public class ClothesAttribute {
 
 	@Id
