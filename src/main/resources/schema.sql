@@ -44,7 +44,7 @@ CREATE TABLE users (
 CREATE TABLE profiles (
                           id UUID PRIMARY KEY,
                           nickname VARCHAR(50) NOT NULL,
-                          gender VARCHAR(10),
+                          gender VARCHAR(10) CHECK (gender IN ('MALE', 'FEMALE', 'OTHER')),
                           birth_date TIMESTAMPTZ,
                           latitude DOUBLE PRECISION,
                           longitude DOUBLE PRECISION,
