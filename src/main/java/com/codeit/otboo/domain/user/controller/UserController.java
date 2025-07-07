@@ -91,8 +91,8 @@ public class UserController {
 	public ResponseEntity<ProfileDto> updateProfile(
 		@PathVariable UUID userId,
 		@RequestPart("request") @Valid ProfileUpdateRequest request,
-		@RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
-
+		@RequestPart(value = "image", required = false) MultipartFile profileImage
+	) {
 		ProfileDto updated = userService.updateProfile(userId, request, profileImage);
 		return ResponseEntity.ok(updated);
 	}

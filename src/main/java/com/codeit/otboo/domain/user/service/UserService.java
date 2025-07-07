@@ -1,5 +1,7 @@
 package com.codeit.otboo.domain.user.service;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -139,22 +141,37 @@ public class UserService {
 		Profile profile = profileRepository.findByUserId(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
 
-		String imageUrl = profile.getProfileImageUrl();
+		String imageUrl = profile.getProfileImageUrl(); // 기존 이미지
 
 		if (profileImage != null && !profileImage.isEmpty()) {
 			imageUrl = imageStorageService.upload(profileImage);
+			System.out.println("✅ 업로드된 이미지 URL: " + imageUrl);
 		}
 
+		String nickname = request.nickname() != null ? request.nickname() : profile.getNickname();
+		Gender gender = request.gender() != null ? request.gender() : profile.getGender();
+		Integer temperatureSensitivity = request.temperatureSensitivity() != null
+			? request.temperatureSensitivity()
+			: profile.getTemperatureSensitivity();
+
+		Instant birthDateInstant = request.birthDate() != null
+			? request.birthDate().atStartOfDay(ZoneOffset.UTC).toInstant()
+			: profile.getBirthDate(); // ✅ 기존 값 유지
+
+		String locationName = request.locationName() != null
+			? request.locationName()
+			: profile.getLocationNames(); // ✅ 기존 값 유지
+
 		profile.updateProfile(
-			request.nickname(),
-			request.gender(),
-			request.birthDate(),
-			request.locationName(),
-			request.temperatureSensitivity(),
+			nickname,
+			gender,
+			birthDateInstant,
+			locationName,
+			temperatureSensitivity,
 			imageUrl
 		);
 
-		return profileMapper.toDto(profile);
+		return profileMapper.toDto(profile); // ✅ profileImageUrl 매핑되어 있는지 확인 필요
 	}
 
 	@Transactional(readOnly = false)
