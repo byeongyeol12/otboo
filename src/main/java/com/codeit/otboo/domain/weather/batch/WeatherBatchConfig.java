@@ -1,29 +1,29 @@
 package com.codeit.otboo.domain.weather.batch;
 
+import com.codeit.otboo.domain.user.entity.Profile;
+import com.codeit.otboo.domain.user.repository.ProfileRepository;
 import com.codeit.otboo.domain.weather.component.KmaApiClient;
 import com.codeit.otboo.domain.weather.component.WeatherParser;
 import com.codeit.otboo.domain.weather.dto.WeatherDto;
 import com.codeit.otboo.domain.weather.entity.Weather;
-import com.codeit.otboo.domain.weather.entity.vo.LocationInfo;
 import com.codeit.otboo.domain.weather.repository.WeatherRepository;
+import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.Step;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.batch.item.database.JpaPagingItemReader;
+import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
-@EnableBatchProcessing
-@EnableScheduling      // 스케줄링 기능 활성화
 @RequiredArgsConstructor
 public class WeatherBatchConfig {
 
@@ -42,44 +40,55 @@ public class WeatherBatchConfig {
     private final WeatherRepository weatherRepository;
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    private final JobLauncher jobLauncher; // 스케줄러에서 Job을 실행시키기 위해 주입받습니다.
+    private final JobLauncher jobLauncher;
+    private final EntityManagerFactory entityManagerFactory; // JpaPagingItemReader를 위해 주입
+    private final ProfileRepository profileRepository; // 사용자 위치를 읽기 위해 주입
 
-    // 1. 날씨 수집 Job 정의
     @Bean
-    public Job fetchWeatherJob() {
+    public Job fetchWeatherJob(JobRepository jobRepository, Step fetchWeatherStep) {
         return new JobBuilder("fetchWeatherJob", jobRepository)
-                .start(fetchWeatherStep())
+                .start(fetchWeatherStep)
                 .build();
     }
 
-    // 2. 날씨 수집 Step 정의
     @Bean
-    public Step fetchWeatherStep() {
+    public Step fetchWeatherStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+                                 JpaPagingItemReader<Profile> profileItemReader,
+                                 ItemProcessor<Profile, List<Weather>> weatherItemProcessor,
+                                 ItemWriter<List<Weather>> weatherListItemWriter) {
         return new StepBuilder("fetchWeatherStep", jobRepository)
-                .<LocationInfo, List<Weather>>chunk(10, transactionManager)
-                .reader(locationInfoItemReader())
-                .processor(weatherItemProcessor())
-                .writer(weatherListItemWriter())
+                .<Profile, List<Weather>>chunk(10, transactionManager) // 읽어올 타입이 Profile로 변경
+                .reader(profileItemReader) // ItemReader 교체
+                .processor(weatherItemProcessor)
+                .writer(weatherListItemWriter)
                 .build();
     }
 
-    // 3. ItemReader 구현
+    /**
+     * ItemReader 구현: DB의 profiles 테이블에서 모든 프로필 정보를 페이징하여 읽어옵니다.
+     */
     @Bean
-    public ItemReader<LocationInfo> locationInfoItemReader() {
-        // TODO: 향후 DB에서 사용자 위치 정보를 읽어오도록 수정해야 합니다.
-        List<LocationInfo> locations = List.of(
-                new LocationInfo(37.5666, 126.9782, 60, 127), // 서울
-                new LocationInfo(37.8000, 127.0500, 62, 129)  // 양주
-        );
-        return new ListItemReader<>(locations);
+    public JpaPagingItemReader<Profile> profileItemReader() {
+        // 위치 정보가 등록된 프로필만 조회합니다.
+        String queryString = "SELECT p FROM Profile p WHERE p.latitude IS NOT NULL AND p.longitude IS NOT NULL";
+
+        return new JpaPagingItemReaderBuilder<Profile>()
+                .name("profileItemReader")
+                .entityManagerFactory(entityManagerFactory)
+                .pageSize(100) // 한 번에 100개의 프로필씩 읽어옴
+                .queryString(queryString)
+                .build();
     }
 
-    // 4. ItemProcessor 구현
+    /**
+     * ItemProcessor 구현: Profile 엔티티를 받아 API를 호출하고, Weather Entity 리스트로 변환합니다.
+     */
     @Bean
-    public ItemProcessor<LocationInfo, List<Weather>> weatherItemProcessor() {
-        return locationInfo -> {
-            String rawData = kmaApiClient.fetchWeatherForecast(locationInfo.x(), locationInfo.y());
-            List<WeatherDto> dtoList = weatherParser.parseAndGroup(rawData, locationInfo.latitude(), locationInfo.longitude());
+    public ItemProcessor<Profile, List<Weather>> weatherItemProcessor() {
+        return profile -> {
+            log.info("Processing weather for user profile: {}", profile.getId());
+            String rawData = kmaApiClient.fetchWeatherForecast(profile.getX(), profile.getY());
+            List<WeatherDto> dtoList = weatherParser.parseAndGroup(rawData, profile.getLatitude(), profile.getLongitude());
 
             return dtoList.stream()
                     .map(dto -> Weather.builder()
@@ -96,7 +105,9 @@ public class WeatherBatchConfig {
         };
     }
 
-    // 5. ItemWriter 구현
+    /**
+     * ItemWriter 구현: 처리된 Weather Entity 리스트를 DB에 저장합니다.
+     */
     @Bean
     public ItemWriter<List<Weather>> weatherListItemWriter() {
         return chunk -> {
@@ -104,24 +115,23 @@ public class WeatherBatchConfig {
                     .flatMap(List::stream)
                     .collect(Collectors.toList());
 
-            log.info("Saving {} weather entities to the database.", weathersToSave.size());
-            weatherRepository.saveAll(weathersToSave);
+            if (!weathersToSave.isEmpty()) {
+                log.info("Saving {} weather entities to the database.", weathersToSave.size());
+                weatherRepository.saveAll(weathersToSave);
+            }
         };
     }
 
     /**
      * 주기적으로 날씨 수집 Job을 실행하는 스케줄러입니다.
-     * cron: 기상청 단기예보가 발표되는 매 3시간 주기의 10분 후 (02:10, 05:10, ...)에 실행됩니다.
-     * zone: 한국 시간대를 기준으로 동작합니다.
      */
     @Scheduled(cron = "0 10 2,5,8,11,14,17,20,23 * * *", zone = "Asia/Seoul")
     public void runFetchWeatherJob() {
         try {
-            // 매번 다른 Job Instance를 생성하기 위해 현재 시간을 파라미터로 넘깁니다.
             JobParameters params = new JobParametersBuilder()
                     .addString("scheduledTime", String.valueOf(System.currentTimeMillis()))
                     .toJobParameters();
-            jobLauncher.run(fetchWeatherJob(), params);
+            jobLauncher.run(fetchWeatherJob(jobRepository, fetchWeatherStep(jobRepository, transactionManager, profileItemReader(), weatherItemProcessor(), weatherListItemWriter())), params);
             log.info("Scheduled weather fetch job has been run successfully.");
         } catch (Exception e) {
             log.error("Failed to run scheduled weather fetch job", e);

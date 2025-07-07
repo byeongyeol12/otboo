@@ -45,14 +45,17 @@ public class SecurityConfig {
 			.headers(headers -> headers
 				.frameOptions(frame -> frame.sameOrigin())
 			)
-			.authorizeHttpRequests(auth -> auth
-				.requestMatchers(
-					"/api/users",             // 회원가입
-					"/api/auth/**",
-					"/h2-console/**"
-				).permitAll()
-				.anyRequest().authenticated()
-			)
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers(
+								"/api/users",             // 회원가입
+								"/api/auth/**",
+								"/h2-console/**",
+								"/api/weathers/**",       // 날씨 API (이전에 추가)
+								"/api/batch/**",           // 배치 API (이전에 추가)
+								"/api/users/**"         // 프로필 관련 API 임시 허용
+						).permitAll()
+						.anyRequest().authenticated()
+				)
 			.addFilterBefore(
 				new JwtAuthenticationFilter(jwtTokenProvider),
 				UsernamePasswordAuthenticationFilter.class

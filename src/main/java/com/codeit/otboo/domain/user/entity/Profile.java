@@ -98,5 +98,13 @@ public class Profile {
 	public void profileImageUrlUpdate(String imageUrl) {
 		this.profileImageUrl = imageUrl;
 	}
+
+	public void updateLocation(Double latitude, Double longitude, Integer x, Integer y, String locationNames) {
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.x = x;
+		this.y = y;
+		this.locationNames = locationNames;
+	}
 }
 
