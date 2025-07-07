@@ -4,12 +4,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import io.hypersistence.utils.hibernate.type.array.ListArrayType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -35,7 +35,7 @@ public class AttributeDef {
 	@Column(name = "name", unique = true, nullable = false, length = 50)
 	private String name;
 
-	@Type(ListArrayType.class)
+	@JdbcTypeCode(SqlTypes.ARRAY)
 	@Column(name = "selectable_values", columnDefinition = "text[]", nullable = false)
 	private List<String> selectableValues;
 
@@ -46,7 +46,6 @@ public class AttributeDef {
 	@LastModifiedDate
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
-
 
 	public AttributeDef(String name, List<String> selectableValues) {
 		this.name = name;
