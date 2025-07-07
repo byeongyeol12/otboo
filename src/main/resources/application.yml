@@ -8,6 +8,10 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   jpa:
     hibernate:
@@ -18,6 +22,10 @@ spring:
         format_sql: true
     show-sql: true
 
+  batch:
+    jdbc:
+      initialize-schema: NEVER
+
 api:
   kma:
     base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
@@ -27,3 +35,7 @@ logging:
   level:
     org.springframework.web.reactive.function.client: DEBUG
 
+jwt:
+  secret: MySuperSecretJwtKeyThatShouldBeLongEnough123
+  expiration: 600000 # 10? (??? ??)
+  refresh-token-validity-in-ms: 604800000

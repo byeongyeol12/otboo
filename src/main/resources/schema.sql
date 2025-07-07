@@ -45,6 +45,7 @@ CREATE TABLE profiles (
                           id UUID PRIMARY KEY,
                           nickname VARCHAR(50) NOT NULL,
                           gender VARCHAR(10),
+                          birth_date TIMESTAMPTZ,
                           latitude DOUBLE PRECISION,
                           longitude DOUBLE PRECISION,
                           x INTEGER,
@@ -79,20 +80,21 @@ CREATE TABLE clothes (
                          CONSTRAINT fk_clothes_owner FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 
--- weathers
+-- weathers 테이블 생성 구문
 CREATE TABLE weathers (
                           id UUID PRIMARY KEY,
-                          created_at TIMESTAMPTZ NOT NULL,
-                          updated_at TIMESTAMPTZ,
-                          forecastedAt TIMESTAMPTZ NOT NULL,
-                          forecastAt   TIMESTAMPTZ NOT NULL,
-                          location JSON,
-                          skyStatus sky_status_enum NOT NULL DEFAULT 'CLEAR',
-                          precipitation JSON,
-                          humidity JSON,
-                          temperature JSON,
-                          windSpeed JSON
+                          forecasted_at TIMESTAMPTZ NOT NULL, -- 예보 발표 시각
+                          forecast_at   TIMESTAMPTZ NOT NULL, -- 예보 대상 시각
+                          location JSON,                      -- 위치
+                          sky_status VARCHAR(255) NOT NULL,   -- 하늘상태
+                          precipitation JSON,                  -- 강수정보
+                          humidity JSON,                       -- 습도
+                          temperature JSON,                    -- 온도
+                          wind_speed JSON,                     -- 풍속
+                          created_at TIMESTAMPTZ NOT NULL,     -- 생성시각
+                          updated_at TIMESTAMPTZ                -- 수정시각
 );
+
 
 -- notifications
 CREATE TABLE notifications (

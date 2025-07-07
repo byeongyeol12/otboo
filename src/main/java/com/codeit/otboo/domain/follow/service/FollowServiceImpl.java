@@ -35,6 +35,7 @@ public class FollowServiceImpl implements FollowService {
 	private final UserService userService;
 	private final FollowMapper followMapper;
 	private final NotificationService notificationService;
+
 	//팔로우 생성
 	@Override
 	public FollowDto createFollow(FollowCreateRequest request) {
@@ -67,7 +68,8 @@ public class FollowServiceImpl implements FollowService {
 		followRepository.save(follow);
 
 		//3. 알림 이벤트 발생
-		notificationService.createAndSend(followeeId,"팔로우","새 팔로워 ["+follower.getName()+"] 님이 ["+followee.getName()"] 님을 팔로우 했습니다.",
+		notificationService.createAndSend(followeeId, "팔로우",
+			"새 팔로워 [" + follower.getName() + "] 님이 [" + followee.getName() + "] 님을 팔로우 했습니다.",
 			NotificationLevel.INFO);
 
 		//4. 리턴
@@ -78,16 +80,16 @@ public class FollowServiceImpl implements FollowService {
 	@Override
 	public FollowSummaryDto getFollowSummary(UUID followeeId, UUID myUserId) {
 		//1. 유저 정보 조회
-		User user = userService.getUserById(followeeId); // 요약 정보를 조회할 대상
-		User me = userService.getUserById(myUserId);
+		User user = userRepository.getUserById(followeeId); // 요약 정보를 조회할 대상
+		User me = userRepository.getUserById(myUserId);
 
 		//2. 팔로워 수 조회
 		long followerCount = followRepository.countByFolloweeId(user.getId()); // 대상을 팔로우하는 수
 		long followeeCount = followRepository.countByFollowerId(user.getId()); // 대상이 팔로우하고 있는 수
 
 		//3. 팔로우 중인지 확인
-		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowee(me,user); // 내가 이 유저를 팔로우하고 있는지
-		boolean followeeMe = followRepository.existsByFollowerAndFollowee(user,me); // 상대가 나를 팔로우하고 있는지
+		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowee(me, user); // 내가 이 유저를 팔로우하고 있는지
+		boolean followeeMe = followRepository.existsByFollowerAndFollowee(user, me); // 상대가 나를 팔로우하고 있는지
 
 		//4. return
 		return followMapper.toFollowSummaryDto(
@@ -100,22 +102,23 @@ public class FollowServiceImpl implements FollowService {
 		);
 	}
 
-
 	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
 	@Override
-	public FollowListResponse getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
+	public FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike,
+		String sortBy, String sortDirection) {
 		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
 
 		//2. 정렬
-		Sort.Direction direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+		Sort.Direction direction =
+			"DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		String sort = (sortBy != null && !sortBy.isBlank()) ? sortBy : "id";
-		Pageable pageable = PageRequest.of(0, limit+1, Sort.by(direction, sort));
+		Pageable pageable = PageRequest.of(0, limit + 1, Sort.by(direction, sort));
 
 		//3. repository query
-		List<Follow> follows = followRepository.findFollowees(followerId,effectiveIdAfter,nameLike,pageable);
+		List<Follow> follows = followRepository.findFollowees(followerId, effectiveIdAfter, nameLike, pageable);
 
 		//4. hasNext, nextCursor
 		boolean hasNext = follows.size() > limit;
@@ -144,19 +147,21 @@ public class FollowServiceImpl implements FollowService {
 
 	// 나를 팔로우 하는 사람들 목록 조회
 	@Override
-	public FollowListResponse getFollowers(UUID followeeId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
+	public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike,
+		String sortBy, String sortDirection) {
 		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
 
 		//2. 정렬
-		Sort.Direction direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+		Sort.Direction direction =
+			"DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		String sort = (sortBy != null && !sortBy.isBlank()) ? sortBy : "id";
-		Pageable pageable = PageRequest.of(0, limit+1, Sort.by(direction, sort));
+		Pageable pageable = PageRequest.of(0, limit + 1, Sort.by(direction, sort));
 
 		//3. repository query
-		List<Follow> follows = followRepository.findFollowers(followeeId,effectiveIdAfter,nameLike,pageable);
+		List<Follow> follows = followRepository.findFollowers(followeeId, effectiveIdAfter, nameLike, pageable);
 
 		//4. hasNext, nextCursor
 		boolean hasNext = follows.size() > limit;

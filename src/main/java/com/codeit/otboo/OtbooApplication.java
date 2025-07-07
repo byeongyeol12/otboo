@@ -1,14 +1,13 @@
 package com.codeit.otboo;
 
-import io.github.cdimascio.dotenv.Dotenv; // Dotenv 임포트
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import io.github.cdimascio.dotenv.Dotenv;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.codeit.otboo")
-@ComponentScan(basePackages = "com.codeit.otboo")
 public class OtbooApplication {
 
 	public static void main(String[] args) {
