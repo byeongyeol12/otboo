@@ -47,6 +47,7 @@ public class AttributeDef {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
+
 	public AttributeDef(String name, List<String> selectableValues) {
 		this.name = name;
 		this.selectableValues = selectableValues;
