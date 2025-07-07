@@ -11,9 +11,6 @@ import com.codeit.otboo.domain.user.entity.Profile;
 
 @Mapper(componentModel = "spring")
 public interface ProfileMapper {
-
-	/*@Mapping(target = "id", expression = "java(UUID.randomUUID())")
-	@Mapping(target = "user", ignore = true)*/
 	Profile toEntity(UserCreateRequest request);
 
 	@Mapping(source = "user.id", target = "userId")
