@@ -33,8 +33,9 @@ public interface FollowMapper {
 	);
 
 	default UserSummary toUserSummary(User user) {
-		if (user == null) return null;
-		String profileImgUrl = (user.getProfile() != null) ? user.getProfile().getProfileImgUrl() : null;
+		if (user == null)
+			return null;
+		String profileImgUrl = (user.getProfile() != null) ? user.getProfile().getProfileImageUrl() : null;
 		return new UserSummary(user.getId(), user.getName(), profileImgUrl);
 	}
 }

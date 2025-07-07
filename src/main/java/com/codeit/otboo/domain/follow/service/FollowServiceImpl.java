@@ -1,6 +1,5 @@
 package com.codeit.otboo.domain.follow.service;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,7 +16,6 @@ import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
-import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.user.entity.User;
@@ -37,6 +35,7 @@ public class FollowServiceImpl implements FollowService {
 	private final UserService userService;
 	private final FollowMapper followMapper;
 	private final NotificationService notificationService;
+
 	//팔로우 생성
 	@Override
 	public FollowDto createFollow(FollowCreateRequest request) {
@@ -88,8 +87,8 @@ public class FollowServiceImpl implements FollowService {
 	@Override
 	public FollowSummaryDto getFollowSummary(UUID followeeId, UUID myUserId) {
 		//1. 유저 정보 조회
-		User user = userService.getUserById(followeeId); // 요약 정보를 조회할 대상
-		User me = userService.getUserById(myUserId);
+		User user = userRepository.getUserById(followeeId); // 요약 정보를 조회할 대상
+		User me = userRepository.getUserById(myUserId);
 
 		//2. 팔로워 수 조회
 		long followerCount = followRepository.countByFolloweeId(user.getId()); // 대상을 팔로우하는 수
