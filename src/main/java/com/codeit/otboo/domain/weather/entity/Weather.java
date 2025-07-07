@@ -1,3 +1,4 @@
+// src/main/java/com/codeit/otboo/domain/weather/entity/Weather.java
 package com.codeit.otboo.domain.weather.entity;
 
 import com.codeit.otboo.domain.weather.entity.vo.*;
@@ -7,13 +8,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -28,47 +28,46 @@ public class Weather {
     @Column(name = "id")
     private UUID id;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+    @Column(name = "forecasted_at", nullable = false)
+    private Instant forecastedAt;
 
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
+    @Column(name = "forecast_at", nullable = false)
+    private Instant forecastAt;
 
-    @Column(nullable = false)
-    private OffsetDateTime forecastedAt;
-
-    @Column(nullable = false)
-    private OffsetDateTime forecastAt;
+    @Type(JsonType.class)
+    @Column(name = "location", columnDefinition = "json")
+    private LocationInfo location;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "skystatus", nullable = false)
-    @ColumnDefault("'CLEAR'")
+    @Column(name = "sky_status", nullable = false)
     private SkyStatus skyStatus;
 
     @Type(JsonType.class)
-    @Column(columnDefinition = "json")
-    private LocationInfo location;
-
-    @Type(JsonType.class)
-    @Column(columnDefinition = "json")
+    @Column(name = "precipitation", columnDefinition = "json")
     private PrecipitationInfo precipitation;
 
     @Type(JsonType.class)
-    @Column(columnDefinition = "json")
+    @Column(name = "humidity", columnDefinition = "json")
     private HumidityInfo humidity;
 
     @Type(JsonType.class)
-    @Column(columnDefinition = "json")
+    @Column(name = "temperature", columnDefinition = "json")
     private TemperatureInfo temperature;
 
     @Type(JsonType.class)
-    @Column(columnDefinition = "json")
+    @Column(name = "wind_speed", columnDefinition = "json")
     private WindSpeedInfo windSpeed;
 
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     @Builder
-    public Weather(OffsetDateTime forecastedAt, OffsetDateTime forecastAt, SkyStatus skyStatus, LocationInfo location,
+    public Weather(Instant forecastedAt, Instant forecastAt, SkyStatus skyStatus, LocationInfo location,
                    PrecipitationInfo precipitation, HumidityInfo humidity, TemperatureInfo temperature, WindSpeedInfo windSpeed) {
         this.forecastedAt = forecastedAt;
         this.forecastAt = forecastAt;
