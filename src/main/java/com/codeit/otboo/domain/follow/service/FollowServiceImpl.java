@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowListResponse;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
@@ -40,13 +39,10 @@ public class FollowServiceImpl implements FollowService {
 
 	//팔로우 생성
 	@Override
-	public FollowDto createFollow(FollowCreateRequest request) {
+	public FollowDto createFollow(UUID myUserId,UUID followeeId) {
 		//1. 팔로우, 팔로워 조회 및 예외 처리
-		UUID followerId = request.followerId();
-		UUID followeeId = request.followeeId();
-
 		// 팔로워(=나) 조회
-		User follower = userRepository.findById(followerId)
+		User follower = userRepository.findById(myUserId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "팔로워를 찾을 수 없습니다."));
 		// 대상자 조회
 		User followee = userRepository.findById(followeeId)
@@ -57,7 +53,7 @@ public class FollowServiceImpl implements FollowService {
 			throw new CustomException(ErrorCode.FOLLOW_NOT_MYSELF);
 		}
 		// 팔로우 중복 방지
-		if (followRepository.existsByFollowerIdAndFolloweeId(followerId, followeeId)) {
+		if (followRepository.existsByFollowerIdAndFolloweeId(follower.getId(), followee.getId())) {
 			throw new CustomException(ErrorCode.FOLLOW_ALREADY_USER);
 		}
 
