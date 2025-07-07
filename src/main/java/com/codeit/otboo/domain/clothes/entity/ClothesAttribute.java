@@ -5,9 +5,11 @@ import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,8 +23,9 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "clothes_attribute_values")
+@Table(name = "clothes_attribute")
 public class ClothesAttribute {
 
 	@Id
@@ -37,7 +40,7 @@ public class ClothesAttribute {
 	@JoinColumn(name = "attribute_definition_id", nullable = false)
 	private AttributeDef attributeDef;
 
-	@Column(nullable = false)
+	@Column(name = "attribute_value", nullable = false)
 	private String value;
 
 	@CreatedDate

@@ -7,22 +7,26 @@ import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
 @Table(name = "clothes")
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Clothes {
 
@@ -54,6 +58,22 @@ public class Clothes {
 	@Column(name = "updated_at", columnDefinition = "timestamp with time zone")
 	private Instant updatedAt;
 
+	public void addAttribute(AttributeDef attributeDef, String value) {
+		ClothesAttribute newAttribute = new ClothesAttribute(this, attributeDef, value);
+		this.attributes.add(newAttribute);
+	}
+
+	public void clearAttributes() {
+		this.attributes.clear();
+	}
+
+	public void update(String name, ClothesType type, String imageUrl) {
+		this.name = name;
+		this.type = type;
+		this.imageUrl = imageUrl;
+	}
+
+	@Builder
 	public Clothes(UUID ownerId, String name, String imageUrl, ClothesType type) {
 		this.id = UUID.randomUUID();
 		this.ownerId = ownerId;
@@ -63,5 +83,4 @@ public class Clothes {
 		this.createdAt = Instant.now();
 		this.updatedAt = Instant.now();
 	}
-
 }

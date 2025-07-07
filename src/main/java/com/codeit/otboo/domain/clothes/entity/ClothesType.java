@@ -1,7 +1,7 @@
 package com.codeit.otboo.domain.clothes.entity;
 
 public enum ClothesType {
-	OP,
+	TOP,
 	BOTTOM,
 	DRESS,
 	OUTER,
