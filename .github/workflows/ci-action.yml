@@ -53,7 +53,7 @@ jobs:
       - name: Grant execute permission for Gradle Wrapper
         run: chmod +x ./gradlew
       - name: Build & Test
-        run: ./gradlew clean build --no-daemon
+        run: ./gradlew clean test --no-daemon --stacktrace --info
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
