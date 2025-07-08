@@ -11,7 +11,7 @@ public class JwtBlacklistService {
 	private final RedisTemplate<String, String> redisTemplate;
 	private static final String PREFIX = "blacklist:";
 
-	public JwtBlacklistService(RedisTemplate<String, String> redisTemplate) {
+	public JwtBlacklistService( RedisTemplate<String, String> redisTemplate) {
 		this.redisTemplate = redisTemplate;
 	}
 
