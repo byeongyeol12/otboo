@@ -32,7 +32,7 @@ CREATE TABLE users (
                        id UUID PRIMARY KEY,
                        email VARCHAR(255) UNIQUE NOT NULL,
                        name VARCHAR(50) NOT NULL,
-                       role user_role    NOT NULL DEFAULT 'USER',
+                       role VARCHAR(20) NOT NULL CHECK (role IN ('USER', 'ADMIN')),
                        locked BOOLEAN    NOT NULL DEFAULT false,
                        created_at TIMESTAMPTZ NOT NULL,
                        updated_at TIMESTAMPTZ,
