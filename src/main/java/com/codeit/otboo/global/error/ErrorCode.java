@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
+
 	// COMMON
 	INVALID_INPUT_VALUE(400, "C001", "잘못된 입력값입니다."),
 	METHOD_NOT_ALLOWED(405, "C002", "지원하지 않는 HTTP 메서드입니다."),
@@ -11,11 +12,11 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(500, "C004", "서버 오류입니다."),
 	ACCESS_DENIED(403, "C005", "접근 권한이 없습니다."),
 
-  // AUTH
-  INVALID_TOKEN(401, "A001", "유효하지 않은 토큰입니다."),
-  EXPIRED_TOKEN(401, "A002", "만료된 토큰입니다."),
-  UNAUTHORIZED(401, "A003", "인증 정보가 없습니다."),
-  FORBIDDEN(403, "A004", "권한이 없습니다."),
+  	// AUTH
+  	INVALID_TOKEN(401, "A001", "유효하지 않은 토큰입니다."),
+  	EXPIRED_TOKEN(401, "A002", "만료된 토큰입니다."),
+  	UNAUTHORIZED(401, "A003", "인증 정보가 없습니다."),
+  	FORBIDDEN(403, "A004", "권한이 없습니다."),
 
 	// USER
 	USER_NOT_FOUND(404, "U001", "사용자를 찾을 수 없습니다."),
