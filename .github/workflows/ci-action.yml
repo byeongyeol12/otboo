@@ -41,7 +41,7 @@ jobs:
       DB_URL:      jdbc:postgresql://localhost:5432/ci_db
       DB_USERNAME: ci_user
       DB_PASSWORD: ci_pass
-      # API_KMA_SERVICE_KEY: ${{ secrets.API_KMA_SERVICE_KEY }}
+      API_KMA_SERVICE_KEY: ${{ secrets.API_KMA_SERVICE_KEY }}
 
     steps:
       - uses: actions/checkout@v4
