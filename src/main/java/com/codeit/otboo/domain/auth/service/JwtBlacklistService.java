@@ -2,16 +2,16 @@ package com.codeit.otboo.domain.auth.service;
 
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 public class JwtBlacklistService {
 
-	private final RedisTemplate<String, String> redisTemplate;
+	private final StringRedisTemplate redisTemplate;
 	private static final String PREFIX = "blacklist:";
 
-	public JwtBlacklistService( RedisTemplate<String, String> redisTemplate) {
+	public JwtBlacklistService(StringRedisTemplate redisTemplate) {
 		this.redisTemplate = redisTemplate;
 	}
 
