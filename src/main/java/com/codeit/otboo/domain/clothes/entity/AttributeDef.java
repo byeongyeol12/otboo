@@ -1,17 +1,21 @@
 package com.codeit.otboo.domain.clothes.entity;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.persistence.CollectionTable;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,6 +25,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "clothes_attribute_definitions")
+@EntityListeners(AuditingEntityListener.class)
 public class AttributeDef {
 
 	@Id
@@ -30,10 +35,17 @@ public class AttributeDef {
 	@Column(name = "name", unique = true, nullable = false, length = 50)
 	private String name;
 
-	@ElementCollection(fetch = FetchType.LAZY)
-	@CollectionTable(name = "attribute_def_selectable_values", joinColumns = @JoinColumn(name = "attribute_def_id"))
-	@Column
+	@JdbcTypeCode(SqlTypes.ARRAY)
+	@Column(name = "selectable_values", columnDefinition = "text[]", nullable = false)
 	private List<String> selectableValues;
+
+	@CreatedDate
+	@Column(name = "created_at", updatable = false, nullable = false)
+	private Instant createdAt;
+
+	@LastModifiedDate
+	@Column(name = "updated_at", nullable = false)
+	private Instant updatedAt;
 
 	public AttributeDef(String name, List<String> selectableValues) {
 		this.name = name;
