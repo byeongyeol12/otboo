@@ -40,3 +40,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Generated sources ###
+/build/generated/
+/src/main/generated/
+/src/main/java/*/Q.java/
