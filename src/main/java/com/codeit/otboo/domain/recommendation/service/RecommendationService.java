@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codeit.otboo.domain.clothes.dto.response.ClothesAttributeWithDefDto;
 import com.codeit.otboo.domain.clothes.entity.Clothes;
@@ -19,12 +20,11 @@ import com.codeit.otboo.domain.weather.repository.WeatherRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class RecommendationService {
 
 	private final ClothesRepository clothesRepository;
@@ -33,15 +33,24 @@ public class RecommendationService {
 
 	public RecommendationResponse getRecommendations(UUID userId, UUID weatherId) {
 
+		Weather weather = weatherRepository.findById(weatherId)
+			.orElseThrow(() -> new CustomException(ErrorCode.WEATHER_NOT_FOUND));
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		List<Clothes> allUserClothes = clothesRepository.findAllByOwnerId(userId);
 
-		List<Clothes> recommendedClothesList = allUserClothes;
+		List<Clothes> recommendedClothesList = recommend(allUserClothes, weather, user);
 
 		List<RecommendedClothesDto> recommendedClothesDtos = recommendedClothesList.stream()
 			.map(this::convertToRecommendedClothesDto)
 			.collect(Collectors.toList());
 		
 		return new RecommendationResponse(weatherId, userId, recommendedClothesDtos);
+	}
+
+	private List<Clothes> recommend(List<Clothes> allClothes, Weather weather, User user) {
+		// 구현 예정
+		return allClothes;
 	}
 
 	private RecommendedClothesDto convertToRecommendedClothesDto(Clothes clothes) {
