@@ -30,23 +30,7 @@ public class SecurityConfig {
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
 			.cors(Customizer.withDefaults())
-			.csrf(csrf -> csrf
-				.csrfTokenRepository(customCsrfTokenRepository())
-				.ignoringRequestMatchers(request -> {
-					String path = request.getRequestURI();
-					String method = request.getMethod();
-					// 로그인 요청만 제외
-					return (
-						(path.equals("/api/auth/sign-in") ||
-							path.equals("/api/auth/sign-out") ||  // ✅ 로그아웃 추가
-							path.equals("/api/users")) && method.equalsIgnoreCase("POST")
-					) || (
-						path.matches("^/api/users/.+/profiles$") && method.equalsIgnoreCase("PATCH")
-					) || (
-						path.matches("^/api/users/.+/role$") && method.equalsIgnoreCase("PATCH")
-					);
-				})
-			)
+			.csrf(csrf -> csrf.disable()) // ✅ CSRF 완전히 끔
 
 			.sessionManagement(session ->
 				session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS)

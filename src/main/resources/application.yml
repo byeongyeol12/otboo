@@ -2,6 +2,11 @@ spring:
   application:
     name: otboo
 
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -16,7 +21,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
