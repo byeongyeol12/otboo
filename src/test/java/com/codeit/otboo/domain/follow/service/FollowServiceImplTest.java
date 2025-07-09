@@ -123,5 +123,22 @@ public class FollowServiceImplTest {
 		assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FOLLOW_NOT_MYSELF);
 	}
 
+	@Test
+	@DisplayName("createFollow - 실패 : 팔로우 중복 발생")
+	public void createFollow_fail_follow_duplicated(){
+		//given
+		//FollowCreateRequest 생성
+		FollowCreateRequest request = new FollowCreateRequest(followerId, followeeId);
 
+		//팔로워,팔로이 모두 존재한다고 가정
+		given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
+		given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
+
+		//중복 발생
+		given(followRepository.existsByFollowerIdAndFolloweeId(any(),any())).willReturn(true);
+
+		//when,then
+		CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(request));
+		assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FOLLOW_ALREADY_USER);
+	}
 }
