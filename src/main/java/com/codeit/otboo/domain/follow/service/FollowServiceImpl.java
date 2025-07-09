@@ -102,7 +102,7 @@ public class FollowServiceImpl implements FollowService {
 		);
 	}
 
-	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
+	// 유저가 팔로우 하는 사람들 목록 조회(팔로우 클릭)
 	@Override
 	public FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike,
 		String sortBy, String sortDirection) {
@@ -145,7 +145,7 @@ public class FollowServiceImpl implements FollowService {
 		);
 	}
 
-	// 나를 팔로우 하는 사람들 목록 조회
+	// 유저를 팔로우 하는 사람들 목록 조회(팔로워 클릭)
 	@Override
 	public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike,
 		String sortBy, String sortDirection) {
