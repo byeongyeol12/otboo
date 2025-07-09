@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,9 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
+import com.codeit.otboo.domain.follow.dto.FollowListResponse;
 import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.mapper.FollowMapper;
@@ -48,8 +52,10 @@ public class FollowServiceImplTest {
 
 	private static final UUID followerId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 	private static final UUID followeeId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+	private static final UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000003");
 	private User follower;
 	private User followee;
+	private User user;
 
 	@BeforeEach
 	public void setUp() {
@@ -60,12 +66,16 @@ public class FollowServiceImplTest {
 		followee = new User();
 		followee.setId(followeeId);
 		followee.setName("팔로이");
+
+		User user = new User();
+		user.setId(userId);
+		user.setName("유저");
 	}
 
 	//createFollow
 	@Test
 	@DisplayName("createFollow - 팔로우 생성 성공")
-	public void createFollow_success(){
+	public void createFollow_success() {
 		//given
 		//FollowCreateRequest 생성
 		FollowCreateRequest request = new FollowCreateRequest(followerId, followeeId);
@@ -104,12 +114,12 @@ public class FollowServiceImplTest {
 		assertThat(result).isNotNull();
 		//알림 서비스 호출 확인
 		then(notificationService).should(times(1))
-			.createAndSend(eq(followerId),eq("팔로우"),contains("새 팔로워"),eq(NotificationLevel.INFO));
+			.createAndSend(eq(followerId), eq("팔로우"), contains("새 팔로워"), eq(NotificationLevel.INFO));
 	}
 
 	@Test
 	@DisplayName("createFollow - 실패 : 자기 자신 팔로우")
-	public void createFollow_fail_follow_myself(){
+	public void createFollow_fail_follow_myself() {
 		//given
 
 		//FollowCreateRequest 생성
@@ -125,7 +135,7 @@ public class FollowServiceImplTest {
 
 	@Test
 	@DisplayName("createFollow - 실패 : 팔로우 중복 발생")
-	public void createFollow_fail_follow_duplicated(){
+	public void createFollow_fail_follow_duplicated() {
 		//given
 		//FollowCreateRequest 생성
 		FollowCreateRequest request = new FollowCreateRequest(followerId, followeeId);
@@ -135,10 +145,80 @@ public class FollowServiceImplTest {
 		given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
 
 		//중복 발생
-		given(followRepository.existsByFollowerIdAndFolloweeId(any(),any())).willReturn(true);
+		given(followRepository.existsByFollowerIdAndFolloweeId(any(), any())).willReturn(true);
 
 		//when,then
 		CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(request));
 		assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FOLLOW_ALREADY_USER);
+	}
+
+	//getFollowSummary - 팔로우 요약 정보 조회
+
+	// getFollowings - 유저가 팔로우 하는 사람들 목록 조회
+	@Test
+	@DisplayName("getFollowings - 팔로잉 목록 조회 성공(커서X, idAfterX, limit 미만 반환)")
+	public void getFollowing_success_underLimit() {
+		//given
+		String cursor = null;
+		UUID idAfter = null;
+		int limit = 3;
+		String nameLike = null;
+		String sortBy = null; //id
+		String sortDirection = null; //ASC
+
+		// 현재 팔로우 2개(limit 3)
+		List<Follow> followList = Arrays.asList(
+			Follow.builder().follower(follower).followee(followee).build(),
+			Follow.builder().follower(follower).followee(followee).build()
+		);
+
+		// 팔로우 목록 리턴
+		given(followRepository.findFollowees(eq(followerId), isNull(), eq(nameLike), any(Pageable.class)))
+			.willReturn(followList);
+
+		// 총 팔로잉 수 조회
+		given(followRepository.countByFollowerId(followerId)).willReturn(2L);
+
+		//dto 변환
+		List<FollowDto> dtoList = List.of(
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummary(
+					followee.getId(),
+					followee.getName(),
+					null
+				),
+				new UserSummary(
+					follower.getId(),
+					follower.getName(),
+					null
+				)
+			),
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummary(
+					followee.getId(),
+					followee.getName(),
+					null
+				),
+				new UserSummary(
+					follower.getId(),
+					follower.getName(),
+					null
+				)
+			)
+		);
+		given(followMapper.toFollowDtoList(anyList())).willReturn(dtoList);
+
+		//when
+		FollowListResponse response = followService.getFollowings(
+			followerId, cursor, idAfter, limit, nameLike, sortBy, sortDirection
+		);
+
+		//then
+		assertThat(response.data()).hasSize(2); // 반환된 목록 개수 2개 
+		assertThat(response.hasNext()).isFalse(); // 다음 데이터가 없음
+		assertThat(response.totalCount()).isEqualTo(2L); //전체 팔로잉 수 2명
+		assertThat(response.sortBy()).isEqualTo(sortBy);
 	}
 }
