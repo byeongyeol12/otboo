@@ -1,6 +1,7 @@
 package com.codeit.otboo.domain.follow.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.Optional;
@@ -25,6 +26,8 @@ import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.domain.user.service.UserService;
+import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.error.ErrorCode;
 
 @ExtendWith(MockitoExtension.class)
 public class FollowServiceImplTest {
@@ -62,7 +65,7 @@ public class FollowServiceImplTest {
 	//createFollow
 	@Test
 	@DisplayName("createFollow - 팔로우 생성 성공")
-	public void createFollow_Success(){
+	public void createFollow_success(){
 		//given
 		//FollowCreateRequest 생성
 		FollowCreateRequest request = new FollowCreateRequest(followerId, followeeId);
@@ -103,4 +106,22 @@ public class FollowServiceImplTest {
 		then(notificationService).should(times(1))
 			.createAndSend(eq(followerId),eq("팔로우"),contains("새 팔로워"),eq(NotificationLevel.INFO));
 	}
+
+	@Test
+	@DisplayName("createFollow - 실패 : 자기 자신 팔로우")
+	public void createFollow_fail_follow_myself(){
+		//given
+
+		//FollowCreateRequest 생성
+		FollowCreateRequest request = new FollowCreateRequest(followerId, followerId);
+
+		//팔로워만 존재
+		given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
+
+		//when,then
+		CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(request));
+		assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FOLLOW_NOT_MYSELF);
+	}
+
+
 }
