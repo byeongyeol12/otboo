@@ -16,9 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
@@ -83,15 +81,15 @@ public class FollowServiceImplTest {
 		FollowCreateRequest request = new FollowCreateRequest(followerId, followeeId);
 
 		//팔로워,팔로이 모두 존재한다고 가정
-		given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
-		given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
+		when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+		when(userRepository.findById(followeeId)).thenReturn(Optional.of(followee));
 
 		//중복 팔로우 방지
-		given(followRepository.existsByFollowerIdAndFolloweeId(followeeId, followerId)).willReturn(false);
+		when(followRepository.existsByFollowerIdAndFolloweeId(followeeId, followerId)).thenReturn(false);
 
 		//팔로우 저장
 		Follow follow = Follow.builder().follower(follower).followee(followee).build();
-		given(followRepository.save(any(Follow.class))).willReturn(follow);
+		when(followRepository.save(any(Follow.class))).thenReturn(follow);
 
 		//dto 변환
 		FollowDto dto = new FollowDto(
@@ -106,7 +104,7 @@ public class FollowServiceImplTest {
 				follower.getName(),
 				null
 			));
-		given(followMapper.toFollowDto(any(Follow.class))).willReturn(dto);
+		when(followMapper.toFollowDto(any(Follow.class))).thenReturn(dto);
 
 		//when
 		FollowDto result = followService.createFollow(request);
@@ -128,7 +126,7 @@ public class FollowServiceImplTest {
 		FollowCreateRequest request = new FollowCreateRequest(followerId, followerId);
 
 		//팔로워만 존재
-		given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
+		when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
 
 		//when,then
 		CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(request));
@@ -143,11 +141,11 @@ public class FollowServiceImplTest {
 		FollowCreateRequest request = new FollowCreateRequest(followerId, followeeId);
 
 		//팔로워,팔로이 모두 존재한다고 가정
-		given(userRepository.findById(followerId)).willReturn(Optional.of(follower));
-		given(userRepository.findById(followeeId)).willReturn(Optional.of(followee));
+		when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+		when(userRepository.findById(followeeId)).thenReturn(Optional.of(followee));
 
 		//중복 발생
-		given(followRepository.existsByFollowerIdAndFolloweeId(any(), any())).willReturn(true);
+		when(followRepository.existsByFollowerIdAndFolloweeId(any(), any())).thenReturn(true);
 
 		//when,then
 		CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(request));
@@ -190,12 +188,12 @@ public class FollowServiceImplTest {
 
 		//repository,mapper mock
 		// 팔로우 목록 리턴
-		given(followRepository.findFollowees(eq(followerId), isNull(), eq(nameLike), any(Pageable.class)))
-			.willReturn(followList);
+		when(followRepository.findFollowees(eq(followerId), isNull(), eq(nameLike), any(Pageable.class)))
+			.thenReturn(followList);
 
 		// 총 팔로잉 수 조회
-		given(followRepository.countByFollowerId(followerId)).willReturn(2L);
-		given(followMapper.toFollowDtoList(anyList())).willReturn(dtoList);
+		when(followRepository.countByFollowerId(followerId)).thenReturn(2L);
+		when(followMapper.toFollowDtoList(anyList())).thenReturn(dtoList);
 
 		//when
 		FollowListResponse response = followService.getFollowings(
@@ -220,9 +218,8 @@ public class FollowServiceImplTest {
 		String sortBy = "createdAt";
 		String sortDirection = "DESCENDING";
 
-		//커서 변환 및 페이징 객체
+		//커서 변환
 		UUID effectiveIdAfter = UUID.fromString(cursor);
-		Pageable pageable = PageRequest.of(0, limit +1, Sort.by(sortDirection,sortBy));
 
 		// 현재 팔로우 3개(limit +1 개)
 		List<Follow> followList = List.of(
@@ -274,4 +271,56 @@ public class FollowServiceImplTest {
 		assertEquals(followList.get(limit - 1).getId(), result.nextIdAfter()); // 다음 커서는 2번째(0,1번째)의 id
 	}
 
+	@Test
+	@DisplayName("getFollowings - idAfer만 사용")
+	public void getFollowings_success_cursorPagingIdAfter(){
+		//given
+		int limit = 1;
+		String cursor = null; // 커서 없음
+		UUID idAfter = UUID.randomUUID();
+		String nameLike = null;
+		String sortBy = null; // default: "id"
+		String sortDirection = null; // default: "ASC"
+
+		// 현재 팔로우 2개(limit +1 개)
+		List<Follow> followList = List.of(
+			Follow.builder().follower(follower).followee(followee).build(),
+			Follow.builder().follower(follower).followee(followee).build()
+		);
+
+		//dto 변환
+		List<FollowDto> dtoList = List.of(
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummary(followee.getId(), followee.getName(), null),
+				new UserSummary(follower.getId(), follower.getName(), null)
+			),
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummary(followee.getId(), followee.getName(), null),
+				new UserSummary(follower.getId(), follower.getName(), null)
+			)
+		);
+
+		// Mock 세팅
+		when(followRepository.findFollowees(eq(followerId), eq(idAfter), any(), any(Pageable.class)))
+			.thenReturn(followList); // followRepository가 3개 반환
+		when(followRepository.countByFollowerId(followerId)).thenReturn(10L); // 총 follow 수
+		when(followMapper.toFollowDtoList(followList)).thenReturn(dtoList); // 3개 dto 반환
+
+
+		//when
+		FollowListResponse result = followService.getFollowings(
+			followerId, cursor, idAfter, limit, nameLike, sortBy, "ASCENDING");
+
+		// then
+		assertNotNull(result); // 결과값 null 아님
+		assertEquals(2, result.data().size()); // limit만큼(2개) 반환
+		assertTrue(result.hasNext()); // hasNext = true (3개 중 2개만 반환)
+		assertNotNull(result.nextCursor()); // 다음 커서 값 있음
+		assertNotNull(result.nextIdAfter()); // 다음 idAfter 값 있음
+		assertEquals(followList.get(limit-1).getId(), result.nextIdAfter()); // 2번째 follow의 id가 커서로 반환됨
+		assertEquals(null, result.sortBy()); // default 정렬 필드
+		assertEquals("ASCENDING", result.sortDirection()); // default 정렬 방향
+	}
 }
