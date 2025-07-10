@@ -222,69 +222,55 @@ public class FollowServiceImplTest {
 		assertNotNull(result.nextCursor()); // 다음 페이지 커서가 정상적으로 리턴되는지 확인
 	}
 
-	// @Test
-	// @DisplayName("getFollowings - 커서 기반 페이징 성공")
-	// public void getFollowings_success_cursorPaging() {
-	// 	//given
-	// 	int limit = 2;
-	// 	String cursor = UUID.randomUUID().toString();
-	// 	UUID idAfter = UUID.randomUUID();
-	// 	String nameLike = "팔";
-	// 	String sortBy = "createdAt";
-	// 	String sortDirection = "DESCENDING";
-	//
-	// 	//커서 변환
-	// 	UUID effectiveIdAfter = UUID.fromString(cursor);
-	//
-	// 	// 현재 팔로우 3개(limit +1 개)
-	// 	List<Follow> followList = List.of(
-	// 		Follow.builder().follower(follower).followee(followee).build(),
-	// 		Follow.builder().follower(follower).followee(followee).build(),
-	// 		Follow.builder().follower(follower).followee(followee).build()
-	// 	);
-	//
-	// 	//dto 변환
-	// 	List<FollowDto> dtoList = List.of(
-	// 		new FollowDto(
-	// 			UUID.randomUUID(),
-	// 			new UserSummaryDto(followee.getId(), followee.getName(), null),
-	// 			new UserSummaryDto(follower.getId(), follower.getName(), null)
-	// 		),
-	// 		new FollowDto(
-	// 			UUID.randomUUID(),
-	// 			new UserSummaryDto(followee.getId(), followee.getName(), null),
-	// 			new UserSummaryDto(follower.getId(), follower.getName(), null)
-	// 		)
-	// 		,
-	// 		new FollowDto(
-	// 			UUID.randomUUID(),
-	// 			new UserSummaryDto(followee.getId(), followee.getName(), null),
-	// 			new UserSummaryDto(follower.getId(), follower.getName(), null)
-	// 		)
-	// 	);
-	//
-	// 	//repository, mapper mock
-	// 	when(followRepository.findFollowees(eq(followerId), eq(effectiveIdAfter), eq(nameLike), any(Pageable.class)))
-	// 		.thenReturn(followList);
-	// 	when(followRepository.countByFollowerId(followerId)).thenReturn(10L);
-	// 	when(followMapper.toFollowDtoList(followList)).thenReturn(dtoList);
-	//
-	// 	//when
-	// 	FollowListResponse result = followService.getFollowings(
-	// 		followerId, cursor, null, limit, nameLike, sortBy, sortDirection);
-	//
-	// 	//then
-	// 	assertNotNull(result); // 결과 not null
-	// 	assertEquals(dtoList, result.data()); // 데이터 일치
-	// 	assertTrue(result.hasNext()); // hasNext = true
-	// 	assertEquals(10L, result.totalCount()); // 총 카운트 확인
-	// 	assertEquals(sortBy, result.sortBy());
-	// 	assertEquals(sortDirection, result.sortDirection());
-	// 	assertNotNull(result.nextCursor()); // 다음 커서 존재
-	// 	assertNotNull(result.nextIdAfter());
-	// 	assertEquals(followList.get(limit - 1).getId(), result.nextIdAfter()); // 다음 커서는 2번째(0,1번째)의 id
-	// }
-	//
+	@Test
+	@DisplayName("getFollowings - 팔로잉 목록 조회 성공(cursor O, idAfter X, limit 2, nameLike O , hasNext:false)")
+	public void getFollowings_cursorUsed_noIdAfter_limit2_nameLikeUsed() {
+		//given
+		String cursor = UUID.randomUUID().toString();
+		int limit = 2;
+		String nameLike = "팔";
+
+		// 현재 팔로우 2개
+		List<Follow> followList = List.of(
+			Follow.builder().follower(follower).followee(followee).build(),
+			Follow.builder().follower(follower).followee(followee).build()
+		);
+
+		//dto 변환
+		List<FollowDto> dtoList = List.of(
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
+			),
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
+			)
+		);
+
+		//mock
+		when(followRepository.findFollowees(eq(followerId), eq(UUID.fromString(cursor)), eq(nameLike), any()))
+			.thenReturn(followList);
+		when(followRepository.countByFollowerId(followerId)).thenReturn(2L);
+		when(followMapper.toFollowDtoList(followList)).thenReturn(dtoList);
+
+		//when
+		FollowListResponse result = followService.getFollowings(
+			followerId, cursor, null, limit, nameLike, "id", "ASCENDING");
+
+		//then
+		assertNotNull(result); // 결과 not null
+		assertEquals(2, result.data().size()); // 데이터 일치
+		assertFalse(result.hasNext()); // hasNext = true
+		assertEquals(2L, result.totalCount()); // 총 카운트 확인
+		assertEquals("id", result.sortBy());
+		assertEquals("ASCENDING", result.sortDirection());
+		assertNull(result.nextCursor()); // 다음 커서 존재x
+		assertNull(result.nextIdAfter());
+	}
+
 	// @Test
 	// @DisplayName("getFollowings - idAfer만 사용")
 	// public void getFollowings_success_cursorPagingIdAfter() {
