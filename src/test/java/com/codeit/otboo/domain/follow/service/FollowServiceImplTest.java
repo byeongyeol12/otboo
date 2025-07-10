@@ -534,4 +534,44 @@ public class FollowServiceImplTest {
 		assertEquals("ASCENDING", result.sortDirection());
 	}
 
+	//cancelFollow() - 팔로우 취소
+	@Test
+	@DisplayName("cancelFollow - 팔로우 취소 성공")
+	void cancelFollow_success(){
+		//given
+		Follow follow = Follow.builder().follower(follower).followee(followee).build();
+		when(followRepository.findById(follow.getId())).thenReturn(Optional.of(follow));
+
+		//when
+		followService.cancelFollow(follow.getId(),followerId);
+
+		//then
+		verify(followRepository, times(1)).deleteById(follow.getId());
+	}
+
+	@Test
+	@DisplayName("cancelFollow - 존재하지 않는 팔로우인데 취소하면 예외 발생")
+	void cancelFollow_fail_followNotFound(){
+		//given
+		Follow follow = Follow.builder().follower(follower).followee(followee).build();
+		when(followRepository.findById(follow.getId())).thenReturn(Optional.empty());
+
+		//when,then
+		CustomException ex = assertThrows(CustomException.class, () -> followService.cancelFollow(follow.getId(),followerId));
+		assertEquals(ErrorCode.FOLLOW_NOT_FOUND, ex.getErrorCode());
+		verify(followRepository, times(0)).deleteById(follow.getId());
+	}
+
+	@Test
+	@DisplayName("cancelFollow - 팔로워가 아닌 유저가 팔로우 취소 시도하면 예외 발생")
+	void cancelFollow_fail_notMyFollow(){
+		//given
+		Follow follow = Follow.builder().follower(follower).followee(followee).build();
+		when(followRepository.findById(follow.getId())).thenReturn(Optional.of(follow));
+
+		//when,then
+		CustomException ex = assertThrows(CustomException.class, () -> followService.cancelFollow(follow.getId(),userId));
+		assertEquals(ErrorCode.FOLLOW_CANCEL_ONLY_MINE, ex.getErrorCode());
+		verify(followRepository, times(0)).deleteById(follow.getId());
+	}
 }
