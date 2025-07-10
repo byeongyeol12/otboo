@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.follow.service;
 
+import static java.util.Collections.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -272,7 +273,7 @@ public class FollowServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("getFollowings - 팔로잉 목록 조회(cursor x, idAfter o, limit 3, nameLike x, hasNext x)")
+	@DisplayName("getFollowings - 팔로잉 목록 조회(cursor X, idAfter O, limit 3, nameLike X, hasNext X)")
 	public void getFollowings_noCursor_idAfterUsed_limit3_noNameLike(){
 		//given
 		UUID idAfter = UUID.randomUUID();
@@ -318,58 +319,56 @@ public class FollowServiceImplTest {
 		assertEquals("id", result.sortBy());
 		assertEquals("ASCENDING", result.sortDirection());
 	}
-	// @Test
-	// @DisplayName("getFollowings - idAfer만 사용")
-	// public void getFollowings_success_cursorPagingIdAfter() {
-	// 	//given
-	// 	int limit = 1;
-	// 	String cursor = null; // 커서 없음
-	// 	UUID idAfter = UUID.randomUUID();
-	// 	String nameLike = null;
-	// 	String sortBy = null; // default: "id"
-	// 	String sortDirection = null; // default: "ASC"
-	//
-	// 	// 현재 팔로우 2개(limit +1 개)
-	// 	List<Follow> followList = List.of(
-	// 		Follow.builder().follower(follower).followee(followee).build(),
-	// 		Follow.builder().follower(follower).followee(followee).build()
-	// 	);
-	//
-	// 	//dto 변환
-	// 	List<FollowDto> dtoList = List.of(
-	// 		new FollowDto(
-	// 			UUID.randomUUID(),
-	// 			new UserSummaryDtoDto(followee.getId(), followee.getName(), null),
-	// 			new UserSummaryDtoDto(follower.getId(), follower.getName(), null)
-	// 		),
-	// 		new FollowDto(
-	// 			UUID.randomUUID(),
-	// 			new UserSummaryDtoDto(followee.getId(), followee.getName(), null),
-	// 			new UserSummaryDtoDto(follower.getId(), follower.getName(), null)
-	// 		)
-	// 	);
-	//
-	// 	// Mock 세팅
-	// 	when(followRepository.findFollowees(eq(followerId), eq(idAfter), any(), any(Pageable.class)))
-	// 		.thenReturn(followList); // followRepository가 3개 반환
-	// 	when(followRepository.countByFollowerId(followerId)).thenReturn(10L); // 총 follow 수
-	// 	when(followMapper.toFollowDtoList(followList)).thenReturn(dtoList); // 3개 dto 반환
-	//
-	// 	//when
-	// 	FollowListResponse result = followService.getFollowings(
-	// 		followerId, cursor, idAfter, limit, nameLike, sortBy, "ASCENDING");
-	//
-	// 	// then
-	// 	assertNotNull(result); // 결과값 null 아님
-	// 	assertEquals(2, result.data().size()); // limit만큼(2개) 반환
-	// 	assertTrue(result.hasNext()); // hasNext = true (3개 중 2개만 반환)
-	// 	assertNotNull(result.nextCursor()); // 다음 커서 값 있음
-	// 	assertNotNull(result.nextIdAfter()); // 다음 idAfter 값 있음
-	// 	assertEquals(followList.get(limit - 1).getId(), result.nextIdAfter()); // 2번째 follow의 id가 커서로 반환됨
-	// 	assertEquals(null, result.sortBy()); // default 정렬 필드
-	// 	assertEquals("ASCENDING", result.sortDirection()); // default 정렬 방향
-	// }
-	//
+
+	@Test
+	@DisplayName("getFollowings - 팔로잉 목록 조회(cursor O, idAfter X, limit 5, nameLike O -> 검색결과 없음, hasNext X)")
+	void getFollowings_noCursor_noIdAfter_limit5_nameLikeUsed_emptyResult() {
+		//given
+		String cursor = UUID.randomUUID().toString();
+		int limit = 5;
+		String nameLike = "zzz";
+
+		// 현재 팔로우 2개
+		List<Follow> followList = List.of(
+			Follow.builder().follower(follower).followee(followee).build(),
+			Follow.builder().follower(follower).followee(followee).build()
+		);
+
+		//dto 변환
+		List<FollowDto> dtoList = List.of(
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
+			),
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
+			)
+		);
+
+		//mock
+		when(followRepository.findFollowees(eq(followerId), eq(UUID.fromString(cursor)), eq(nameLike), any()))
+			.thenReturn(followList);
+		when(followRepository.countByFollowerId(followerId)).thenReturn(0L);
+		when(followMapper.toFollowDtoList(followList)).thenReturn(emptyList());
+
+		//when
+		FollowListResponse result = followService.getFollowings(
+			followerId, cursor, null, limit, nameLike, "id", "ASCENDING");
+
+		//then
+		assertNotNull(result); // 결과 not null
+		assertEquals(0, result.data().size()); // 데이터 일치
+		assertNull(result.nextCursor()); // 다음 커서 존재x
+		assertNull(result.nextIdAfter());
+		assertFalse(result.hasNext()); // hasNext
+		assertEquals(0L, result.totalCount()); // 총 카운트 확인
+		assertEquals("id", result.sortBy());
+		assertEquals("ASCENDING", result.sortDirection());
+	}
+
 	// // getFollowers - 유저를 팔로우 하는 사람들 목록 조회(팔로워 클릭)
 	// @Test
 	// @DisplayName("getFollowers - 팔로워 목록 조회 성공(커서X, idAfterX, limit 미만 반환)")
