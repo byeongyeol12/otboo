@@ -21,12 +21,12 @@ import org.springframework.data.domain.Pageable;
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowListResponse;
-import com.codeit.otboo.domain.follow.dto.UserSummary;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
+import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.domain.user.service.UserService;
@@ -94,12 +94,12 @@ public class FollowServiceImplTest {
 		//dto 변환
 		FollowDto dto = new FollowDto(
 			UUID.randomUUID(),
-			new UserSummary(
+			new UserSummaryDto(
 				followee.getId(),
 				followee.getName(),
 				null
 			),
-			new UserSummary(
+			new UserSummaryDto(
 				follower.getId(),
 				follower.getName(),
 				null
@@ -176,13 +176,13 @@ public class FollowServiceImplTest {
 		List<FollowDto> dtoList = List.of(
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
 			),
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
 			)
 		);
 
@@ -232,19 +232,19 @@ public class FollowServiceImplTest {
 		List<FollowDto> dtoList = List.of(
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
 			),
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
 			)
 			,
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDto(follower.getId(), follower.getName(), null)
 			)
 		);
 
@@ -292,13 +292,13 @@ public class FollowServiceImplTest {
 		List<FollowDto> dtoList = List.of(
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDtoDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDtoDto(follower.getId(), follower.getName(), null)
 			),
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDtoDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDtoDto(follower.getId(), follower.getName(), null)
 			)
 		);
 
@@ -346,13 +346,13 @@ public class FollowServiceImplTest {
 		List<FollowDto> dtoList = List.of(
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDtoDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDtoDto(follower.getId(), follower.getName(), null)
 			),
 			new FollowDto(
 				UUID.randomUUID(),
-				new UserSummary(followee.getId(), followee.getName(), null),
-				new UserSummary(follower.getId(), follower.getName(), null)
+				new UserSummaryDtoDto(followee.getId(), followee.getName(), null),
+				new UserSummaryDtoDto(follower.getId(), follower.getName(), null)
 			)
 		);
 
