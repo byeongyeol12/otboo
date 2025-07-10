@@ -33,20 +33,20 @@ public class AuthController {
 	private final JwtTokenProvider jwtTokenProvider;
 
 	@PostMapping("/sign-in")
-	public ResponseEntity<LoginResponse> signIn(@RequestBody @Valid LoginRequest request) {
+	public ResponseEntity<String> signIn(@RequestBody @Valid LoginRequest request) {
 		LoginResponse response = authService.login(request);
 
 		ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
 			.httpOnly(true)
-			.secure(false)
+			.secure(false) // 개발 중이므로 false, 운영 시 true 권장
 			.path("/")
 			.maxAge(7 * 24 * 60 * 60)
-			.sameSite("Strict")
+			.sameSite("Lax")
 			.build();
 
 		return ResponseEntity.ok()
 			.header(HttpHeaders.SET_COOKIE, cookie.toString())
-			.body(response);
+			.body(response.getAccessToken());
 	}
 
 	@PostMapping("/sign-out")
