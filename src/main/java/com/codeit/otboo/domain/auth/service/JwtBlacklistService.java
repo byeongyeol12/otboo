@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 public class JwtBlacklistService {
 
 	private final StringRedisTemplate redisTemplate;
+
 	private static final String PREFIX = "blacklist:";
 
 	public JwtBlacklistService(StringRedisTemplate redisTemplate) {

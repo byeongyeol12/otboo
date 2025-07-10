@@ -12,10 +12,11 @@ import com.codeit.otboo.domain.user.entity.User;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-	/*	@Mapping(target = "id", expression = "java(UUID.randomUUID())")
-		@Mapping(target = "passwordHash", source = "password")
-		@Mapping(target = "locked", constant = "false")
-		@Mapping(target = "role", expression = "java(com.codeit.otboo.global.enumType.Role.USER)")*/
+	@Mapping(target = "id", ignore = true)
+	@Mapping(target = "locked", ignore = true)
+	@Mapping(target = "role", ignore = true)
+	@Mapping(target = "passwordHash", ignore = true)
+	@Mapping(target = "field", ignore = true)
 	User toEntity(UserCreateRequest request);
 
 	@Mapping(target = "linkedOAuthProviders", ignore = true)

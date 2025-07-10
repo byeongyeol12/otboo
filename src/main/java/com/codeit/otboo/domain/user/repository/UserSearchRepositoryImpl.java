@@ -23,6 +23,8 @@ public class UserSearchRepositoryImpl implements UserSearchRepository {
 	public List<User> search(UserSearchRequest request) {
 		QUser user = QUser.user;
 
+		int limit = (request.limit() != null) ? request.limit() : 20; // 기본값 20
+
 		return queryFactory
 			.select(user)
 			.from(user)
@@ -33,7 +35,7 @@ public class UserSearchRepositoryImpl implements UserSearchRepository {
 				idAfter(request.idAfter())
 			)
 			.orderBy(getSort(request.sortBy(), request.sortDirection()))
-			.limit(request.limit())
+			.limit(limit)
 			.fetch();
 	}
 
@@ -72,19 +74,23 @@ public class UserSearchRepositoryImpl implements UserSearchRepository {
 	// 정렬 조건
 	private OrderSpecifier<?> getSort(String sortBy, String direction) {
 		QUser user = QUser.user;
-		Order order = "DESCENDING".equalsIgnoreCase(direction) ? Order.DESC : Order.ASC;
 
-		switch (sortBy) {
-			case "email":
-				return new OrderSpecifier<>(order, user.email);
-			case "name":
-				return new OrderSpecifier<>(order, user.name);
-			case "createdAt":
-				return new OrderSpecifier<>(order, user.createdAt);
-			case "role":
-				return new OrderSpecifier<>(order, user.role);
-			default:
-				throw new IllegalArgumentException("지원하지 않는 정렬 필드입니다: " + sortBy);
+		// 기본값 설정
+		if (sortBy == null || sortBy.isBlank()) {
+			sortBy = "createdAt"; // or "email", 요구사항에 맞게
 		}
+		if (direction == null || direction.isBlank()) {
+			direction = "DESC"; // or ASC
+		}
+
+		Order order = direction.equalsIgnoreCase("DESC") ? Order.DESC : Order.ASC;
+
+		return switch (sortBy) {
+			case "email" -> new OrderSpecifier<>(order, user.email);
+			case "name" -> new OrderSpecifier<>(order, user.name);
+			case "createdAt" -> new OrderSpecifier<>(order, user.createdAt);
+			case "role" -> new OrderSpecifier<>(order, user.role);
+			default -> throw new IllegalArgumentException("지원하지 않는 정렬 필드입니다: " + sortBy);
+		};
 	}
 }

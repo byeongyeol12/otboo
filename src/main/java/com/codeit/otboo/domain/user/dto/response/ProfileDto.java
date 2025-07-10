@@ -1,25 +1,19 @@
 package com.codeit.otboo.domain.user.dto.response;
 
-import java.util.List;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import com.codeit.otboo.global.enumType.Gender;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public record ProfileDto(
 	UUID userId,
 	String name,
 	Gender gender,
-	String birthDate,
-	Object location,
-	Integer temperatureSensitivity,
+	@JsonFormat(pattern = "yyyy-MM-dd")
+	LocalDate birthDate,
+	LocationDto location,
+	int temperatureSensitivity,
 	String profileImageUrl
 ) {
-	public record LocationDto(
-		Double latitude,
-		Double longitude,
-		Integer x,
-		Integer y,
-		List<String> locationNames
-	) {
-	}
 }
