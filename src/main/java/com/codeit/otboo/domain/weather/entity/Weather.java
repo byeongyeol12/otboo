@@ -8,6 +8,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -45,6 +47,14 @@ public class Weather {
     @Type(JsonType.class)
     @Column(name = "precipitation", columnDefinition = "json")
     private PrecipitationInfo precipitation;
+
+    @Formula(" (precipitation ->> 'type') ")
+    @Enumerated(EnumType.STRING)
+    private PrecipitationType precipitationType;
+
+    public PrecipitationType getPrecipitationType() {
+        return precipitationType;
+    }
 
     @Type(JsonType.class)
     @Column(name = "humidity", columnDefinition = "json")
