@@ -150,25 +150,24 @@ public class FollowServiceImplTest {
 		verify(notificationService, never()).createAndSend(any());
 	}
 
-	// @Test
-	// @DisplayName("createFollow - 실패 : 팔로우 중복 발생")
-	// public void createFollow_fail_follow_duplicated() {
-	// 	//given
-	// 	//FollowCreateRequest 생성
-	// 	FollowCreateRequest request = new FollowCreateRequest(followerId, followeeId);
-	//
-	// 	//팔로워,팔로이 모두 존재한다고 가정
-	// 	when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
-	// 	when(userRepository.findById(followeeId)).thenReturn(Optional.of(followee));
-	//
-	// 	//중복 발생
-	// 	when(followRepository.existsByFollowerIdAndFolloweeId(any(), any())).thenReturn(true);
-	//
-	// 	//when,then
-	// 	CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(request));
-	// 	assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FOLLOW_ALREADY_USER);
-	// }
-	//
+	@Test
+	@DisplayName("createFollow - 이미 팔로우 관계가 있으면 예외 발생")
+	public void createFollow_fail_follow_duplicated() {
+		//given
+
+		//팔로워,팔로이 모두 존재한다고 가정
+		when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+		when(userRepository.findById(followeeId)).thenReturn(Optional.of(followee));
+
+		//중복 발생
+		when(followRepository.existsByFollowerIdAndFolloweeId(any(), any())).thenReturn(true);
+
+		//when,then
+		CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(followerId,followeeId));
+		assertEquals(ErrorCode.FOLLOW_ALREADY_USER,ex.getErrorCode());
+		verify(notificationService,never()).createAndSend(any());
+	}
+
 	// //getFollowSummary - 팔로우 요약 정보 조회
 	//
 	// // getFollowings - 	유저가 팔로우 하는 사람들 목록 조회(팔로우 클릭)
