@@ -323,4 +323,57 @@ public class FollowServiceImplTest {
 		assertEquals(null, result.sortBy()); // default 정렬 필드
 		assertEquals("ASCENDING", result.sortDirection()); // default 정렬 방향
 	}
+
+	// getFollowers - 유저를 팔로우 하는 사람들 목록 조회(팔로워 클릭)
+	@Test
+	@DisplayName("getFollowers - 팔로워 목록 조회 성공(커서X, idAfterX, limit 미만 반환)")
+	public void getFollowers_success_underLimit(){
+		//given
+		String cursor = null;
+		UUID idAfter = null;
+		int limit = 3;
+		String nameLike = null;
+		String sortBy = null; //id
+		String sortDirection = null; //ASC
+
+		// 현재 팔로우 2개(limit 3)
+		List<Follow> followList = Arrays.asList(
+			Follow.builder().follower(follower).followee(followee).build(),
+			Follow.builder().follower(follower).followee(followee).build()
+		);
+
+		//dto 변환
+		List<FollowDto> dtoList = List.of(
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummary(followee.getId(), followee.getName(), null),
+				new UserSummary(follower.getId(), follower.getName(), null)
+			),
+			new FollowDto(
+				UUID.randomUUID(),
+				new UserSummary(followee.getId(), followee.getName(), null),
+				new UserSummary(follower.getId(), follower.getName(), null)
+			)
+		);
+
+		//repository,mapper mock
+		// 팔로우 목록 리턴
+		when(followRepository.findFollowers(eq(followeeId), isNull(), eq(nameLike), any(Pageable.class)))
+			.thenReturn(followList);
+
+		// 총 팔로잉 수 조회
+		when(followRepository.countByFolloweeId(followeeId)).thenReturn(2L);
+		when(followMapper.toFollowDtoList(anyList())).thenReturn(dtoList);
+
+		//when
+		FollowListResponse response = followService.getFollowers(
+			followeeId, cursor, idAfter, limit, nameLike, sortBy, sortDirection
+		);
+
+		//then
+		assertThat(response.data()).hasSize(2); // 반환된 목록 개수 2개
+		assertThat(response.hasNext()).isFalse(); // 다음 데이터가 없음
+		assertThat(response.totalCount()).isEqualTo(2L); //전체 팔로잉 수 2명
+		assertThat(response.sortBy()).isEqualTo(sortBy);
+	}
 }
