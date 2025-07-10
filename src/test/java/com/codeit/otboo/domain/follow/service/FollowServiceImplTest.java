@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowListResponse;
+import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
@@ -172,6 +173,85 @@ public class FollowServiceImplTest {
 	}
 
 	//getFollowSummary - 팔로우 요약 정보 조회
+	@Test
+	@DisplayName("getFollowSummary - 팔로우 요약 조회(서로 팔로우)")
+	public void getFollowSummary_success() {
+		//given
+		// 팔로이, 팔로워 조회
+		when(userRepository.getUserById(followeeId)).thenReturn(followee);
+		when(userRepository.getUserById(followerId)).thenReturn(follower);
+		// 팔로워 수 조회
+		when(followRepository.countByFolloweeId(followeeId)).thenReturn(1L); // 내가 팔로우하는 사람 수(팔로잉 수)
+		when(followRepository.countByFollowerId(followeeId)).thenReturn(2L); // 나를 팔로우하는 사람 수(팔로워 수)
+
+		// 팔로우 중인지 확인
+		Follow follow  = Follow.builder().follower(follower).followee(followee).build();
+		when(followRepository.findByFollowerAndFollowee(follower,followee)).thenReturn(Optional.of(follow));
+		when(followRepository.existsByFollowerAndFollowee(followee,follower)).thenReturn(true);
+
+		// Mapper mock 처리
+		FollowSummaryDto dto = new FollowSummaryDto(
+			followeeId,   // 팔로이 ID
+			1L,           // 팔로워 수
+			2L,           // 팔로잉 수
+			true,         // 내가 이 사람을 팔로우 하는가
+			follow.getId(), // follow id
+			true          // 이 사람이 나를 팔로우 하는가
+		);
+		when(followMapper.toFollowSummaryDto(followeeId, 1L, 2L, true, follow.getId(), true)).thenReturn(dto);
+
+		//when
+		FollowSummaryDto summary = followService.getFollowSummary(followeeId,followerId);
+
+		// then
+		assertNotNull(summary);                               // 요약 결과가 null이 아닌지 확인
+		assertEquals(followeeId, summary.followeeId());       // 팔로이 ID 확인
+		assertEquals(1L, summary.followerCount());            // 팔로워 수 확인
+		assertEquals(2L, summary.followingCount());           // 팔로잉 수 확인
+		assertTrue(summary.followedByMe());                   // 내가 이 사람을 팔로우하는지 확인
+		assertEquals(follow.getId(), summary.followedByMeId()); // followId 확인
+		assertTrue(summary.followingMe());                    // 이 사람이 나를 팔로우하는지 확인
+	}
+
+	@Test
+	@DisplayName("getFollowSummary - 팔로우 요약 정보(팔로워가 팔로이 를 팔로우하지 않은 경우)")
+	void getFollowSummary_follower_notFollowed(){
+		//given
+		// 팔로이, 팔로워 조회
+		when(userRepository.getUserById(followeeId)).thenReturn(followee);
+		when(userRepository.getUserById(followerId)).thenReturn(follower);
+		// 팔로워 수 조회
+		when(followRepository.countByFolloweeId(followeeId)).thenReturn(1L); // 내가 팔로우하는 사람 수(팔로잉 수)
+		when(followRepository.countByFollowerId(followeeId)).thenReturn(2L); // 나를 팔로우하는 사람 수(팔로워 수)
+
+		// 팔로우 중인지 확인
+		Follow follow  = Follow.builder().follower(follower).followee(followee).build();
+		when(followRepository.findByFollowerAndFollowee(follower,followee)).thenReturn(Optional.empty());
+		when(followRepository.existsByFollowerAndFollowee(followee,follower)).thenReturn(true);
+
+		// Mapper mock 처리
+		FollowSummaryDto dto = new FollowSummaryDto(
+			followeeId,   // 팔로이 ID
+			1L,           // 팔로워 수
+			2L,           // 팔로잉 수
+			false,         // 내가 이 사람을 팔로우 하는가
+			null, // follow id
+			true          // 이 사람이 나를 팔로우 하는가
+		);
+		when(followMapper.toFollowSummaryDto(followeeId, 1L, 2L, false, null, true)).thenReturn(dto);
+
+		//when
+		FollowSummaryDto summary = followService.getFollowSummary(followeeId,followerId);
+
+		// then
+		assertNotNull(summary);                               // 요약 결과가 null이 아닌지 확인
+		assertEquals(followeeId, summary.followeeId());       // 팔로이 ID 확인
+		assertEquals(1L, summary.followerCount());            // 팔로워 수 확인
+		assertEquals(2L, summary.followingCount());           // 팔로잉 수 확인
+		assertFalse(summary.followedByMe());                  // 내가 이 사람을 팔로우하지 않는지 확인
+		assertNull(summary.followedByMeId());                 // followId는 null이어야 함
+		assertTrue(summary.followingMe());                    // 이 사람이 나를 팔로우하는지 확인
+	}
 
 
 	// getFollowings - 	유저가 팔로우 하는 사람들 목록 조회(팔로우 클릭)
