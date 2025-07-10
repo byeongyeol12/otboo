@@ -46,12 +46,16 @@ public class NotificationServiceImpl implements NotificationService {
 
 	// 알림 생성 + 전송
 	@Override
-	public NotificationDto createAndSend(UUID receiverId, String title, String content, NotificationLevel level) {
+	public NotificationDto createAndSend(NotificationDto request) {
 		// 알림 받는 사람, 알림 생성
-		User receiver = userRepository.findById(receiverId).orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND,"알림 받는 유저를 찾을 수 없습니다."));
+		User receiver = userRepository.findById(request.receiverId()).orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND,"알림 받는 유저를 찾을 수 없습니다."));
 
 		Notification notification = new Notification(
-			receiver,title,content,level,false
+			receiver,
+			request.title(),
+			request.content(),
+			request.level(),
+			false
 		);
 
 		NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
@@ -59,7 +63,7 @@ public class NotificationServiceImpl implements NotificationService {
 		notificationRepository.save(notification);
 
 		// 알림 전송
-		sseEmitterServiceImpl.send(receiverId,"notifications",notificationDto);
+		sseEmitterServiceImpl.send(request.receiverId(),"notifications",notificationDto);
 
 		//반환
 		return notificationDto;

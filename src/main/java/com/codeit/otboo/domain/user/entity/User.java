@@ -37,7 +37,7 @@ public class User {
 	private String name;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 10)
+	@Column(nullable = false)
 	private Role role;
 
 	@Column(nullable = false)
@@ -50,17 +50,52 @@ public class User {
 	@Column(columnDefinition = "timestamp with time zone", name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
+	@Column(length = 255)
+	private String field;
+
 	@LastModifiedDate
 	@Column(columnDefinition = "timestamp with time zone", name = "updated_at")
 	private Instant updatedAt;
 	@OneToOne(mappedBy = "user")
 	private Profile profile;
 
+	public User() {
+	}
+
+	public UUID getId() {
+		return id;
+	}
+
 	public Profile getProfile() {
 		return profile;
 	}
 
-	public User() {
+	public String getField() {
+		return field;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Role getRole() {
+		return role;
+	}
+
+	public String getPasswordHash() {
+		return passwordHash;
+	}
+
+	public Instant getCreatedAt() {
+		return createdAt;
+	}
+
+	public Instant getUpdatedAt() {
+		return updatedAt;
 	}
 
 	public void setId(UUID id) {
@@ -87,36 +122,12 @@ public class User {
 		this.email = email;
 	}
 
-	public UUID getId() {
-		return id;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public Role getRole() {
-		return role;
+	public void setField(String field) {
+		this.field = field;
 	}
 
 	public boolean isLocked() {
 		return locked;
-	}
-
-	public String getPasswordHash() {
-		return passwordHash;
-	}
-
-	public Instant getCreatedAt() {
-		return createdAt;
-	}
-
-	public Instant getUpdatedAt() {
-		return updatedAt;
 	}
 
 	public void updateRole(Role role) {

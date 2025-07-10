@@ -19,13 +19,14 @@ public class LocalImageStorageService implements ImageStorageService {
 
 	@Override
 	public String upload(MultipartFile file) {
-		String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-		Path target = uploadDir.resolve(filename);
 		try {
+			Files.createDirectories(uploadDir); // ✅ 디렉토리 없으면 생성
+			String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+			Path target = uploadDir.resolve(filename);
 			Files.copy(file.getInputStream(), target);
+			return "/static/profile/" + filename;
 		} catch (IOException e) {
 			throw new CustomException(ErrorCode.PROFILE_IMAGE_UPLOAD_FAILED);
 		}
-		return "/static/profile/" + filename;
 	}
 }
