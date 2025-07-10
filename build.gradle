@@ -33,6 +33,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
     compileOnly 'org.projectlombok:lombok'
 
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
@@ -47,13 +48,8 @@ dependencies {
 
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.batch:spring-batch-test'
-    testImplementation 'org.springframework.kafka:spring-kafka-test'
-    testImplementation 'org.springframework.security:spring-security-test'
     runtimeOnly 'org.postgresql:postgresql'
-    // runtimeOnly 'com.h2database:h2' // H2는 더 이상 사용하지 않으므로 주석 처리합니다.
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    //runtimeOnly 'com.h2database:h2' // H2는 더 이상 사용하지 않으므로 주석 처리합니다.
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.7.0'
@@ -76,6 +72,13 @@ dependencies {
 //	implementation 'io.awspring.cloud:spring-cloud-aws-s3'
 //	implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
 //	implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
+
+    //test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {

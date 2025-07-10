@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.follow.service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -9,13 +10,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowListResponse;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.follow.mapper.FollowMapper;
 import com.codeit.otboo.domain.follow.repository.FollowRepository;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.user.entity.User;
@@ -38,13 +39,10 @@ public class FollowServiceImpl implements FollowService {
 
 	//팔로우 생성
 	@Override
-	public FollowDto createFollow(FollowCreateRequest request) {
+	public FollowDto createFollow(UUID myUserId,UUID followeeId) {
 		//1. 팔로우, 팔로워 조회 및 예외 처리
-		UUID followerId = request.followerId();
-		UUID followeeId = request.followeeId();
-
 		// 팔로워(=나) 조회
-		User follower = userRepository.findById(followerId)
+		User follower = userRepository.findById(myUserId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, "팔로워를 찾을 수 없습니다."));
 		// 대상자 조회
 		User followee = userRepository.findById(followeeId)
@@ -55,7 +53,7 @@ public class FollowServiceImpl implements FollowService {
 			throw new CustomException(ErrorCode.FOLLOW_NOT_MYSELF);
 		}
 		// 팔로우 중복 방지
-		if (followRepository.existsByFollowerIdAndFolloweeId(followerId, followeeId)) {
+		if (followRepository.existsByFollowerIdAndFolloweeId(follower.getId(), followee.getId())) {
 			throw new CustomException(ErrorCode.FOLLOW_ALREADY_USER);
 		}
 
@@ -68,9 +66,16 @@ public class FollowServiceImpl implements FollowService {
 		followRepository.save(follow);
 
 		//3. 알림 이벤트 발생
-		notificationService.createAndSend(followeeId, "팔로우",
-			"새 팔로워 [" + follower.getName() + "] 님이 [" + followee.getName() + "] 님을 팔로우 했습니다.",
-			NotificationLevel.INFO);
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				followeeId,
+				"팔로우",
+				"새 팔로워 ["+follower.getName()+"] 님이 [" +followee.getName()+ "] 님을 팔로우 했습니다.",
+				NotificationLevel.INFO
+			)
+		);
 
 		//4. 리턴
 		return followMapper.toFollowDto(follow);
@@ -88,8 +93,8 @@ public class FollowServiceImpl implements FollowService {
 		long followeeCount = followRepository.countByFollowerId(user.getId()); // 대상이 팔로우하고 있는 수
 
 		//3. 팔로우 중인지 확인
-		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowee(me, user); // 내가 이 유저를 팔로우하고 있는지
-		boolean followeeMe = followRepository.existsByFollowerAndFollowee(user, me); // 상대가 나를 팔로우하고 있는지
+		Optional<Follow> followedByMe = followRepository.findByFollowerAndFollowee(me,user); // 내가 이 유저를 팔로우하고 있는지
+		boolean followeeMe = followRepository.existsByFollowerAndFollowee(user,me); // 상대가 나를 팔로우하고 있는지
 
 		//4. return
 		return followMapper.toFollowSummaryDto(
@@ -102,23 +107,22 @@ public class FollowServiceImpl implements FollowService {
 		);
 	}
 
+
 	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
 	@Override
-	public FollowListResponse getFollowings(UUID followerId, String cursor, UUID idAfter, int limit, String nameLike,
-		String sortBy, String sortDirection) {
+	public FollowListResponse getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
 		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
 
 		//2. 정렬
-		Sort.Direction direction =
-			"DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+		Sort.Direction direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		String sort = (sortBy != null && !sortBy.isBlank()) ? sortBy : "id";
-		Pageable pageable = PageRequest.of(0, limit + 1, Sort.by(direction, sort));
+		Pageable pageable = PageRequest.of(0, limit+1, Sort.by(direction, sort));
 
 		//3. repository query
-		List<Follow> follows = followRepository.findFollowees(followerId, effectiveIdAfter, nameLike, pageable);
+		List<Follow> follows = followRepository.findFollowees(followerId,effectiveIdAfter,nameLike,pageable);
 
 		//4. hasNext, nextCursor
 		boolean hasNext = follows.size() > limit;
@@ -147,21 +151,19 @@ public class FollowServiceImpl implements FollowService {
 
 	// 나를 팔로우 하는 사람들 목록 조회
 	@Override
-	public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike,
-		String sortBy, String sortDirection) {
+	public FollowListResponse getFollowers(UUID followeeId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
 		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
 
 		//2. 정렬
-		Sort.Direction direction =
-			"DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+		Sort.Direction direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		String sort = (sortBy != null && !sortBy.isBlank()) ? sortBy : "id";
-		Pageable pageable = PageRequest.of(0, limit + 1, Sort.by(direction, sort));
+		Pageable pageable = PageRequest.of(0, limit+1, Sort.by(direction, sort));
 
 		//3. repository query
-		List<Follow> follows = followRepository.findFollowers(followeeId, effectiveIdAfter, nameLike, pageable);
+		List<Follow> follows = followRepository.findFollowers(followeeId,effectiveIdAfter,nameLike,pageable);
 
 		//4. hasNext, nextCursor
 		boolean hasNext = follows.size() > limit;

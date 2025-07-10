@@ -5,11 +5,10 @@ import java.util.UUID;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
-import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 
 public interface NotificationService {
 	List<NotificationDto> findUnreceived(UUID receiverId, UUID lastEventId);
 	NotificationDtoCursorResponse getNotifications(UUID userId, String cursor, UUID idAfter, int limit);
-	NotificationDto createAndSend(UUID receiverId, String title, String content, NotificationLevel level);
+	NotificationDto createAndSend(NotificationDto notificationDto);
 	void readNotifications(UUID notificationId, UUID receiverId);
 }
