@@ -30,6 +30,9 @@ public enum ErrorCode {
 
   // FEED
   FEED_NOT_FOUND(404, "F001", "피드 정보를 찾을 수 없습니다."),
+  FEED_LIKE_ALREADY(409, "F002", "이미 해당 피드에 좋아요를 눌렀습니다."),
+  FEED_LIKE_NOT_FOUND(404, "F003", "해당 피드에 좋아요를 누르지 않았습니다."),
+
 
   // FOLLOW
   FOLLOW_NOT_FOUND(404, "FL001", "팔로우 정보를 찾을 수 없습니다."),
