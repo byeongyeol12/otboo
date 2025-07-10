@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowListResponse;
 import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
@@ -136,7 +135,7 @@ public class FollowServiceImpl implements FollowService {
 		long totalCount = followRepository.countByFollowerId(followerId);
 
 		//6. dto 변환
-		List<FollowDto> dtoList = followMapper.toFollowDtoList(follows);
+		List<FollowDto> dtoList = followMapper.toFollowDtoList(pagedList);
 
 		//7. return
 		return new FollowListResponse(
