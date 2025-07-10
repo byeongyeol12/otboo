@@ -135,23 +135,21 @@ public class FollowServiceImplTest {
 		verify(notificationService, never()).createAndSend(any());
 	}
 
-	//
-	// @Test
-	// @DisplayName("createFollow - 실패 : 자기 자신 팔로우")
-	// public void createFollow_fail_follow_myself() {
-	// 	//given
-	//
-	// 	//FollowCreateRequest 생성
-	// 	FollowCreateRequest request = new FollowCreateRequest(followerId, followerId);
-	//
-	// 	//팔로워만 존재
-	// 	when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
-	//
-	// 	//when,then
-	// 	CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(request));
-	// 	assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.FOLLOW_NOT_MYSELF);
-	// }
-	//
+	@Test
+	@DisplayName("createFollow - 자기 자신을 팔로우 시도하면 예외 발생")
+	public void createFollow_fail_follow_myself() {
+		//given
+
+		//팔로워만 존재
+		when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+		when(userRepository.findById(followerId)).thenReturn(Optional.of(follower));
+
+		//when,then
+		CustomException ex = assertThrows(CustomException.class, () -> followService.createFollow(followerId, followerId));
+		assertEquals(ErrorCode.FOLLOW_NOT_MYSELF, ex.getErrorCode());
+		verify(notificationService, never()).createAndSend(any());
+	}
+
 	// @Test
 	// @DisplayName("createFollow - 실패 : 팔로우 중복 발생")
 	// public void createFollow_fail_follow_duplicated() {
