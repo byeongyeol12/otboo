@@ -176,7 +176,7 @@ public class FollowServiceImplTest {
 	// getFollowings - 	유저가 팔로우 하는 사람들 목록 조회(팔로우 클릭)
 	@Test
 	@DisplayName("getFollowings - 팔로잉 목록 조회 성공(cursor X, idAfter X, limit 2, nameLike X , hasNext true)")
-	public void getFollowing_success_underLimit() {
+	public void getFollowing_noCursor_noIdAfter_limit2_noNameLike() {
 		//given
 		int limit = 2;
 
