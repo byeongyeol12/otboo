@@ -2,6 +2,8 @@ package com.codeit.otboo.domain.follow.repository;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -54,7 +58,7 @@ public class FollowRepositoryTest {
 
 		anotherUser = new User();
 		anotherUser.setEmail("another@example.com");
-		anotherUser.setName("유저");
+		anotherUser.setName("팔로");
 		anotherUser.setPasswordHash("pw3");
 		anotherUser.setRole(Role.USER);
 		anotherUser.setField("SALES");
@@ -76,4 +80,71 @@ public class FollowRepositoryTest {
 		assertThat(exist).isTrue();
 	}
 
+	//findFollowees
+	@Test
+	@DisplayName("findFollowees - 유저가 팔로우하는 사람 목록(커서 x)")
+	void findFollowees_noCursor(){
+		//given
+		Follow follow = Follow.builder().follower(follower).followee(followee).build();
+		Follow follow2 = Follow.builder().follower(follower).followee(anotherUser).build();
+		followRepository.save(follow);
+		followRepository.save(follow2);
+		Pageable pageable = PageRequest.of(0, 10);
+
+		//when
+		List<Follow> followees = followRepository.findFollowees(follower.getId(),null,null,pageable);
+
+		//then
+		assertThat(followees).hasSize(2);
+		//리스트에서 각 팔로우 객체의 "팔로이" ID만 추출해서,
+		// 그 안에 내가 팔로우했던 2명(followee, anotherUser)가 모두 포함됐는지 검증
+		assertThat(followees).extracting(f -> f.getFollowee().getId())
+			.contains(followee.getId(), anotherUser.getId());
+	}
+
+	@Test
+	@DisplayName("findFollowees - 유저가 팔로우하는 사람 목록(커서 x, idAfter o, nameLike o)")
+	void findFollowees_noCursor_usedIdAfter_usedNameLike() {
+		//given
+		Follow follow1 = Follow.builder().follower(follower).followee(followee).build();
+		Follow follow2 = Follow.builder().follower(follower).followee(anotherUser).build();
+		followRepository.save(follow1);
+		followRepository.save(follow2);
+		Pageable pageable = PageRequest.of(0, 10);
+
+		// when: nameLike 필터
+		List<Follow> byName = followRepository.findFollowees(
+			follower.getId(), null, "팔", pageable);
+
+		// then
+		assertThat(byName).hasSize(1);
+		assertThat(byName.get(0).getFollowee().getName()).isEqualTo("팔로이");
+
+
+		// when: idAfter 필터
+		List<Follow> after = followRepository.findFollowees(
+			follower.getId(), follow1.getId(), null, pageable);
+
+		// then
+		assertThat(after).hasSize(1);
+		assertThat(after.get(0).getId()).isEqualTo(follow2.getId());
+	}
+
+	@Test
+	@DisplayName("findFollowees - 유저가 팔로우하는 사람 목록(커서 x, idAfter o, nameLike o)")
+	void findFollowees_withCursorAndNameLike() {
+		//given
+		Follow follow1 = Follow.builder().follower(follower).followee(followee).build();
+		Follow follow2 = Follow.builder().follower(follower).followee(anotherUser).build();
+		followRepository.save(follow1);
+		followRepository.save(follow2);
+		Pageable pageable = PageRequest.of(0, 10);
+
+		//when
+		List<Follow> result = followRepository.findFollowees(follower.getId(),follow1.getId(),"팔",pageable);
+
+		//then
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).getFollowee().getName()).isEqualTo("팔로");
+	}
 }
