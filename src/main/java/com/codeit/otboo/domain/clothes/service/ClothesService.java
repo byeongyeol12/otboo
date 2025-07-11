@@ -36,7 +36,8 @@ public class ClothesService {
 	private final LocalImageUploadService localImageUploadService;
 
 	@Transactional
-	public ClothesDto createClothes(UUID ownerId, ClothesCreateRequest request, MultipartFile image) {
+	public ClothesDto createClothes(ClothesCreateRequest request, MultipartFile image) {
+		UUID ownerId = request.ownerId();
 		String imageUrl = localImageUploadService.upload(image);
 
 		Clothes newClothes = Clothes.builder()
