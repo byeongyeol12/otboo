@@ -173,6 +173,7 @@ CREATE TABLE ootds (
                        id UUID PRIMARY KEY,
                        clothes_id UUID NOT NULL,
                        feed_id UUID NOT NULL,
+                       created_at TIMESTAMPTZ NOT NULL,
                        CONSTRAINT fk_ootds_clothes FOREIGN KEY (clothes_id) REFERENCES clothes(id),
                        CONSTRAINT fk_ootds_feed FOREIGN KEY (feed_id) REFERENCES feeds(id)
 );
