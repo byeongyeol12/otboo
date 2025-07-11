@@ -39,6 +39,11 @@ public class FollowRepositoryTest {
 	User followee;
 	User anotherUser;
 
+	static final UUID FOLLOW_ID_1 = UUID.fromString("00000000-0000-0000-0000-000000000001");
+	static final UUID FOLLOW_ID_2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
+	static final UUID FOLLOW_ID_3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
+
 	@BeforeEach
 	public void setUp() {
 		// 유저 더미 생성 및 저장
@@ -84,11 +89,11 @@ public class FollowRepositoryTest {
 
 	//findFollowees
 	@Test
-	@DisplayName("findFollowees - idAfterX, nameLikeX, limitO(10), sortBy='id', DESC: 전체(최대 10개, 최신순)")
-	void findFollowees_noCursor(){
+	@DisplayName("findFollowees - idAfterX, nameLikeX, limitO(10), sortBy='id', DESC")
+	void findFollowees_noIdAfterAndNameLike_usedLimitAndSortByIdDESC(){
 		// given
-		Follow f1 = Follow.builder().follower(follower).followee(followee).build();
-		Follow f2 = Follow.builder().follower(follower).followee(anotherUser).build();
+		Follow f1 = Follow.builder().id(FOLLOW_ID_1).follower(follower).followee(followee).build();
+		Follow f2 = Follow.builder().id(FOLLOW_ID_2).follower(follower).followee(anotherUser).build();
 		followRepository.save(f1);
 		followRepository.save(f2);
 		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC,"id"));
@@ -98,27 +103,44 @@ public class FollowRepositoryTest {
 
 		// then
 		assertThat(result).hasSize(2);
+		assertThat(result.get(1).getId()).isEqualTo(FOLLOW_ID_1);
+		assertThat(result.get(0).getId()).isEqualTo(FOLLOW_ID_2);
 		assertThat(result.get(0).getFollowee().getName()).isIn("유저2", "유저3");
 	}
 
 	@Test
-	@DisplayName("findFollowees - idAfterO, nameLikeX, limitO(10), sortBy='id', ASC: idAfter 커서 이후(오름차순)")
-	void findFollowees_noCursor_usedIdAfter_usedNameLike() {
+	@DisplayName("findFollowees - idAfterX, nameLikeX, limitO(10), sortBy='id', ASC")
+	void findFollowees_noIdAfterAndNameLike_usedLimitAndSortByIdASC(){
 		// given
-		Follow f1 = Follow.builder().follower(follower).followee(followee).build();
-		Follow f2 = Follow.builder().follower(follower).followee(anotherUser).build();
+		Follow f1 = Follow.builder().id(FOLLOW_ID_1).follower(follower).followee(followee).build();
+		Follow f2 = Follow.builder().id(FOLLOW_ID_2).follower(follower).followee(anotherUser).build();
 		followRepository.save(f1);
 		followRepository.save(f2);
+		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC,"id"));
 
-		// UUID 반드시 비교
-		UUID minId = f1.getId().compareTo(f2.getId()) < 0 ? f1.getId() : f2.getId();
-		UUID maxId = f1.getId().compareTo(f2.getId()) > 0 ? f1.getId() : f2.getId();
-		String maxUserName = f1.getId().compareTo(f2.getId()) > 0 ? anotherUser.getName() : followee.getName();
+		// when
+		List<Follow> result = followRepository.findFollowees(follower.getId(),null,null,pageable);
+
+		// then
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0).getId()).isEqualTo(FOLLOW_ID_1);
+		assertThat(result.get(1).getId()).isEqualTo(FOLLOW_ID_2);
+		assertThat(result.get(0).getFollowee().getName()).isIn("유저2", "유저3");
+	}
+
+	@Test
+	@DisplayName("findFollowees - idAfterO, nameLikeO, limitO(10), sortBy='id', ASC: idAfter 커서 이후(오름차순)")
+	void findFollowees_usedIdAfterNameLikeLimitAndSortByIdASC() {
+		// given
+		Follow f1 = Follow.builder().id(FOLLOW_ID_1).follower(follower).followee(followee).build();
+		Follow f2 = Follow.builder().id(FOLLOW_ID_2).follower(follower).followee(anotherUser).build();
+		followRepository.save(f1);
+		followRepository.save(f2);
 
 		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
 
 		// when
-		List<Follow> result = followRepository.findFollowees(follower.getId(), minId, maxUserName, pageable);
+		List<Follow> result = followRepository.findFollowees(follower.getId(),f1.getId(),"유저",pageable);
 
 		// then
 		assertThat(result).hasSize(1);
@@ -126,22 +148,24 @@ public class FollowRepositoryTest {
 	}
 
 	@Test
-	@DisplayName("findFollowees - 유저가 팔로우하는 사람 목록(커서 x, idAfter o, nameLike o)")
-	void findFollowees_withCursorAndNameLike() {
-		//given
-		Follow follow1 = Follow.builder().follower(follower).followee(followee).build();
-		Follow follow2 = Follow.builder().follower(follower).followee(anotherUser).build();
-		followRepository.save(follow1);
-		followRepository.save(follow2);
-		Pageable pageable = PageRequest.of(0, 10);
+	@DisplayName("findFollowees - idAfterx, nameLikeO, limitO(10), sortBy='followee.name', ASC: idAfter 커서 이후(오름차순)")
+	void findFollowees_noIdAfter_usedNameLikeLimitAndSortByNameASC() {
+		// given
+		Follow f1 = Follow.builder().id(FOLLOW_ID_1).follower(follower).followee(followee).build();
+		Follow f2 = Follow.builder().id(FOLLOW_ID_2).follower(follower).followee(anotherUser).build();
+		followRepository.save(f1);
+		followRepository.save(f2);
 
-		//when
-		List<Follow> result = followRepository.findFollowees(follower.getId(),follow1.getId(),"팔",pageable);
+		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "followee.name"));
 
-		//then
-		assertThat(result).hasSize(1);
-		assertThat(result.get(0).getFollowee().getName()).isEqualTo("팔로");
+		// when
+		List<Follow> result = followRepository.findFollowees(follower.getId(),null,"유저",pageable);
+
+		// then
+		assertThat(result).hasSize(2);
+		assertThat(result.get(0).getFollowee().getName()).isEqualTo("유저2");
 	}
+
 
 	// // findFollowers
 	// @Test
