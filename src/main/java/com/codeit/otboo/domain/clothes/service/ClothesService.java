@@ -33,12 +33,12 @@ public class ClothesService {
 
 	private final ClothesRepository clothesRepository;
 	private final AttributeDefRepository attributeDefRepository;
-	private final ImageUploadService imageUploadService;
+	private final LocalImageUploadService localImageUploadService;
 
 	@Transactional
 	public ClothesDto createClothes(ClothesCreateRequest request, MultipartFile image) {
 		UUID ownerId = request.ownerId();
-		String imageUrl = imageUploadService.upload(image);
+		String imageUrl = localImageUploadService.upload(image);
 
 		Clothes newClothes = Clothes.builder()
 			.ownerId(ownerId)
@@ -94,7 +94,7 @@ public class ClothesService {
 
 		String imageUrl = clothesToUpdate.getImageUrl();
 		if (image != null && !image.isEmpty()) {
-			imageUrl = imageUploadService.upload(image);
+			imageUrl = localImageUploadService.upload(image);
 		}
 
 		clothesToUpdate.update(request.name(), convertToClothesType(request.type()), imageUrl);
