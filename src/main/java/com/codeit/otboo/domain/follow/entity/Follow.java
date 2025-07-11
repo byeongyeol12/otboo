@@ -46,7 +46,7 @@ public class Follow {
 
 	@Builder
 	public Follow(UUID id, User follower, User followee) {
-		this.id = id;
+		this.id = id != null ? id : UUID.randomUUID();
 		this.follower = follower;
 		this.followee = followee;
 		this.createdAt = Instant.now();
