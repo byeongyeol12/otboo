@@ -246,5 +246,37 @@ public class FollowRepositoryTest {
 		assertThat(result.get(1).getFollower().getName()).isEqualTo("유저3");
 	}
 
+	//countByFollowerId
+	@Test
+	@DisplayName("countByFollowerId - 유저가 팔로우 하는 사람 수")
+	void countByFollowerId_success(){
+		//given
+		Follow f1 = Follow.builder().id(FOLLOW_ID_1).follower(follower).followee(followee).build();
+		Follow f2 = Follow.builder().id(FOLLOW_ID_2).follower(follower).followee(anotherUser).build();
+		followRepository.save(f1);
+		followRepository.save(f2);
 
+		//when
+		Long count = followRepository.countByFollowerId(follower.getId());
+
+		//then
+		assertThat(count).isEqualTo(2);
+	}
+
+	//countByFolloweeId
+	@Test
+	@DisplayName("countByFolloweeId - 유저를 팔로우 하는 사람 수")
+	void countByFolloweeId_success(){
+		//given
+		Follow f1 = Follow.builder().id(FOLLOW_ID_1).follower(follower).followee(followee).build();
+		Follow f2 = Follow.builder().id(FOLLOW_ID_2).follower(anotherUser).followee(followee).build();
+		followRepository.save(f1);
+		followRepository.save(f2);
+
+		//when
+		Long count = followRepository.countByFolloweeId(followee.getId());
+
+		//then
+		assertThat(count).isEqualTo(2);
+	}
 }
