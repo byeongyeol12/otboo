@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
 import com.codeit.otboo.domain.notification.service.NotificationService;
+import com.codeit.otboo.global.config.security.UserPrincipal;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,11 +30,10 @@ public class NotificationController {
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam int limit,
-		@RequestParam(required = false) UUID userId // test
-		//@AuthenticationPrincipal OtbooUserDetails userDetails,
+		@AuthenticationPrincipal UserPrincipal userPrincipal
 		) {
-		NotificationDtoCursorResponse notificationDtoCursorResponse = notificationService.getNotifications(userId,cursor,idAfter,limit); //test
-		//NotificationDtoCursorResponse notificationDtoCursorResponse = notificationService.getNotifications(userDetails.getUserDto().id(),cursor,idAfter,limit);
+		UUID userId = userPrincipal.getId();
+		NotificationDtoCursorResponse notificationDtoCursorResponse = notificationService.getNotifications(userId,cursor,idAfter,limit);
 		return ResponseEntity.status(HttpStatus.OK).body(notificationDtoCursorResponse);
 	}
 
@@ -40,11 +41,10 @@ public class NotificationController {
 	@DeleteMapping("/{notificationId}")
 	public ResponseEntity<Void> readNotifications(
 		@PathVariable UUID notificationId,
-		//@AuthenticationPrincipal OtbooUserDetails userDetails,
-		@RequestParam(required = false) UUID userId// 추후 인증 토큰에서 추출
+		@AuthenticationPrincipal UserPrincipal userPrincipal
 	) {
-		notificationService.readNotifications(notificationId,userId); //test
-		//notificationService.readNotifications(notificationId,userDetails.getUserDto().id());
+		UUID userId = userPrincipal.getId();
+		notificationService.readNotifications(notificationId,userId);
 
 		return ResponseEntity.noContent().build();
 	}

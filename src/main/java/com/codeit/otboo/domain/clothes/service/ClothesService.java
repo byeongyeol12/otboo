@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.clothes.service;
 
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +22,9 @@ import com.codeit.otboo.domain.clothes.entity.Clothes;
 import com.codeit.otboo.domain.clothes.entity.ClothesType;
 import com.codeit.otboo.domain.clothes.repository.AttributeDefRepository;
 import com.codeit.otboo.domain.clothes.repository.ClothesRepository;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
@@ -34,6 +38,7 @@ public class ClothesService {
 	private final ClothesRepository clothesRepository;
 	private final AttributeDefRepository attributeDefRepository;
 	private final LocalImageUploadService localImageUploadService;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public ClothesDto createClothes(ClothesCreateRequest request, MultipartFile image) {
@@ -56,6 +61,19 @@ public class ClothesService {
 		}
 
 		Clothes savedClothes = clothesRepository.save(newClothes);
+
+		// 알림 : 옷 등록
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				ownerId,
+				"옷 등록",
+				"옷 ["+request.name()+"] 등록 했습니다.",
+				NotificationLevel.INFO
+			)
+		);
+
 		return convertToDto(savedClothes);
 	}
 

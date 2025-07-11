@@ -14,9 +14,11 @@ import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.sse.repository.SseEmitterRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SseEmitterServiceImpl implements SseEmitterService {
 
 	@Value("300000") //300,000 milliseconds, 5분
@@ -31,17 +33,17 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 
 		//클라이언트가 연결을 끊었을 때
 		sseEmitter.onCompletion(() -> {
-			//log.debug("sse on onCompletion");
+			log.debug("sse on onCompletion");
 			sseEmitterRepository.delete(receiverId,sseEmitter);
 		});
 		//타임아웃으로 끊길 때
 		sseEmitter.onTimeout(() -> {
-			//log.debug("sse on onTimeout");
+			log.debug("sse on onTimeout");
 			sseEmitterRepository.delete(receiverId,sseEmitter);
 		});
 		//예외/에러 발생
 		sseEmitter.onError((e)-> {
-			//log.debug("sse on onError");
+			log.debug("sse on onError");
 			sseEmitterRepository.delete(receiverId,sseEmitter);
 		});
 
@@ -59,6 +61,8 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 	//1명에게 알림 전송
 	public void send(UUID receiverId, String eventName, NotificationDto notificationDto) {
 		List<SseEmitter> sseEmitters = sseEmitterRepository.findByReceiverId(receiverId).orElse(List.of());
+		log.info("SseEmitter count for {}: {}", receiverId, sseEmitters.size());
+
 		for(SseEmitter sseEmitter : sseEmitters) {
 			try {
 				sseEmitter.send(
