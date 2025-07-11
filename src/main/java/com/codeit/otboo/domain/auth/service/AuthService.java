@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.auth.dto.request.LoginRequest;
 import com.codeit.otboo.domain.auth.dto.response.LoginResponse;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
@@ -24,6 +27,7 @@ public class AuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final TokenCacheService tokenCacheService;
+	private final NotificationService notificationService;
 
 	public LoginResponse login(LoginRequest request) {
 
@@ -47,6 +51,18 @@ public class AuthService {
 		tokenCacheService.saveRefreshToken(user.getId(), refreshToken);
 
 		Instant expiresAt = Instant.now().plusMillis(jwtTokenProvider.getTokenValidityInMilliseconds());
+
+		// 알림 테스트
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				user.getId(),
+				"로그인",
+				"유저 ["+user.getName()+"] 님이 로그인 했습니다.",
+				NotificationLevel.INFO
+			)
+		);
 
 		return new LoginResponse(token, refreshToken, expiresAt);
 	}
