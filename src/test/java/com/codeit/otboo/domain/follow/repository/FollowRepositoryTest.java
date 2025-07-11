@@ -3,6 +3,7 @@ package com.codeit.otboo.domain.follow.repository;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -278,5 +279,38 @@ public class FollowRepositoryTest {
 
 		//then
 		assertThat(count).isEqualTo(2);
+	}
+
+	//findByFollowerAndFollowee
+	@Test
+	@DisplayName("findByFollowerAndFollowee - 팔로우 조회")
+	void findByFollowerAndFollowee_success(){
+		//given
+		Follow f1 = Follow.builder().id(FOLLOW_ID_1).follower(follower).followee(followee).build();
+		Follow f2 = Follow.builder().id(FOLLOW_ID_2).follower(follower).followee(anotherUser).build();
+		followRepository.save(f1);
+		followRepository.save(f2);
+
+		//when
+		Optional<Follow> follow = followRepository.findByFollowerAndFollowee(follower,followee);
+
+		//then
+		assertThat(follow.isPresent()).isTrue();
+		assertThat(follow.get().getId()).isEqualTo(FOLLOW_ID_1);
+	}
+
+	//existsByFollowerAndFollowee
+	@Test
+	@DisplayName("existsByFollowerAndFollowee - 팔로우 존재 여부")
+	void existsByFollowerAndFollowee_success(){
+		//given
+		Follow f1 = Follow.builder().id(FOLLOW_ID_1).follower(follower).followee(followee).build();
+		followRepository.save(f1);
+
+		//when
+		Boolean result = followRepository.existsByFollowerAndFollowee(follower,followee);
+
+		//then
+		assertThat(result).isTrue();
 	}
 }
