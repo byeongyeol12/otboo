@@ -63,7 +63,9 @@ public enum ErrorCode {
 
 	// RECOMMENDATION
 	RECOMMENDATION_NOT_FOUND(404, "R001", "추천 정보를 찾을 수 없습니다."),
-	;
+
+	// LOCATION
+	LOCATION_NOT_FOUND(404, "LC001", "위치 정보를 찾을 수 없습니다.") ;
 
 	private final int status;
 	private final String code;
