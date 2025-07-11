@@ -53,6 +53,7 @@ public class SecurityConfig {
 					"/api/sse",
 					"/h2-console/**"
 				).permitAll()
+				.requestMatchers("/uploads/**").permitAll() // 테스트를 위해 임시로 추가
 				.anyRequest().authenticated()
 			)
 
