@@ -8,6 +8,7 @@ build/
 .env
 *.env
 .env
+/uploads/
 ### STS ###
 .apt_generated
 .classpath
@@ -43,4 +44,4 @@ out/
 ### Generated sources ###
 /build/generated/
 /src/main/generated/
-/src/main/java/**/Q*.java
+/src/main/java/*/Q.java/
