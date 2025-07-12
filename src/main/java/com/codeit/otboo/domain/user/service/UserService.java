@@ -139,39 +139,44 @@ public class UserService {
 	@Transactional
 	public ProfileDto updateProfile(UUID userId, ProfileUpdateRequest request, MultipartFile profileImage) {
 		Profile profile = profileRepository.findByUserId(userId)
-			.orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+				.orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
 
-		String imageUrl = profile.getProfileImageUrl(); // 기존 이미지
-
+		String imageUrl = profile.getProfileImageUrl();
 		if (profileImage != null && !profileImage.isEmpty()) {
 			imageUrl = imageStorageService.upload(profileImage);
-			System.out.println("✅ 업로드된 이미지 URL: " + imageUrl);
 		}
 
 		String nickname = request.nickname() != null ? request.nickname() : profile.getNickname();
 		Gender gender = request.gender() != null ? request.gender() : profile.getGender();
 		Integer temperatureSensitivity = request.temperatureSensitivity() != null
-			? request.temperatureSensitivity()
-			: profile.getTemperatureSensitivity();
-
+				? request.temperatureSensitivity()
+				: profile.getTemperatureSensitivity();
 		Instant birthDateInstant = request.birthDate() != null
-			? request.birthDate().atStartOfDay(ZoneOffset.UTC).toInstant()
-			: profile.getBirthDate(); // ✅ 기존 값 유지
+				? request.birthDate().atStartOfDay(ZoneOffset.UTC).toInstant()
+				: profile.getBirthDate();
 
-		String locationName = request.locationName() != null
-			? request.locationName()
-			: profile.getLocationNames(); // ✅ 기존 값 유지
+		// Location 정보가 있으면 updateLocation 호출
+		if (request.location() != null) {
+			Double latitude = request.location().latitude();
+			Double longitude = request.location().longitude();
+			Integer x = request.location().x();
+			Integer y = request.location().y();
+			String locationNames = String.join(", ", request.location().locationNames());
 
+			profile.updateLocation(latitude, longitude, x, y, locationNames);
+		}
+
+		// locationNames는 updateLocation에서 이미 갱신됨, 중복 방지
 		profile.updateProfile(
-			nickname,
-			gender,
-			birthDateInstant,
-			locationName,
-			temperatureSensitivity,
-			imageUrl
+				nickname,
+				gender,
+				birthDateInstant,
+				profile.getLocationNames(), // 현재 profile 객체의 값 사용
+				temperatureSensitivity,
+				imageUrl
 		);
 
-		return profileMapper.toDto(profile); // ✅ profileImageUrl 매핑되어 있는지 확인 필요
+		return profileMapper.toDto(profile);
 	}
 
 	@Transactional(readOnly = false)
