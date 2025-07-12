@@ -4,9 +4,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -56,7 +59,7 @@ public class RecommendationService {
 			weather = Weather.builder()
 				.temperature(new TemperatureInfo(15.0, 15.0, 15.0, 0.0)) // 임시로 15도
 				.skyStatus(SkyStatus.CLEAR) // 임시 값
-				.location(new LocationInfo(0.0, 0.0, 0, 0)) // 임시 값 (위도, 경도, x, y)
+				.location(new LocationInfo(37.5665, 126.9780, 60, 127))
 				.forecastedAt(Instant.now()) // 현재 시각으로 임시 설정
 				.forecastAt(Instant.now().plusSeconds(3600)) // 1시간 후로 임시 설정
 				.humidity(new HumidityInfo(0, 0)) // 임시 값
@@ -79,7 +82,7 @@ public class RecommendationService {
 	}
 
 	private List<Clothes> recommend(List<Clothes> allClothes, Weather weather, User user) {
-		// 온도별 의상 추천
+
 		double currentTemp = weather.getTemperature().current();
 
 		Map<ClothesType, List<Clothes>> clothesByType = new EnumMap<>(ClothesType.class);
@@ -87,32 +90,26 @@ public class RecommendationService {
 			clothesByType.computeIfAbsent(c.getType(), k -> new ArrayList<>()).add(c);
 		}
 
-		List<ClothesType> requiredTypes = new ArrayList<>();
+		Set<ClothesType> typesToRecommend = new HashSet<>(clothesByType.keySet());
+
+		// 만약 온도가 22도 이상이면 추천 대상 종류에서 OUTER를 제외
 		if (currentTemp >= 22.0) {
-			requiredTypes.add(ClothesType.TOP);
-			requiredTypes.add(ClothesType.BOTTOM);
-		} else {
-			requiredTypes.add(ClothesType.TOP);
-			requiredTypes.add(ClothesType.BOTTOM);
-			requiredTypes.add(ClothesType.OUTER);
+			typesToRecommend.remove(ClothesType.OUTER);
 		}
-
-		int maxSets = requiredTypes.stream()
-			.map(type -> clothesByType.getOrDefault(type, Collections.emptyList()).size())
-			.min(Integer::compare)
-			.orElse(0);
-
-		int setsToRecommend = Math.min(3, maxSets);
 
 		List<Clothes> recommendation = new ArrayList<>();
+		Random random = new Random();
 
-		for (int i = 0; i < setsToRecommend; i++) {
-			for (ClothesType type : requiredTypes) {
-				if (clothesByType.containsKey(type) && i < clothesByType.get(type).size()) {
-					recommendation.add(clothesByType.get(type).get(i));
-				}
+		for (ClothesType type : typesToRecommend) {
+			List<Clothes> clothesList = clothesByType.get(type);
+
+			if (clothesList != null && !clothesList.isEmpty()) {
+				// 해당 종류의 옷 목록에서 랜덤으로 하나를 선택하여 추천 목록에 추가
+				Clothes randomClothes = clothesList.get(random.nextInt(clothesList.size()));
+				recommendation.add(randomClothes);
 			}
 		}
+
 		return recommendation;
 	}
 
