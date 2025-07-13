@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional; // Optional 임포트 추가
 import java.util.UUID;
 
 @Repository
@@ -27,5 +28,22 @@ public interface WeatherRepository extends JpaRepository<Weather, UUID> {
             @Param("x") int x,
             @Param("y") int y,
             @Param("forecastAtAfter") OffsetDateTime forecastAtAfter
+    );
+
+    // <<< 이 메서드를 여기에 추가하세요.
+    /**
+     * 특정 위치에서 현재 시간 이후의 가장 최신/가까운 예보 1개를 조회합니다.
+     */
+    @Query(value = "SELECT w.* FROM weathers w " +
+            "WHERE CAST(w.location ->> 'x' AS INTEGER) = :x " +
+            "AND CAST(w.location ->> 'y' AS INTEGER) = :y " +
+            "AND w.forecast_at > :now " +
+            "ORDER BY w.forecast_at ASC " +
+            "LIMIT 1",
+            nativeQuery = true)
+    Optional<Weather> findLatestForecastByLocation(
+            @Param("x") int x,
+            @Param("y") int y,
+            @Param("now") OffsetDateTime now
     );
 }

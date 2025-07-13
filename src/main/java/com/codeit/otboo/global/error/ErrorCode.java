@@ -26,6 +26,7 @@ public enum ErrorCode {
 	// PROFILE
 	PROFILE_NOT_FOUND(404, "P001", "프로필 정보를 찾을 수 없습니다."),
 	PROFILE_ALREADY_EXISTS(400, "P006", "이미 등록된 프로필이 존재합니다."),
+	LOCATION_NOT_SET(400, "P003", "프로필에 위치 정보가 설정되지 않았습니다."),
 	PROFILE_IMAGE_UPLOAD_FAILED(500, "P002", "프로필 이미지 업로드에 실패했습니다."),
 
 	// CLOTHES
@@ -40,7 +41,8 @@ public enum ErrorCode {
 	ATTRIBUTE_DEF_IN_USE(409, "AD004", "사용 중인 의상이 있어 삭제할 수 없는 속성입니다."),
 
 	// WEATHER
-	WEATHER_NOT_FOUND(404, "W001", "날씨 정보를 찾을 수 없습니다."),
+	WEATHER_NOT_FOUND(404, "W001", "요청한 ID의 날씨 정보를 찾을 수 없습니다."),
+	WEATHER_NOT_FOUND_FOR_LOCATION(404, "W002", "해당 위치의 날씨 정보를 찾을 수 없습니다."),
 
 	// FEED
 	FEED_NOT_FOUND(404, "F001", "피드 정보를 찾을 수 없습니다."),

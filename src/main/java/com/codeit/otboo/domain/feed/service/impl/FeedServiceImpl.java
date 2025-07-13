@@ -30,6 +30,9 @@ import com.codeit.otboo.domain.weather.entity.vo.SkyStatus;
 import com.codeit.otboo.domain.weather.repository.WeatherRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
+import com.codeit.otboo.domain.user.entity.Profile;
+import java.time.OffsetDateTime;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,30 +46,51 @@ public class FeedServiceImpl implements FeedService {
 	private final ClothesRepository clothesRepository;
 
 	@Transactional
+	@Override
 	public FeedDto createFeed(FeedCreateRequest request) {
-		// 1) author, weather 조회
+		// 1) author를 먼저 조회합니다. (폴백 로직에서 사용자 위치가 필요하기 때문)
 		User author = userRepository.findById(request.getAuthorId())
-			.orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-		Weather weather = weatherRepository.findById(request.getWeatherId())
-			.orElseThrow(() -> new CustomException(WEATHER_NOT_FOUND));
+				.orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-		// 2) Feed 생성
+		// 2) 프론트에서 받은 weatherId로 날씨를 찾아봅니다.
+		Optional<Weather> optionalWeather = weatherRepository.findById(request.getWeatherId());
+
+		Weather weather;
+		if (optionalWeather.isPresent()) {
+			// 3-1) DB에 날씨 정보가 있으면, 그걸 사용합니다.
+			weather = optionalWeather.get();
+		} else {
+			// 3-2) DB에 날씨 정보가 없으면 (프론트가 오래된 ID를 보낸 경우),
+			//      사용자 위치를 기반으로 최신 날씨를 다시 찾아옵니다.
+			Profile profile = Optional.ofNullable(author.getProfile())
+					.orElseThrow(() -> new CustomException(PROFILE_NOT_FOUND));
+
+			Integer x = profile.getX();
+			Integer y = profile.getY();
+			if (x == null || y == null) {
+				throw new CustomException(LOCATION_NOT_SET);
+			}
+
+			weather = weatherRepository.findLatestForecastByLocation(x, y, OffsetDateTime.now())
+					.orElseThrow(() -> new CustomException(WEATHER_NOT_FOUND_FOR_LOCATION));
+		}
+
+		// 4) Feed 생성 (이제 weather 변수에는 항상 유효한 값이 들어있습니다)
 		Feed feed = new Feed(author, weather, false, 0L, 0, request.getContent());
 
-		// 3) 각 clothesId → Ootd 생성 및 Feed에 추가
+		// 5) 각 clothesId → Ootd 생성 및 Feed에 추가
 		for (UUID clothesId : request.getClothesIds()) {
 			Clothes clothes = clothesRepository.findById(clothesId)
-				.orElseThrow(() -> new CustomException(CLOTHES_NOT_FOUND));
+					.orElseThrow(() -> new CustomException(CLOTHES_NOT_FOUND));
 			feed.addClothes(clothes);
 		}
 
-		// 4) 저장 (cascade=PERSIST 덕분에 Ootd도 함께 insert)
+		// 6) 저장
 		feed = feedRepository.save(feed);
 
-		// 5) DTO로 변환
+		// 7) DTO로 변환
 		return FeedDto.fromEntity(feed);
 	}
-
 	@Transactional(readOnly = true)
 	@Override
 	public FeedDto getFeed(UUID feedId) {
