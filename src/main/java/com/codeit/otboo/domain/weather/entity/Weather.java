@@ -1,4 +1,3 @@
-// src/main/java/com/codeit/otboo/domain/weather/entity/Weather.java
 package com.codeit.otboo.domain.weather.entity;
 
 import com.codeit.otboo.domain.weather.entity.vo.*;
@@ -8,8 +7,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -48,13 +45,10 @@ public class Weather {
     @Column(name = "precipitation", columnDefinition = "json")
     private PrecipitationInfo precipitation;
 
-    @Formula(" (precipitation ->> 'type') ")
+    // ★ DB 컬럼 매핑 (JPA, JPQL/HQL 조건에 쓸 수 있음)
     @Enumerated(EnumType.STRING)
+    @Column(name = "precipitation_type", nullable = false)
     private PrecipitationType precipitationType;
-
-    public PrecipitationType getPrecipitationType() {
-        return precipitationType;
-    }
 
     @Type(JsonType.class)
     @Column(name = "humidity", columnDefinition = "json")
@@ -77,8 +71,17 @@ public class Weather {
     private Instant updatedAt;
 
     @Builder
-    public Weather(Instant forecastedAt, Instant forecastAt, SkyStatus skyStatus, LocationInfo location,
-                   PrecipitationInfo precipitation, HumidityInfo humidity, TemperatureInfo temperature, WindSpeedInfo windSpeed) {
+    public Weather(
+            Instant forecastedAt,
+            Instant forecastAt,
+            SkyStatus skyStatus,
+            LocationInfo location,
+            PrecipitationInfo precipitation,
+            HumidityInfo humidity,
+            TemperatureInfo temperature,
+            WindSpeedInfo windSpeed,
+            PrecipitationType precipitationType // ★ builder에도 포함
+    ) {
         this.forecastedAt = forecastedAt;
         this.forecastAt = forecastAt;
         this.skyStatus = skyStatus;
@@ -87,5 +90,7 @@ public class Weather {
         this.humidity = humidity;
         this.temperature = temperature;
         this.windSpeed = windSpeed;
+        this.precipitationType = precipitationType;
     }
+
 }

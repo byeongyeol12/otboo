@@ -85,8 +85,14 @@ public class Profile {
 		this.profileImageUrl = null;
 	}
 
-	public void updateProfile(String nickname, Gender gender, Instant birthDate,
-		String locationNames, Integer temperatureSensitivity, String profileImageUrl) {
+	public void updateProfile(
+			String nickname,
+			Gender gender,
+			Instant birthDate,
+			String locationNames,
+			Integer temperatureSensitivity,
+			String profileImageUrl
+	) {
 		this.nickname = nickname;
 		this.gender = gender;
 		this.birthDate = birthDate;
@@ -95,8 +101,21 @@ public class Profile {
 		this.profileImageUrl = profileImageUrl;
 	}
 
+	public void updateLocation(
+			Double latitude,
+			Double longitude,
+			Integer x,
+			Integer y,
+			String locationNames
+	) {
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.x = x;
+		this.y = y;
+		this.locationNames = locationNames;
+	}
+
 	public void profileImageUrlUpdate(String imageUrl) {
 		this.profileImageUrl = imageUrl;
 	}
 }
-

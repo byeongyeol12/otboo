@@ -13,5 +13,6 @@ public record WeatherDto(
         PrecipitationInfo precipitation,
         HumidityInfo humidity,
         TemperatureInfo temperature,
-        WindSpeedInfo windSpeed
+        WindSpeedInfo windSpeed,
+        PrecipitationType precipitationType
 ) {}
