@@ -1,3 +1,5 @@
+// RecommendationController.java 파일
+
 package com.codeit.otboo.domain.recommendation.controller;
 
 import java.util.UUID;
@@ -24,12 +26,11 @@ public class RecommendationController {
 
 	@GetMapping
 	public ResponseEntity<RecommendationResponse> getRecommendations(
-		@RequestParam("weatherId") UUID weatherId,
-		@AuthenticationPrincipal UserPrincipal userPrincipal) {
+			@RequestParam(name = "weatherId", required = false) UUID weatherId,
+			@AuthenticationPrincipal UserPrincipal userPrincipal) {
 
 		UUID userId = userPrincipal.getId();
 		RecommendationResponse response = recommendationService.getRecommendations(userId, weatherId);
 		return ResponseEntity.ok(response);
 	}
-
 }
