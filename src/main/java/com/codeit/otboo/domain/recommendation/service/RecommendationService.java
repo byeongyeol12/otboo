@@ -56,7 +56,7 @@ public class RecommendationService {
 				throw new CustomException(ErrorCode.LOCATION_NOT_SET);
 			}
 
-			weather = weatherRepository.findLatestForecastByLocation(x, y, OffsetDateTime.now())
+			weather = weatherRepository.findLatestWeatherByLocation(x, y)
 					.orElseThrow(() -> new CustomException(ErrorCode.WEATHER_NOT_FOUND_FOR_LOCATION));
 		}
 
