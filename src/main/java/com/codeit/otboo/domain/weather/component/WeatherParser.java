@@ -38,11 +38,12 @@ public class WeatherParser {
                 return Collections.emptyList();
             }
 
-            Map<String, List<KmaWeatherResponse.Item>> groupedByTime = response.getResponse().getBody().getItems().getItemList().stream()
-                    .collect(Collectors.groupingBy(KmaWeatherResponse.Item::getFcstTime));
+            Map<String, List<KmaWeatherResponse.Item>> groupedByDateTime =
+                    response.getResponse().getBody().getItems().getItemList().stream()
+                            .collect(Collectors.groupingBy(item -> item.getFcstDate() + item.getFcstTime()));
 
-            return groupedByTime.entrySet().stream()
-                    .map(entry -> createWeatherDtoFromGroup(entry.getValue(), latitude, longitude))
+            return groupedByDateTime.values().stream()
+                    .map(group -> createWeatherDtoFromGroup(group, latitude, longitude))
                     .collect(Collectors.toList());
 
         } catch (JsonProcessingException e) {
@@ -93,7 +94,8 @@ public class WeatherParser {
                 precipitation,
                 humidity,
                 temperature,
-                windSpeed
+                windSpeed,
+                precipitation.type()
         );
     }
 

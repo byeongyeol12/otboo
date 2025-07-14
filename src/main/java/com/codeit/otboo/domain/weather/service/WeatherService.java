@@ -8,12 +8,13 @@ import java.util.List;
 public interface WeatherService {
 
     /**
-     * 위도/경도를 기반으로 DB에 저장된 날씨 예보 목록을 조회합니다.
+     * latitude/longitude 에 해당하는 위치의
+     * “일별 요약” WeatherDto 리스트를 반환합니다.
      */
     List<WeatherDto> getWeather(double latitude, double longitude);
 
     /**
-     * 위도/경도를 기반으로 격자 좌표 및 지역명 정보를 조회합니다.
+     * 내부에서 Grid 변환에만 쓰이므로 그대로 두세요.
      */
     LocationInfo getWeatherLocation(double latitude, double longitude);
 }

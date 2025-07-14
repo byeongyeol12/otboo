@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.weather.batch;
 
+import com.codeit.otboo.domain.user.repository.ProfileRepository;
 import com.codeit.otboo.domain.weather.component.KmaApiClient;
 import com.codeit.otboo.domain.weather.component.WeatherParser;
 import com.codeit.otboo.domain.weather.dto.WeatherDto;
@@ -41,6 +42,7 @@ public class WeatherBatchConfig {
     private final WeatherParser weatherParser;
     private final WeatherRepository weatherRepository;
     private final JobRepository jobRepository;
+    private final ProfileRepository profileRepository;
     private final PlatformTransactionManager transactionManager;
     private final JobLauncher jobLauncher; // 스케줄러에서 Job을 실행시키기 위해 주입받습니다.
 
@@ -66,14 +68,11 @@ public class WeatherBatchConfig {
     // 3. ItemReader 구현
     @Bean
     public ItemReader<LocationInfo> locationInfoItemReader() {
-        // TODO: 향후 DB에서 사용자 위치 정보를 읽어오도록 수정해야 합니다.
-        List<LocationInfo> locations = List.of(
-                new LocationInfo(37.5666, 126.9782, 60, 127), // 서울
-                new LocationInfo(37.8000, 127.0500, 62, 129)  // 양주
-        );
+        List<LocationInfo> locations = profileRepository.findAll().stream()
+                .map(p -> new LocationInfo(p.getLatitude(), p.getLongitude(), p.getX(), p.getY()))
+                .collect(Collectors.toList());
         return new ListItemReader<>(locations);
     }
-
     // 4. ItemProcessor 구현
     @Bean
     public ItemProcessor<LocationInfo, List<Weather>> weatherItemProcessor() {
@@ -91,6 +90,7 @@ public class WeatherBatchConfig {
                             .precipitation(dto.precipitation())
                             .humidity(dto.humidity())
                             .windSpeed(dto.windSpeed())
+                            .precipitationType(dto.precipitationType()) // ★ 추가!
                             .build())
                     .collect(Collectors.toList());
         };

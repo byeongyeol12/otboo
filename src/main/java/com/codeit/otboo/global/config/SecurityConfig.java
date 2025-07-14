@@ -51,7 +51,8 @@ public class SecurityConfig {
 					"/api/batch/**",
 					"/api/users/**",
 					"/api/sse",
-					"/h2-console/**"
+					"/h2-console/**",
+					"/uploads/**"// 테스트를 위해 임시로 추가
 				).permitAll()
 				.anyRequest().authenticated()
 			)

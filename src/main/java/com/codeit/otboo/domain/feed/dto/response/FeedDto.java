@@ -1,10 +1,8 @@
 package com.codeit.otboo.domain.feed.dto.response;
 
-import com.codeit.otboo.domain.clothes.dto.response.ClothesAttributeDefDto;
 import com.codeit.otboo.domain.clothes.dto.response.ClothesAttributeWithDefDto;
 import com.codeit.otboo.domain.feed.entity.Feed;
 import com.codeit.otboo.domain.feed.entity.Ootd;
-import com.codeit.otboo.domain.feed.dto.response.OotdDto;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.weather.dto.WeatherForFeedDto;
 import com.codeit.otboo.domain.weather.entity.Weather;
@@ -26,7 +24,7 @@ public record FeedDto(
 	boolean likedByMe
 ) {
 
-	public static FeedDto fromEntity(Feed feed) {
+	public static FeedDto fromEntity(Feed feed, boolean likedByMe) {
 		// Author
 		User authorEntity = feed.getUser();
 		AuthorDto authorDto = new AuthorDto(
@@ -43,7 +41,6 @@ public record FeedDto(
 			weatherEntity.getPrecipitation(),
 			weatherEntity.getTemperature()
 		);
-
 
 		// OOTDs
 		List<OotdDto> ootdList = feed.getClothesFeeds().stream()
@@ -63,6 +60,7 @@ public record FeedDto(
 					.toList()
 			))
 			.toList();
+		//check for this feed likedByMe
 
 		return new FeedDto(
 			feed.getId(),
@@ -74,7 +72,23 @@ public record FeedDto(
 			feed.getContent(),
 			feed.getLikeCount(),
 			feed.getCommentCount(),
-			feed.isLikedByMe()
+			likedByMe
+		);
+	}
+
+	public FeedDto withLikedByMe(boolean likedByMe) {
+		return new FeedDto(
+			this.id,
+			this.createdAt,
+			this.updatedAt,
+			this.author,
+			this.weather,
+			this.ootds,
+			this.content,
+			this.likeCount,
+			this.commentCount,
+			likedByMe
 		);
 	}
 }
+

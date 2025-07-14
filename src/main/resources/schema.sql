@@ -1,3 +1,5 @@
+-- === 기존 도메인 테이블들 ===
+
 DROP TABLE IF EXISTS feed_likes CASCADE;
 DROP TABLE IF EXISTS ootds CASCADE;
 DROP TABLE IF EXISTS direct_messages CASCADE;
@@ -33,7 +35,7 @@ CREATE TABLE users (
                        email VARCHAR(255) UNIQUE NOT NULL,
                        name VARCHAR(50) NOT NULL,
                        role VARCHAR(20) NOT NULL CHECK (role IN ('USER', 'ADMIN')),
-                       locked BOOLEAN    NOT NULL DEFAULT false,
+                       locked BOOLEAN NOT NULL DEFAULT false,
                        created_at TIMESTAMPTZ NOT NULL,
                        updated_at TIMESTAMPTZ,
                        password_hash VARCHAR(255) NOT NULL,
@@ -80,21 +82,21 @@ CREATE TABLE clothes (
                          CONSTRAINT fk_clothes_owner FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 
--- weathers 테이블 생성 구문
+-- weathers
 CREATE TABLE weathers (
                           id UUID PRIMARY KEY,
                           forecasted_at TIMESTAMPTZ NOT NULL, -- 예보 발표 시각
                           forecast_at   TIMESTAMPTZ NOT NULL, -- 예보 대상 시각
                           location JSON,                      -- 위치
                           sky_status VARCHAR(255) NOT NULL,   -- 하늘상태
-                          precipitation JSON,                  -- 강수정보
-                          humidity JSON,                       -- 습도
-                          temperature JSON,                    -- 온도
-                          wind_speed JSON,                     -- 풍속
-                          created_at TIMESTAMPTZ NOT NULL,     -- 생성시각
-                          updated_at TIMESTAMPTZ                -- 수정시각
+                          precipitation JSON,
+                          precipitation_type VARCHAR(32),      -- 강수정보
+                          humidity JSON,                      -- 습도
+                          temperature JSON,                   -- 온도
+                          wind_speed JSON,                    -- 풍속
+                          created_at TIMESTAMPTZ NOT NULL,    -- 생성시각
+                          updated_at TIMESTAMPTZ              -- 수정시각
 );
-
 
 -- notifications
 CREATE TABLE notifications (
@@ -173,6 +175,7 @@ CREATE TABLE ootds (
                        id UUID PRIMARY KEY,
                        clothes_id UUID NOT NULL,
                        feed_id UUID NOT NULL,
+                       created_at TIMESTAMPTZ NOT NULL,
                        CONSTRAINT fk_ootds_clothes FOREIGN KEY (clothes_id) REFERENCES clothes(id),
                        CONSTRAINT fk_ootds_feed FOREIGN KEY (feed_id) REFERENCES feeds(id)
 );
@@ -186,3 +189,82 @@ CREATE TABLE feed_likes (
                             CONSTRAINT fk_feed_likes_feed FOREIGN KEY (feed_id) REFERENCES feeds(id),
                             CONSTRAINT fk_feed_likes_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- === [Spring Batch 메타데이터 테이블 추가] ===
+
+CREATE TABLE BATCH_JOB_INSTANCE  (
+                                     JOB_INSTANCE_ID BIGINT  NOT NULL PRIMARY KEY ,
+                                     VERSION BIGINT ,
+                                     JOB_NAME VARCHAR(100) NOT NULL,
+                                     JOB_KEY VARCHAR(32) NOT NULL,
+                                     constraint JOB_INST_UN unique (JOB_NAME, JOB_KEY)
+);
+
+CREATE TABLE BATCH_JOB_EXECUTION  (
+                                      JOB_EXECUTION_ID BIGINT  NOT NULL PRIMARY KEY ,
+                                      VERSION BIGINT  ,
+                                      JOB_INSTANCE_ID BIGINT NOT NULL,
+                                      CREATE_TIME TIMESTAMP NOT NULL,
+                                      START_TIME TIMESTAMP DEFAULT NULL ,
+                                      END_TIME TIMESTAMP DEFAULT NULL ,
+                                      STATUS VARCHAR(10) ,
+                                      EXIT_CODE VARCHAR(2500) ,
+                                      EXIT_MESSAGE VARCHAR(2500) ,
+                                      LAST_UPDATED TIMESTAMP,
+                                      constraint JOB_INST_EXEC_FK foreign key (JOB_INSTANCE_ID)
+                                          references BATCH_JOB_INSTANCE(JOB_INSTANCE_ID)
+);
+
+CREATE TABLE BATCH_JOB_EXECUTION_PARAMS  (
+                                             JOB_EXECUTION_ID BIGINT NOT NULL ,
+                                             PARAMETER_NAME VARCHAR(100) NOT NULL ,
+                                             PARAMETER_TYPE VARCHAR(100) NOT NULL ,
+                                             PARAMETER_VALUE VARCHAR(2500) ,
+                                             IDENTIFYING CHAR(1) NOT NULL ,
+                                             constraint JOB_EXEC_PARAMS_FK foreign key (JOB_EXECUTION_ID)
+                                                 references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID)
+);
+
+CREATE TABLE BATCH_STEP_EXECUTION  (
+                                       STEP_EXECUTION_ID BIGINT  NOT NULL PRIMARY KEY ,
+                                       VERSION BIGINT NOT NULL,
+                                       STEP_NAME VARCHAR(100) NOT NULL,
+                                       JOB_EXECUTION_ID BIGINT NOT NULL,
+                                       CREATE_TIME TIMESTAMP NOT NULL,
+                                       START_TIME TIMESTAMP DEFAULT NULL ,
+                                       END_TIME TIMESTAMP DEFAULT NULL ,
+                                       STATUS VARCHAR(10) ,
+                                       COMMIT_COUNT BIGINT ,
+                                       READ_COUNT BIGINT ,
+                                       FILTER_COUNT BIGINT ,
+                                       WRITE_COUNT BIGINT ,
+                                       READ_SKIP_COUNT BIGINT ,
+                                       WRITE_SKIP_COUNT BIGINT ,
+                                       PROCESS_SKIP_COUNT BIGINT ,
+                                       ROLLBACK_COUNT BIGINT ,
+                                       EXIT_CODE VARCHAR(2500) ,
+                                       EXIT_MESSAGE VARCHAR(2500) ,
+                                       LAST_UPDATED TIMESTAMP,
+                                       constraint JOB_EXEC_STEP_FK foreign key (JOB_EXECUTION_ID)
+                                           references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID)
+);
+
+CREATE TABLE BATCH_STEP_EXECUTION_CONTEXT  (
+                                               STEP_EXECUTION_ID BIGINT NOT NULL PRIMARY KEY,
+                                               SHORT_CONTEXT VARCHAR(2500) NOT NULL,
+                                               SERIALIZED_CONTEXT TEXT ,
+                                               constraint STEP_EXEC_CTX_FK foreign key (STEP_EXECUTION_ID)
+                                                   references BATCH_STEP_EXECUTION(STEP_EXECUTION_ID)
+);
+
+CREATE TABLE BATCH_JOB_EXECUTION_CONTEXT  (
+                                              JOB_EXECUTION_ID BIGINT NOT NULL PRIMARY KEY,
+                                              SHORT_CONTEXT VARCHAR(2500) NOT NULL,
+                                              SERIALIZED_CONTEXT TEXT ,
+                                              constraint JOB_EXEC_CTX_FK foreign key (JOB_EXECUTION_ID)
+                                                  references BATCH_JOB_EXECUTION(JOB_EXECUTION_ID)
+);
+
+CREATE SEQUENCE BATCH_STEP_EXECUTION_SEQ MAXVALUE 9223372036854775807 NO CYCLE;
+CREATE SEQUENCE BATCH_JOB_EXECUTION_SEQ MAXVALUE 9223372036854775807 NO CYCLE;
+CREATE SEQUENCE BATCH_JOB_SEQ MAXVALUE 9223372036854775807 NO CYCLE;

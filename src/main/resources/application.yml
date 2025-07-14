@@ -4,7 +4,7 @@ spring:
 
   sql:
     init:
-      mode: always
+      mode: never
       schema-locations: classpath:schema.sql
 
   datasource:
@@ -40,6 +40,8 @@ api:
   kma:
     base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
     service-key: "${API_KMA_SERVICE_KEY}"
+  kakao:
+    rest-key: "${API_KAKAO_REST_KEY}"
 
 logging:
   level:
