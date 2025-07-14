@@ -6,8 +6,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,23 +49,32 @@ public class CommentServiceImpl implements CommentService {
 
 	@Transactional(readOnly = true)
 	@Override
-	public CommentDtoCursorResponse listByCursor(UUID feedId,
+	public CommentDtoCursorResponse listByCursor(
+		UUID feedId,
 		Instant cursor,
 		UUID idAfter,
 		int limit
 	) {
-		PageRequest pageRequest = PageRequest.of(0, limit);
-		List<FeedComment> feedComments = feedCommentRepository.findCommentsByCreatedAtCursor(feedId, cursor, idAfter, pageRequest);
-		List<CommentDto> data = feedComments.stream().map(CommentDto::fromEntity).toList();
+		List<FeedComment> comments = feedCommentRepository.findByFeedIdCursor(
+			feedId, cursor, idAfter, limit + 1
+		);
 
-		boolean hasNext = data.size() == limit;
-		String nextCursor = null;
+		boolean hasNext = comments.size() > limit;
+		List<FeedComment> pageItems = hasNext
+			? comments.subList(0, limit)
+			: comments;
+
+		List<CommentDto> data = pageItems.stream()
+			.map(CommentDto::fromEntity)
+			.toList();
+
+		Instant nextCursor = null;
 		UUID nextIdAfter = null;
 
 		if (hasNext) {
-			FeedComment lastComment = feedComments.get(feedComments.size() - 1);
-			nextCursor = lastComment.getCreatedAt().toString();
-			nextIdAfter = lastComment.getId();
+			FeedComment last = pageItems.get(pageItems.size() - 1);
+			nextCursor = last.getCreatedAt();
+			nextIdAfter = last.getId();
 		}
 
 		long totalCount = feedCommentRepository.countByFeedId(feedId);

@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.feed.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,4 +14,6 @@ public interface FeedLikeRepository extends JpaRepository<FeedLike, UUID> {
 	List<FeedLike> findAllByUserIdAndFeedIdIn(UUID userId, List<UUID> feedIds);
 	List<FeedLike> findAllByFeedId(UUID feedId);
 	Optional<FeedLike> findByFeedAndUser(Feed feed, User user);
+	List<FeedLike> findByUserIdAndFeedIdIn(UUID userId, Collection<UUID> feedIds);
+	boolean existsByUserIdAndFeedId(UUID userId, UUID feedId);
 }
