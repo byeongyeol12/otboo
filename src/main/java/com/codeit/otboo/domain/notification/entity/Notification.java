@@ -58,7 +58,7 @@ public class Notification {
 	private User receiver; // 알림 대상(수신자)
 
 	@Column(name = "event_ref_id")
-	private UUID eventRefId;
+	private UUID eventRefId; // 중복방지를 위한 알림 식별자
 
 
 	@Builder
