@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
 import com.codeit.otboo.domain.notification.entity.Notification;
-import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.mapper.NotificationMapper;
 import com.codeit.otboo.domain.notification.repository.NotificationRepository;
 import com.codeit.otboo.domain.sse.service.SseEmitterServiceImpl;

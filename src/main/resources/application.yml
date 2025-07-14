@@ -8,9 +8,9 @@ spring:
       schema-locations: classpath:schema.sql
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/otboo-db
+    username: otboo-user
+    password: otboo-password
     driver-class-name: org.postgresql.Driver
 
 
