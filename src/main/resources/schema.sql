@@ -90,7 +90,7 @@ CREATE TABLE weathers (
                           location JSON,                      -- 위치
                           sky_status VARCHAR(255) NOT NULL,   -- 하늘상태
                           precipitation JSON,
-                          precipitation_type VARCHAR(32)      -- 강수정보
+                          precipitation_type VARCHAR(32),      -- 강수정보
                           humidity JSON,                      -- 습도
                           temperature JSON,                   -- 온도
                           wind_speed JSON,                    -- 풍속

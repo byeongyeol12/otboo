@@ -1,6 +1,5 @@
 package com.codeit.otboo.domain.feed.entity;
 
-import java.util.UUID;
 
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.global.base.BaseEntity;

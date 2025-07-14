@@ -15,7 +15,6 @@ import com.codeit.otboo.domain.feed.service.FeedLikeService;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
-import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,13 +30,13 @@ public class FeedLikeServiceImpl implements FeedLikeService {
 	@Override
 	public void likeFeed(UUID myUSerId, UUID feedId) {
 		User user = userRepository.findById(myUSerId)
-			.orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+			.orElseThrow(() -> new CustomException(USER_NOT_FOUND)); //좋아요 찍은 사람
 
 		Feed feed = feedRepository.findById(feedId)
 			.orElseThrow(() -> new CustomException(FEED_NOT_FOUND));
 
 		if (feedLikeRepository.existsByFeedAndUser(feed, user)) {
-			throw new CustomException(FEED_LIKE_ALREADY);
+			throw new CustomException(FEED_LIKE_ALREADY); //피드 좋아요 레포 : 피드와 좋아요를 찍은 사람레포. 이미 있으면 말이 안되는 상황
 		}
 
 		FeedLike feedLike = new FeedLike(feed, user);

@@ -4,13 +4,14 @@ import static com.codeit.otboo.global.error.ErrorCode.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codeit.otboo.domain.auth.service.AuthService;
 import com.codeit.otboo.domain.clothes.entity.Clothes;
 import com.codeit.otboo.domain.clothes.repository.ClothesRepository;
 import com.codeit.otboo.domain.feed.dto.request.FeedCreateRequest;
@@ -18,9 +19,8 @@ import com.codeit.otboo.domain.feed.dto.request.FeedUpdateRequest;
 import com.codeit.otboo.domain.feed.dto.response.FeedDto;
 import com.codeit.otboo.domain.feed.dto.response.FeedDtoCursorResponse;
 import com.codeit.otboo.domain.feed.entity.Feed;
-import com.codeit.otboo.domain.feed.entity.Ootd;
+import com.codeit.otboo.domain.feed.repository.FeedLikeRepository;
 import com.codeit.otboo.domain.feed.repository.FeedRepository;
-import com.codeit.otboo.domain.feed.repository.OotdRepository;
 import com.codeit.otboo.domain.feed.service.FeedService;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
@@ -29,10 +29,12 @@ import com.codeit.otboo.domain.weather.entity.vo.PrecipitationType;
 import com.codeit.otboo.domain.weather.entity.vo.SkyStatus;
 import com.codeit.otboo.domain.weather.repository.WeatherRepository;
 import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.config.security.UserPrincipal;
 import com.codeit.otboo.global.error.ErrorCode;
 import com.codeit.otboo.domain.user.entity.Profile;
 import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 
@@ -44,6 +46,15 @@ public class FeedServiceImpl implements FeedService {
 	private final UserRepository userRepository;
 	private final WeatherRepository weatherRepository;
 	private final ClothesRepository clothesRepository;
+	private final FeedLikeRepository feedLikeRepository;
+
+	private UUID getCurrentUserId() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth == null || !auth.isAuthenticated()) {
+			throw new IllegalStateException("인증된 사용자가 없습니다.");
+		}
+		return ((UserPrincipal) auth.getPrincipal()).getId();
+	}
 
 	@Transactional
 	@Override
@@ -89,15 +100,18 @@ public class FeedServiceImpl implements FeedService {
 		feed = feedRepository.save(feed);
 
 		// 7) DTO로 변환
-		return FeedDto.fromEntity(feed);
+		return FeedDto.fromEntity(feed, false);
 	}
 	@Transactional(readOnly = true)
 	@Override
 	public FeedDto getFeed(UUID feedId) {
 		Feed feed = feedRepository.findById(feedId)
 			.orElseThrow(() -> new CustomException(FEED_NOT_FOUND));
+		UUID currentUserId = getCurrentUserId();
+		boolean likedByMe = feedLikeRepository
+			.existsByUserIdAndFeedId(currentUserId, feedId);
 
-		return FeedDto.fromEntity(feed);
+		return FeedDto.fromEntity(feed, likedByMe);
 	}
 
 	@Transactional
@@ -108,7 +122,11 @@ public class FeedServiceImpl implements FeedService {
 		feed.updateContent(request.getContent());
 		Feed updatedFeed = feedRepository.save(feed);
 
-		return FeedDto.fromEntity(updatedFeed);
+		UUID currentUserId = getCurrentUserId();
+		boolean likedByMe = feedLikeRepository
+			.existsByUserIdAndFeedId(currentUserId, feedId);
+
+		return FeedDto.fromEntity(updatedFeed, likedByMe);
 	}
 
 	@Transactional
@@ -134,40 +152,65 @@ public class FeedServiceImpl implements FeedService {
 		PrecipitationType precipitationTypeEqual,
 		UUID authorIdEqual
 	) {
+		int fetchSize = limit + 1;
+		List<com.codeit.otboo.domain.feed.entity.Feed> all =
+			"likeCount".equalsIgnoreCase(sortBy)
+				? feedRepository.findByLikeCountCursor(
+				keywordLike, skyStatusEqual, precipitationTypeEqual,
+				cursorLikeCount, idAfter, fetchSize
+			)
+				: feedRepository.findByCreatedAtCursor(
+				keywordLike, skyStatusEqual, precipitationTypeEqual,
+				cursorCreatedAt, idAfter, fetchSize
+			);
 
-		PageRequest pageReq = PageRequest.of(0, limit);
-		List<Feed> feeds = "likeCount".equalsIgnoreCase(sortBy)
-			? feedRepository.findFeedsByLikeCountCursor(
-			keywordLike, skyStatusEqual, precipitationTypeEqual, cursorLikeCount, idAfter, pageReq
-		)
-			: feedRepository.findFeedsByCreatedAtCursor(
-			keywordLike, skyStatusEqual, precipitationTypeEqual, cursorCreatedAt, idAfter, pageReq
-		);
+		boolean hasNext = all.size() > limit;
+		List<com.codeit.otboo.domain.feed.entity.Feed> page =
+			hasNext ? all.subList(0, limit) : all;
 
-		List<FeedDto> data = feeds.stream()
-			.map(feed -> FeedDto.fromEntity(feed))
+		UUID currentUserId = getCurrentUserId();
+
+		List<UUID> feedIds = page.stream()
+			.map(Feed::getId)
+			.toList();
+		Set<UUID> likedFeedIds = feedLikeRepository
+			.findByUserIdAndFeedIdIn(currentUserId, feedIds)
+			.stream()
+			.map(like -> like.getFeed().getId())
+			.collect(Collectors.toSet());
+
+		List<FeedDto> data = page.stream()
+			.map(feed ->
+					FeedDto.fromEntity(feed, likedFeedIds.contains(feed.getId()))
+			)
 			.toList();
 
-		boolean hasNext = data.size() == limit;
-		String nextCursor = null;
-		UUID nextIdAfter = null;
+		Instant nextCursorCreatedAt = null;
+		Long    nextCursorLikeCount = null;
+		UUID    nextIdAfter          = null;
 
-		if(hasNext) {
-			Feed last = feeds.get(feeds.size() - 1);
+		if (hasNext) {
+			var last = page.get(page.size() - 1);
 			nextIdAfter = last.getId();
-			nextCursor = "likeCount".equalsIgnoreCase(sortBy)
-				? String.valueOf(last.getLikeCount())
-				: last.getCreatedAt().toString();
+			if ("likeCount".equalsIgnoreCase(sortBy)) {
+				nextCursorLikeCount = last.getLikeCount();
+			} else {
+				nextCursorCreatedAt = last.getCreatedAt();
+			}
 		}
 
-		long totalCount = feedRepository.countByFilters(keywordLike, skyStatusEqual, precipitationTypeEqual);
+		long total = feedRepository.countByFilters(
+			keywordLike, skyStatusEqual, precipitationTypeEqual
+		);
 
 		return new FeedDtoCursorResponse(
 			data,
-			nextCursor,
+			"likeCount".equalsIgnoreCase(sortBy)
+				? nextCursorLikeCount != null ? nextCursorLikeCount.toString() : null
+				: nextCursorCreatedAt != null    ? nextCursorCreatedAt.toString() : null,
 			nextIdAfter,
 			hasNext,
-			totalCount,
+			total,
 			sortBy,
 			sortDirection
 		);
