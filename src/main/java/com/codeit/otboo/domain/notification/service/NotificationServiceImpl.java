@@ -21,9 +21,11 @@ import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 	private final NotificationRepository notificationRepository;
 	private final NotificationMapper notificationMapper;
@@ -32,30 +34,32 @@ public class NotificationServiceImpl implements NotificationService {
 
 	//마지막 알림 이후 미확인 알림 반환
 	public List<NotificationDto> findUnreceived(UUID receiverId, UUID lastEventId) {
-		List<Notification> list = new ArrayList<>();
-		if(lastEventId != null) {
-			// 마지막 알림 ID가 있으면, 이후 알림만 가져옴
-			list = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(receiverId,lastEventId);
-		}else{
-			// 마지막 알림 ID 가 없으면, 아직 읽지 않은 모든 알림을 가져옴
-			list = notificationRepository.findByReceiverIdAndConfirmedFalse(receiverId);
-		}
-		return notificationMapper.toNotificationDtoList(list);
+		// List<Notification> list;
+		// if(lastEventId != null) {
+		// 	// 마지막 알림 ID가 있으면, 이후 알림만 가져옴
+		// 	list = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(receiverId,lastEventId);
+		// }else{
+		// 	// 마지막 알림 ID 가 없으면, 아직 읽지 않은 모든 알림을 가져옴
+		// 	list = notificationRepository.findByReceiverIdAndConfirmedFalseOrderByCreatedAt(receiverId);
+		// }
+		List<Notification> notifications = notificationRepository.findByReceiverIdAndConfirmedFalseOrderByCreatedAt(receiverId);
+		return notificationMapper.toNotificationDtoList(notifications);
 	}
 
 	// 알림 생성 + 전송
 	@Override
 	public NotificationDto createAndSend(NotificationDto request) {
+		log.info("알림 생성: receiverId={}, title={}, content={}", request.receiverId(), request.title(), request.content());
 		// 알림 받는 사람, 알림 생성
 		User receiver = userRepository.findById(request.receiverId()).orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND,"알림 받는 유저를 찾을 수 없습니다."));
 
-		Notification notification = new Notification(
-			receiver,
-			request.title(),
-			request.content(),
-			request.level(),
-			false
-		);
+		Notification notification = Notification.builder()
+			.receiver(receiver)
+			.title(request.title())
+			.content(request.content())
+			.level(request.level())
+			.confirmed(false)
+			.build();
 
 		NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
 		// 알림 저장

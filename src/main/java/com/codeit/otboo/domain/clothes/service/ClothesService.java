@@ -29,9 +29,11 @@ import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class ClothesService {
 
@@ -63,6 +65,7 @@ public class ClothesService {
 		Clothes savedClothes = clothesRepository.save(newClothes);
 
 		// 알림 : 옷 등록
+		log.info("옷 생성");
 		notificationService.createAndSend(
 			new NotificationDto(
 				UUID.randomUUID(),

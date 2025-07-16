@@ -51,9 +51,9 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 		send(receiverId,"dummy", new NotificationDto(UUID.randomUUID(), Instant.now(),receiverId,"dummy","dummy", NotificationLevel.INFO));
 
 		//미수신한 Event 목록이 존재할 경우 전송
-		for (NotificationDto notificationDto : missedNotifications) {
-			send(receiverId,"notifications",notificationDto);
-		}
+		// for (NotificationDto notificationDto : missedNotifications) {
+		// 	send(receiverId,"notifications",notificationDto);
+		// }
 
 		return sseEmitter;
 	}
