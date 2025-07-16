@@ -62,6 +62,7 @@ public enum ErrorCode {
 	// NOTIFICATION
 	NOTIFICATION_NOT_FOUND(404, "N001", "알림 정보를 찾을 수 없습니다."),
 	NOTIFICATION_ALREADY_READ(400, "N002", "알림을 이미 읽은 상태입니다."),
+	NOTIFICATION_CREATE_FAILED(400, "N003", "알림 생성 실패했습니다."),
 
 	// RECOMMENDATION
 	RECOMMENDATION_NOT_FOUND(404, "R001", "추천 정보를 찾을 수 없습니다."),

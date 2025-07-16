@@ -36,27 +36,37 @@ public class NotificationServiceImpl implements NotificationService {
 	// 알림 생성 + 전송
 	@Override
 	public NotificationDto createAndSend(NotificationDto request) {
-		log.info("알림 생성: receiverId={}, title={}, content={}", request.receiverId(), request.title(), request.content());
-		// 알림 받는 사람, 알림 생성
-		User receiver = userRepository.findById(request.receiverId()).orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND,"알림 받는 유저를 찾을 수 없습니다."));
+		log.info("[알림 생성] createAndSend 시작 : receiverId={}, title={}, content={}", request.receiverId(), request.title(), request.content());
+		try{
+			// 알림 받을 유저 조회
+			User receiver = userRepository.findById(request.receiverId()).orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND,"알림 받는 유저를 찾을 수 없습니다."));
 
-		Notification notification = Notification.builder()
-			.receiver(receiver)
-			.title(request.title())
-			.content(request.content())
-			.level(request.level())
-			.confirmed(false)
-			.build();
-		notificationRepository.save(notification);
-		log.info("알림 생성: receiverId={}, title={}, content={}", request.receiverId(), request.title(), request.content());
-		NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
+			// 알림 엔티티 생성
+			Notification notification = Notification.builder()
+				.receiver(receiver)
+				.title(request.title())
+				.content(request.content())
+				.level(request.level())
+				.confirmed(false)
+				.build();
+			// 알림 DB 에 저장
+			Notification saved = notificationRepository.save(notification);
 
-		// 알림 전송
-		log.info("emitter로 실시간 알림 push: {}", notificationDto.id());
-		eventPublisher.publishEvent(new NotificationCreatedEvent(notificationDto));
+			log.info("[알림 생성] DB 저장 : receiverId={}, title={}, content={}", saved.getReceiver().getId(), saved.getTitle(), saved.getContent());
 
-		//반환
-		return notificationDto;
+			// DTO 변환
+			NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
+
+			// 알림 이벤트 발행
+			log.info("[알림 생성] 알림 이벤트 발행 notificationId={}, receiverId={}", notificationDto.id(), notificationDto.receiverId());
+			eventPublisher.publishEvent(new NotificationCreatedEvent(notificationDto));
+
+			// 반환
+			return notificationDto;
+		} catch (Exception e) {
+			log.error("[알림 생성 실패] receiverId={}, title={}, content={}, error={}", request.receiverId(), request.title(), request.content(),e.getMessage(),e);
+			throw new CustomException(ErrorCode.NOTIFICATION_CREATE_FAILED);
+		}
 	}
 
 
