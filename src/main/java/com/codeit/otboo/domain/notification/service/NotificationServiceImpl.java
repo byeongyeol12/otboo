@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,7 +15,7 @@ import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
 import com.codeit.otboo.domain.notification.entity.Notification;
 import com.codeit.otboo.domain.notification.mapper.NotificationMapper;
 import com.codeit.otboo.domain.notification.repository.NotificationRepository;
-import com.codeit.otboo.domain.sse.service.SseEmitterServiceImpl;
+import com.codeit.otboo.domain.sse.util.NotificationCreatedEvent;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
@@ -30,21 +31,7 @@ public class NotificationServiceImpl implements NotificationService {
 	private final NotificationRepository notificationRepository;
 	private final NotificationMapper notificationMapper;
 	private final UserRepository userRepository;
-	private final SseEmitterServiceImpl sseEmitterServiceImpl;
-
-	//마지막 알림 이후 미확인 알림 반환
-	public List<NotificationDto> findUnreceived(UUID receiverId, UUID lastEventId) {
-		// List<Notification> list;
-		// if(lastEventId != null) {
-		// 	// 마지막 알림 ID가 있으면, 이후 알림만 가져옴
-		// 	list = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(receiverId,lastEventId);
-		// }else{
-		// 	// 마지막 알림 ID 가 없으면, 아직 읽지 않은 모든 알림을 가져옴
-		// 	list = notificationRepository.findByReceiverIdAndConfirmedFalseOrderByCreatedAt(receiverId);
-		// }
-		List<Notification> notifications = notificationRepository.findByReceiverIdAndConfirmedFalseOrderByCreatedAt(receiverId);
-		return notificationMapper.toNotificationDtoList(notifications);
-	}
+	private final ApplicationEventPublisher eventPublisher;
 
 	// 알림 생성 + 전송
 	@Override
@@ -60,13 +47,13 @@ public class NotificationServiceImpl implements NotificationService {
 			.level(request.level())
 			.confirmed(false)
 			.build();
-
-		NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
-		// 알림 저장
 		notificationRepository.save(notification);
+		log.info("알림 생성: receiverId={}, title={}, content={}", request.receiverId(), request.title(), request.content());
+		NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
 
 		// 알림 전송
-		sseEmitterServiceImpl.send(request.receiverId(),"notifications",notificationDto);
+		log.info("emitter로 실시간 알림 push: {}", notificationDto.id());
+		eventPublisher.publishEvent(new NotificationCreatedEvent(notificationDto));
 
 		//반환
 		return notificationDto;
