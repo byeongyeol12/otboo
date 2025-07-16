@@ -52,7 +52,7 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 
 		sseEmitterRepository.save(receiverId, sseEmitter);
 
-		// 미수신 메시지 복구
+		// 마지막 수신 이벤트 ID 이후의 알림 메시지 찾아서 전송
 		Optional.ofNullable(lastEventId)
 			.ifPresent(id -> {
 				sseMessageRepository.findAllByEventIdAfterAndReceiverId(id, receiverId)
@@ -86,11 +86,11 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 	}
 
 	public void send(SseMessage sseMessage) {
-		// 미수신 재전송용 큐 저장
+		// 메모리 큐에 저장(재전송 대비)
 		sseMessageRepository.save(sseMessage);
 		Set<ResponseBodyEmitter.DataWithMediaType> event = sseMessage.toEvent();
 
-		if (sseMessage.isBroadcast()) {
+		if (sseMessage.isBroadcast()) {// 전체 broadcast
 			sseEmitterRepository.findAll()
 				.forEach(sseEmitter -> {
 					try {
@@ -100,7 +100,7 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 							e);
 					}
 				});
-		} else {
+		} else { // 특정 유저만
 			sseEmitterRepository.findAllByReceiverIdsIn(sseMessage.getReceiverIds())
 				.forEach(sseEmitter -> {
 					try {

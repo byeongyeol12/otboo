@@ -57,7 +57,7 @@ public class NotificationServiceImpl implements NotificationService {
 			// DTO 변환
 			NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
 
-			// 알림 이벤트 발행
+			// 알림 이벤트 발행 -> SseHandler 가 구독
 			log.info("[알림 생성] 알림 이벤트 발행 notificationId={}, receiverId={}", notificationDto.id(), notificationDto.receiverId());
 			eventPublisher.publishEvent(new NotificationCreatedEvent(notificationDto));
 

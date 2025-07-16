@@ -26,7 +26,9 @@ public class SseHandler {
 		UUID userId = notificationDto.receiverId();
 		try{
 			log.info("[SSE handle - 알림 전송 시도] receiverId={}, notificationId={}", userId, notificationDto.id());
+			//SseMessage 객체로 변환
 			SseMessage sseMessage = SseMessage.create(userId,"notifications",notificationDto);
+			//SSE 알림 송신 서비스 호출
 			sseEmitterService.send(sseMessage);
 			log.info("[SSE handle - 알림 전송 성공] receiverId={}, notificationId={}", userId, notificationDto.id());
 		}catch(Exception e){
