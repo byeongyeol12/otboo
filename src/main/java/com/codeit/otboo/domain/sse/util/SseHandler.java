@@ -8,11 +8,15 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.sse.service.SseEmitterService;
+import com.codeit.otboo.exception.CustomException;
+import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class SseHandler {
 	private final SseEmitterService sseEmitterService;
 
@@ -20,7 +24,15 @@ public class SseHandler {
 	public void handle(NotificationCreatedEvent event){
 		NotificationDto notificationDto = event.notificationDto();
 		UUID userId = notificationDto.receiverId();
-		SseMessage sseMessage = SseMessage.create(userId,"notifications",notificationDto);
-		sseEmitterService.send(sseMessage);
+		try{
+			log.info("[SSE handle - 알림 전송 시도] receiverId={}, notificationId={}", userId, notificationDto.id());
+			SseMessage sseMessage = SseMessage.create(userId,"notifications",notificationDto);
+			sseEmitterService.send(sseMessage);
+			log.info("[SSE handle - 알림 전송 성공] receiverId={}, notificationId={}", userId, notificationDto.id());
+		}catch(Exception e){
+			log.error("[SSE handle - 알림 전송 실패] receiverId={}, notificationId={}, error={}",
+				userId, notificationDto.id(), e.getMessage(), e);
+			throw new CustomException(ErrorCode.SSE_HANDLER_FAILED);
+		}
 	}
 }

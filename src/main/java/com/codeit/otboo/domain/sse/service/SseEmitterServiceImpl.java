@@ -31,26 +31,26 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 
 	//sse 를 통한 구독 기능 정의
 	@Override
-	public SseEmitter subscribe(UUID receiverId,UUID lastEventId) {
+	public SseEmitter subscribe(UUID receiverId, UUID lastEventId) {
 		SseEmitter sseEmitter = new SseEmitter(timeout);
 
 		//클라이언트가 연결을 끊었을 때
 		sseEmitter.onCompletion(() -> {
 			log.debug("sse on onCompletion");
-			sseEmitterRepository.delete(receiverId,sseEmitter);
+			sseEmitterRepository.delete(receiverId, sseEmitter);
 		});
 		//타임아웃으로 끊길 때
 		sseEmitter.onTimeout(() -> {
 			log.debug("sse on onTimeout");
-			sseEmitterRepository.delete(receiverId,sseEmitter);
+			sseEmitterRepository.delete(receiverId, sseEmitter);
 		});
 		//예외/에러 발생
-		sseEmitter.onError((e)-> {
+		sseEmitter.onError((e) -> {
 			log.debug("sse on onError");
-			sseEmitterRepository.delete(receiverId,sseEmitter);
+			sseEmitterRepository.delete(receiverId, sseEmitter);
 		});
 
-		sseEmitterRepository.save(receiverId,sseEmitter);
+		sseEmitterRepository.save(receiverId, sseEmitter);
 
 		// 미수신 메시지 복구
 		Optional.ofNullable(lastEventId)
@@ -60,14 +60,13 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 						try {
 							sseEmitter.send(sseMessage.toEvent());
 						} catch (IOException e) {
-							log.error(e.getMessage(), e);
+							log.error("[SSE subscribe - 미수신 알림 복구 실패] receiverId={}, eventId={}, error={}", receiverId, sseMessage.getEventId(), e.getMessage(), e);
 						}
 					});
 			});
 
 		return sseEmitter;
 	}
-
 
 	//1명에게 알림 전송
 	@Override
@@ -87,15 +86,18 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 	}
 
 	public void send(SseMessage sseMessage) {
+		// 미수신 재전송용 큐 저장
 		sseMessageRepository.save(sseMessage);
 		Set<ResponseBodyEmitter.DataWithMediaType> event = sseMessage.toEvent();
+
 		if (sseMessage.isBroadcast()) {
 			sseEmitterRepository.findAll()
 				.forEach(sseEmitter -> {
 					try {
 						sseEmitter.send(event);
 					} catch (IOException e) {
-						log.error(e.getMessage(), e);
+						log.error("[SSE send - broadcast 전송 실패] eventId={}, error={}", sseMessage.getEventId(), e.getMessage(),
+							e);
 					}
 				});
 		} else {
@@ -104,22 +106,23 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 					try {
 						sseEmitter.send(event);
 					} catch (IOException e) {
-						log.error(e.getMessage(), e);
+						log.error("[SSE send - 개별 전송 실패] receiverIds={}, eventId={}, error={}",
+							sseMessage.getReceiverIds(), sseMessage.getEventId(), e.getMessage(), e);
 					}
 				});
 		}
 	}
 
 	@Scheduled(cron = "0 */1 * * * *")
-	public void ping(){
+	public void ping() {
 		Set<ResponseBodyEmitter.DataWithMediaType> ping = SseEmitter.event()
 			.name("ping")
 			.build();
 		sseEmitterRepository.findAll()
 			.forEach(sseEmitter -> {
-				try{
+				try {
 					sseEmitter.send(ping);
-				}catch(IOException e){
+				} catch (IOException e) {
 					log.error(e.getMessage(), e);
 					sseEmitter.completeWithError(e);
 				}
