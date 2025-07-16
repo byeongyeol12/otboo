@@ -55,7 +55,7 @@ public class FollowController {
 	//팔로잉 목록 조회(유저가 팔로우한 사람들)
 	@GetMapping("/followings")
 	public ResponseEntity<FollowListResponse> getFollowings(
-		@AuthenticationPrincipal UserPrincipal userPrincipal, // 로그인한 유저
+		@RequestParam UUID followerId,
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam int limit,
@@ -63,15 +63,14 @@ public class FollowController {
 		@RequestParam(required = false) String sortBy,
 		@RequestParam(required = false) String sortDirection
 	) {
-		UUID myUserId = userPrincipal.getId();
-		FollowListResponse followingList = followService.getFollowings(myUserId,cursor,idAfter,limit,nameLike,sortBy,sortDirection);
+		FollowListResponse followingList = followService.getFollowings(followerId,cursor,idAfter,limit,nameLike,sortBy,sortDirection);
 		return ResponseEntity.status(HttpStatus.OK).body(followingList);
 	}
 
 	//팔로워 목록 조회(유저를 팔로우한 사람들)
 	@GetMapping("/followers")
 	public ResponseEntity<FollowListResponse> getFollowers(
-		@AuthenticationPrincipal UserPrincipal userPrincipal, // 로그인한 유저
+		@RequestParam UUID followeeId,
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam int limit,
@@ -79,8 +78,7 @@ public class FollowController {
 		@RequestParam(required = false) String sortBy,
 		@RequestParam(required = false) String sortDirection
 	) {
-		UUID myUserId = userPrincipal.getId();
-		FollowListResponse followerList = followService.getFollowers(myUserId,cursor,idAfter,limit,nameLike,sortBy,sortDirection);
+		FollowListResponse followerList = followService.getFollowers(followeeId,cursor,idAfter,limit,nameLike,sortBy,sortDirection);
 		return ResponseEntity.status(HttpStatus.OK).body(followerList);
 	}
 
