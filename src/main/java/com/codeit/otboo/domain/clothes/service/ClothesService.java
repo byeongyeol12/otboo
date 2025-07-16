@@ -65,13 +65,13 @@ public class ClothesService {
 		Clothes savedClothes = clothesRepository.save(newClothes);
 
 		// 알림 : 옷 등록
-		log.info("옷 생성");
+		log.info("옷 생성 알림");
 		notificationService.createAndSend(
 			new NotificationDto(
 				UUID.randomUUID(),
 				Instant.now(),
 				ownerId,
-				"옷 등록",
+				"Cloth",
 				"옷 ["+request.name()+"] 등록 했습니다.",
 				NotificationLevel.INFO
 			)
