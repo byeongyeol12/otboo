@@ -17,8 +17,3 @@ spring:
       hibernate:
         show_sql: true
         format_sql: true
-
-
-  api:
-    kakao:
-      rest-key: "${secrets.API_KAKAO_REST_KEY}"
