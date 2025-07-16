@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: never
+      schema-locations: classpath:schema.sql
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+
+  batch:
+    jdbc:
+      initialize-schema: NEVER
+
+api:
+  kma:
+    base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
+    service-key: "${API_KMA_SERVICE_KEY}"
+  kakao:
+    rest-key: "${API_KAKAO_REST_KEY}"
+
+logging:
+  level:
+    org.springframework.web.reactive.function.client: ERROR

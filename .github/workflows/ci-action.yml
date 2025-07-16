@@ -51,6 +51,8 @@ jobs:
       DB_USERNAME: ci_user
       DB_PASSWORD: ci_pass
       API_KMA_SERVICE_KEY: ${{ secrets.API_KMA_SERVICE_KEY }}
+      API_KAKAO_REST_KEY: ${{secrets.API_KAKAO_REST_KEY}}
+
 
     steps:
       - uses: actions/checkout@v4
