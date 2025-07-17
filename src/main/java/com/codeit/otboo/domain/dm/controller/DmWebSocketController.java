@@ -5,6 +5,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
+import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
 import com.codeit.otboo.domain.dm.service.DmService;
 
 import lombok.RequiredArgsConstructor;
@@ -18,9 +19,9 @@ public class DmWebSocketController {
 	private final DmService dmService;
 
 	@MessageMapping("/direct-messages_send")
-	public DirectMessageCreateRequest sendDirectMessage(@Payload DirectMessageCreateRequest directMessageCreateRequest) {
+	public DirectMessageDto sendDirectMessage(@Payload DirectMessageCreateRequest directMessageCreateRequest) {
 		log.info("텍스트 메시지 생성 요청 : request={}", directMessageCreateRequest);
-		DirectMessageCreateRequest createDm = dmService.sendDirectMessage(directMessageCreateRequest);
+		DirectMessageDto createDm = dmService.sendDirectMessage(directMessageCreateRequest);
 		log.info("텍스트 메시지 생성 응답 : request={}", createDm);
 		return createDm;
 	}
