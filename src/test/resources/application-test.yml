@@ -9,11 +9,26 @@ spring:
       mode: never
       schema-locations: classpath:schema.sql
       # data-locations: classpath:data.sql
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   jpa:
     hibernate:
       ddl-auto: update
-      defer-datasource-initialization: true
+      # defer-datasource-initialization: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         show_sql: true
         format_sql: true
+
+api:
+    kma:
+      base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
+      service-key: "${API_KMA_SERVICE_KEY}"
+    kakao:
+      rest-key: "${API_KAKAO_REST_KEY}"
+
