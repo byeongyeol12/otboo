@@ -107,6 +107,7 @@ CREATE TABLE notifications (
                                created_at TIMESTAMPTZ NOT NULL,
                                confirmed BOOLEAN NOT NULL,
                                user_id UUID NOT NULL,
+                               event_ref_id UUID,
                                CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

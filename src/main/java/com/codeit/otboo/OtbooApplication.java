@@ -3,11 +3,13 @@ package com.codeit.otboo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.codeit.otboo")
+@EnableScheduling
 public class OtbooApplication {
 
 	public static void main(String[] args) {

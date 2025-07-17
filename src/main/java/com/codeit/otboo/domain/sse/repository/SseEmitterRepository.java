@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.sse.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Repository
-// 각 사용자 별로 여러 SSE 연결을 메모리에 저장/조회/삭제/전체 조회
 public class SseEmitterRepository {
 	// 동일 사용자에 대해 여러 SseEmitter 생길 수 있어서 리스트로 관리
 	private final Map<UUID, List<SseEmitter>> data = new ConcurrentHashMap<>(); //ConcurrentHashMap:스레드 안정성 보장
@@ -26,6 +26,14 @@ public class SseEmitterRepository {
 	//receiverId 에 맞는 emitter 반환
 	public Optional<List<SseEmitter>> findByReceiverId(UUID receiverId) {
 		return Optional.ofNullable(data.get(receiverId));
+	}
+
+	public List<SseEmitter> findAllByReceiverIdsIn(Collection<UUID> receiverIds) {
+		return data.entrySet().stream()
+			.filter(entry->receiverIds.contains(entry.getKey()))
+			.map(Map.Entry::getValue)
+			.flatMap(Collection::stream)
+			.toList();
 	}
 
 	//모든 유저의 emitter 반환

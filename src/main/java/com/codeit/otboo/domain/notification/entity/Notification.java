@@ -57,15 +57,20 @@ public class Notification {
 	@JoinColumn(name="user_id",nullable = false)
 	private User receiver; // 알림 대상(수신자)
 
+	@Column(name = "event_ref_id")
+	private UUID eventRefId; // 중복방지를 위한 알림 식별자
+
+
 	@Builder
-	public Notification(User receiver, String title, String content, NotificationLevel level,boolean confirmed) {
+	public Notification(User receiver, String title, String content, NotificationLevel level,boolean confirmed , UUID eventRefId) {
 		this.id = UUID.randomUUID();
 		this.receiver = receiver;
 		this.title = title;
 		this.content = content;
 		this.level = level;
-		this.confirmed = false;
+		this.confirmed = confirmed;
 		this.createdAt = Instant.now();
+		this.eventRefId = eventRefId;
 	}
 
 	// confirmed false -> true
