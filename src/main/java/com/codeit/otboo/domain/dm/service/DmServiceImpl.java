@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,6 +20,7 @@ import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
 import com.codeit.otboo.domain.dm.redis.RedisPublisher;
 import com.codeit.otboo.domain.dm.repository.DmRepository;
 import com.codeit.otboo.domain.dm.util.DmKeyUtil;
+import com.codeit.otboo.domain.dm.util.NewDmEvent;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
@@ -29,9 +31,11 @@ import com.codeit.otboo.global.error.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DmServiceImpl implements DmService {
 
 	private final UserRepository userRepository;
@@ -41,9 +45,11 @@ public class DmServiceImpl implements DmService {
 	private final RedisTemplate redisTemplate;
 	private final ObjectMapper objectMapper;
 	private final RedisPublisher redisPublisher;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Override
 	public DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
+		log.info("[sendDirectMessage] 메시지 생성 시작 : request = {}", directMessageCreateRequest);
 		//유저 조회/검증
 		User sender = userRepository.findById(directMessageCreateRequest.senderId()).orElseThrow(() -> new CustomException(
 			ErrorCode.USER_NOT_FOUND,"발신자를 찾을 수 없습니다."));
@@ -79,6 +85,7 @@ public class DmServiceImpl implements DmService {
 			)
 		);
 
+		eventPublisher.publishEvent(new NewDmEvent(directMessageDto));
 		return directMessageDto;
 	}
 
