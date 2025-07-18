@@ -20,22 +20,28 @@ public interface ProfileMapper {
 
 	@Mapping(source = "user.id", target = "userId")
 	@Mapping(source = "user.name", target = "name")
-	@Mapping(source = "locationNames", target = "location")
-	@Mapping(source = "profile.profileImageUrl", target = "profileImageUrl")
+	@Mapping(source = ".", target = "location") // profile 전체를 넘김
+	@Mapping(source = "profileImageUrl", target = "profileImageUrl")
 	ProfileDto toDto(Profile profile);
 
-	// 커스텀 매핑: locationName(String) → LocationDto
-	default LocationDto map(String locationName) {
-		if (locationName == null || locationName.isBlank()) {
-			return new LocationDto(null, null, null, null, List.of());
-		}
+	// ↓ 아래 방식으로 커스텀 매핑
+	default LocationDto map(Profile profile) {
+		if (profile == null) return null;
+		List<String> locationNames = profile.getLocationNames() == null ?
+				List.of() :
+				Arrays.stream(profile.getLocationNames().split(","))
+						.map(String::trim)
+						.toList();
 
-		// 예시 파싱 로직: 쉼표로 나뉘어 있다고 가정
-		List<String> locationNames = Arrays.asList(locationName.split(","));
-		return new LocationDto(null, null, null, null, locationNames);
+		return new LocationDto(
+				profile.getLatitude(),
+				profile.getLongitude(),
+				profile.getX(),
+				profile.getY(),
+				locationNames
+		);
 	}
 
-	// 커스텀 매핑: Instant → LocalDate
 	default LocalDate map(Instant birthDate) {
 		return birthDate == null ? null : birthDate.atZone(ZoneId.systemDefault()).toLocalDate();
 	}

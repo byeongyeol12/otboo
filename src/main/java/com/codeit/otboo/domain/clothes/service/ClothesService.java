@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.clothes.service;
 
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -21,24 +22,30 @@ import com.codeit.otboo.domain.clothes.entity.Clothes;
 import com.codeit.otboo.domain.clothes.entity.ClothesType;
 import com.codeit.otboo.domain.clothes.repository.AttributeDefRepository;
 import com.codeit.otboo.domain.clothes.repository.ClothesRepository;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class ClothesService {
 
 	private final ClothesRepository clothesRepository;
 	private final AttributeDefRepository attributeDefRepository;
-	private final ImageUploadService imageUploadService;
+	private final LocalImageUploadService localImageUploadService;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public ClothesDto createClothes(ClothesCreateRequest request, MultipartFile image) {
 		UUID ownerId = request.ownerId();
-		String imageUrl = imageUploadService.upload(image);
+		String imageUrl = localImageUploadService.upload(image);
 
 		Clothes newClothes = Clothes.builder()
 			.ownerId(ownerId)
@@ -56,6 +63,20 @@ public class ClothesService {
 		}
 
 		Clothes savedClothes = clothesRepository.save(newClothes);
+
+		// 알림 : 옷 등록
+		log.info("옷 생성 알림");
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				ownerId,
+				"Cloth",
+				"옷 ["+request.name()+"] 등록 했습니다.",
+				NotificationLevel.INFO
+			)
+		);
+
 		return convertToDto(savedClothes);
 	}
 
@@ -94,7 +115,7 @@ public class ClothesService {
 
 		String imageUrl = clothesToUpdate.getImageUrl();
 		if (image != null && !image.isEmpty()) {
-			imageUrl = imageUploadService.upload(image);
+			imageUrl = localImageUploadService.upload(image);
 		}
 
 		clothesToUpdate.update(request.name(), convertToClothesType(request.type()), imageUrl);

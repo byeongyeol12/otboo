@@ -35,13 +35,27 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      redis:
+        image: redis:6.2
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
       SPRING_PROFILES_ACTIVE: test
       DB_URL:      jdbc:postgresql://localhost:5432/ci_db
       DB_USERNAME: ci_user
       DB_PASSWORD: ci_pass
-      # API_KMA_SERVICE_KEY: ${{ secrets.API_KMA_SERVICE_KEY }}
+      API_KMA_SERVICE_KEY: ${{ secrets.API_KMA_SERVICE_KEY }}
+      API_KAKAO_REST_KEY: ${{secrets.API_KAKAO_REST_KEY}}
+      JWT_SECRET: ${{secrets.JWT_SECRET}}
+      JWT_EXPIRATION: ${{secrets.JWT_EXPIRATION}}
+      JWT_REFRESH_TOKEN_VALIDITY: ${{secrets.JWT_REFRESH_TOKEN_VALIDITY}}
+
 
     steps:
       - uses: actions/checkout@v4

@@ -8,15 +8,13 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface WeatherRepository extends JpaRepository<Weather, UUID> {
 
-    /**
-     * JSON으로 저장된 location의 x, y 값을 조건으로 날씨 정보를 조회합니다.
-     * 데이터베이스의 네이티브 JSON 쿼리 기능을 사용합니다. (PostgreSQL 기준)
-     */
+    // 이 메서드는 더 이상 WeatherServiceImpl에서 사용하지 않으므로 삭제하거나 유지해도 괜찮습니다.
     @Query(value = "SELECT w.* FROM weathers w " +
             "WHERE CAST(w.location ->> 'x' AS INTEGER) = :x " +
             "AND CAST(w.location ->> 'y' AS INTEGER) = :y " +
@@ -28,4 +26,23 @@ public interface WeatherRepository extends JpaRepository<Weather, UUID> {
             @Param("y") int y,
             @Param("forecastAtAfter") OffsetDateTime forecastAtAfter
     );
+
+    // 피드/추천 등에서 만료된 ID 처리용 메서드
+    @Query(value = "SELECT * FROM weathers w " +
+            "WHERE CAST(w.location ->> 'x' AS INTEGER) = :x " +
+            "AND CAST(w.location ->> 'y' AS INTEGER) = :y "
+            + "ORDER BY w.forecasted_at DESC LIMIT 1",
+            nativeQuery = true)
+    Optional<Weather> findLatestWeatherByLocation(@Param("x") int x, @Param("y") int y);
+
+    /**
+     * 특정 위치의 모든 일별 예보를 날짜순으로 조회합니다.
+     * JPQL 대신 Native Query를 사용하여 'not joinable' 에러를 해결합니다.
+     */
+    @Query(value = "SELECT * FROM weathers w " +
+            "WHERE CAST(w.location ->> 'x' AS INTEGER) = :x " +
+            "AND CAST(w.location ->> 'y' AS INTEGER) = :y " +
+            "ORDER BY w.forecast_at ASC",
+            nativeQuery = true)
+    List<Weather> findByLocationXAndLocationYOrderByForecastAtAsc(@Param("x") int x, @Param("y") int y);
 }

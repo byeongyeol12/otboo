@@ -4,7 +4,6 @@ import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
-
 	// COMMON
 	INVALID_INPUT_VALUE(400, "C001", "잘못된 입력값입니다."),
 	METHOD_NOT_ALLOWED(405, "C002", "지원하지 않는 HTTP 메서드입니다."),
@@ -27,6 +26,7 @@ public enum ErrorCode {
 	// PROFILE
 	PROFILE_NOT_FOUND(404, "P001", "프로필 정보를 찾을 수 없습니다."),
 	PROFILE_ALREADY_EXISTS(400, "P006", "이미 등록된 프로필이 존재합니다."),
+	LOCATION_NOT_SET(400, "P003", "프로필에 위치 정보가 설정되지 않았습니다."),
 	PROFILE_IMAGE_UPLOAD_FAILED(500, "P002", "프로필 이미지 업로드에 실패했습니다."),
 
 	// CLOTHES
@@ -41,10 +41,13 @@ public enum ErrorCode {
 	ATTRIBUTE_DEF_IN_USE(409, "AD004", "사용 중인 의상이 있어 삭제할 수 없는 속성입니다."),
 
 	// WEATHER
-	WEATHER_NOT_FOUND(404, "W001", "날씨 정보를 찾을 수 없습니다."),
+	WEATHER_NOT_FOUND(404, "W001", "요청한 ID의 날씨 정보를 찾을 수 없습니다."),
+	WEATHER_NOT_FOUND_FOR_LOCATION(404, "W002", "해당 위치의 날씨 정보를 찾을 수 없습니다."),
 
 	// FEED
 	FEED_NOT_FOUND(404, "F001", "피드 정보를 찾을 수 없습니다."),
+  	FEED_LIKE_ALREADY(409, "F002", "이미 해당 피드에 좋아요를 눌렀습니다."),
+  	FEED_LIKE_NOT_FOUND(404, "F003", "해당 피드에 좋아요를 누르지 않았습니다."),
 
 	// FOLLOW
 	FOLLOW_NOT_FOUND(404, "FL001", "팔로우 정보를 찾을 수 없습니다."),
@@ -59,11 +62,16 @@ public enum ErrorCode {
 	// NOTIFICATION
 	NOTIFICATION_NOT_FOUND(404, "N001", "알림 정보를 찾을 수 없습니다."),
 	NOTIFICATION_ALREADY_READ(400, "N002", "알림을 이미 읽은 상태입니다."),
+	NOTIFICATION_CREATE_FAILED(400, "N003", "알림 생성 실패했습니다."),
+
+	// SSE
+	SSE_HANDLER_FAILED(400, "S001", "SSE 알림 전송 실패"),
 
 	// RECOMMENDATION
 	RECOMMENDATION_NOT_FOUND(404, "R001", "추천 정보를 찾을 수 없습니다."),
 
-	;
+	// LOCATION
+	LOCATION_NOT_FOUND(404, "LC001", "위치 정보를 찾을 수 없습니다.") ;
 
 	private final int status;
 	private final String code;
