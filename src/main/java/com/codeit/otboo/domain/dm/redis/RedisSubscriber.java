@@ -24,6 +24,7 @@ public class RedisSubscriber implements MessageListener {
 
 	@Override
 	public void onMessage(Message message, byte[] pattern) {
+		log.info("[RedisSubscriber] onMessage 진입: {}", new String(message.getBody()));
 		try{
 			// 1. Redis에서 받은 메시지는 직렬화된 JSON 문자열
 			String json = new String(message.getBody());
@@ -33,9 +34,13 @@ public class RedisSubscriber implements MessageListener {
 
 			// 3. DM Key 생성(= 방 역할)
 			String dmKey = DmKeyUtil.makeDmKey(dmMessage.sender().id(),dmMessage.receiver().id());
+			String destination = "/sub/direct-messages_" + dmKey;
+
+			log.info("[RedisSubscriber] destination: {}", destination);
+
 
 			// 4. 웹소켓으로 연결된 구독자에게 실시간 전송
-			messagingTemplate.convertAndSend("/sub/direct-messages_"+dmKey,dmMessage);
+			messagingTemplate.convertAndSend(destination,dmMessage);
 			log.info("[RedisSubscriber] Message received : dmKey = {} ", dmKey);
 
 		} catch (Exception e) {
