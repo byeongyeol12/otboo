@@ -26,12 +26,13 @@ public class DmController {
 	@GetMapping("/api/direct-messages")
 	public ResponseEntity<DirectMessageDtoCursorResponse> getDms(
 		@AuthenticationPrincipal UserPrincipal userPrincipal,
+		@RequestParam UUID userId, // 상대방 아이디
 		@RequestParam(required = false) String cursor,
 		@RequestParam(required = false) UUID idAfter,
 		@RequestParam int limit
 	){
-		UUID userId = userPrincipal.getId(); // 인증된 사용자 ID 만 사용
-		DirectMessageDtoCursorResponse dmList = dmService.getDms(userId,cursor,idAfter,limit);
+		UUID myUserId = userPrincipal.getId(); // 인증된 사용자 ID 만 사용
+		DirectMessageDtoCursorResponse dmList = dmService.getDms(myUserId,userId,cursor,idAfter,limit);
 		return ResponseEntity.status(HttpStatus.OK).body(dmList);
 	}
 }

@@ -17,8 +17,12 @@ public interface DmRepository extends JpaRepository<Dm, UUID> {
 	 * @param pageable
 	 * @return
 	 */
-	@Query("SELECT m FROM Dm m WHERE (m.sender.id = :userId OR m.receiver.id = :userId) "
-		+ "AND (:idAfter IS NULL OR m.id > :idAfter) "
-		+ "ORDER BY m.createdAt ASC")
-	List<Dm> findAllByUserIdAfterCursor(UUID userId, UUID idAfter, Pageable pageable);
+	@Query("SELECT m FROM Dm m WHERE " +
+		"((m.sender.id = :userId AND m.receiver.id = :otherId) OR " +
+		"(m.sender.id = :otherId AND m.receiver.id = :userId)) " +
+		"AND (:idAfter IS NULL OR m.id > :idAfter) " +
+		"ORDER BY m.createdAt ASC")
+	List<Dm> findAllByUserIdAndOtherIdAfterCursor(
+		UUID userId, UUID otherId, UUID idAfter, Pageable pageable);
+
 }

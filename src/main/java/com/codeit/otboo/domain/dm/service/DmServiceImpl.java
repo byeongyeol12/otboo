@@ -120,7 +120,7 @@ public class DmServiceImpl implements DmService {
 	 * @return
 	 */
 	@Override
-	public DirectMessageDtoCursorResponse getDms(UUID userId, String cursor, UUID idAfter, int limit) {
+	public DirectMessageDtoCursorResponse getDms(UUID userId, UUID otherId, String cursor, UUID idAfter, int limit) {
 		// 1. 커서 변환
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
@@ -129,7 +129,7 @@ public class DmServiceImpl implements DmService {
 		Pageable pageable = PageRequest.of(0,limit+1, Sort.by("createdAt").ascending());
 
 		// 3. repository
-		List<Dm> dms = dmRepository.findAllByUserIdAfterCursor(userId,effectiveIdAfter,pageable);
+		List<Dm> dms = dmRepository.findAllByUserIdAndOtherIdAfterCursor(userId,otherId,effectiveIdAfter,pageable);
 
 		// 4. hasNext,nextCursor
 		boolean hasNext = dms.size() > limit;
