@@ -18,6 +18,9 @@ public class DmWebSocketController {
 
 	private final DmService dmService;
 
+	/**
+	 * 클라이언트에서 이 경로로 메시지를 보내면 DmService 로 위임
+	 */
 	@MessageMapping("/direct-messages_send")
 	public DirectMessageDto sendDirectMessage(@Payload DirectMessageCreateRequest directMessageCreateRequest) {
 		log.info("텍스트 메시지 생성 요청 : request={}", directMessageCreateRequest);

@@ -22,22 +22,27 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration
-@EnableWebSocketMessageBroker // 웹소켓브로커를 사용하도록 정의
+@EnableWebSocketMessageBroker // 웹소켓브로커 활성화(STOMP 프로토콜을 통한 WebSocket)
 @RequiredArgsConstructor
 public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RoleHierarchy roleHierarchy;
 
-	// 클라이언트가 웹소켓 서버에 연결할 수 있는 엔트포인트 설정
+	/**
+	 * 클라이언트에서 ws://localhost:8080/ws 로 소켓 연결
+	 * 클라이언트가 웹소켓 서버에 연결할 수 있는 엔드포인트 설정
+	 */
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry){
 		registry
-			.addEndpoint("/ws") // 연결될 엔드 포인트(url = ws://localhost:8080/ws)
+			.addEndpoint("/ws") // 웹 소켓 연결을 위해 연결 시도하는 엔드포인트
 			.setAllowedOrigins("http://localhost:8080")// CORS 허용
-			.withSockJS(); //WebSocket을 지원하지 않는 브라우저 환경에서도 통신이 가능하도록 SockJS fallback을 설정
+			.withSockJS(); //WebSocket을 지원하지 않는 브라우저 환경에서도 통신이 가능
 	}
 
-	// 클라이언트로부터의 메시지를 처리하고 응답을 전달하는 방법 설정
+	/**
+	 * 클라이언트로부터의 메시지를 처리하고 응답을 전달하는 방법 설정
+	 */
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry registry){
 		// /sub : 메시지를 구독(수신)하는 요청 엔드포인트
@@ -46,6 +51,9 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 		registry.setApplicationDestinationPrefixes("/pub");
 	}
 
+	/**
+	 * 커스텀 인터셉터(WebSocketAuthInterceptor)로 JWT 인증/권한 체크
+	 */
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration){
 		//웹 소켓 인가
@@ -59,6 +67,10 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 		);
 	}
 
+	/**
+	 * 인가 매니저로 ROLE_USER 이상만 허용
+	 *
+	 */
 	public AuthorizationManager<Message<?>> messageAuthorityAuthorizationManager(){
 		return MessageMatcherDelegatingAuthorizationManager.builder()
 			.anyMessage().hasRole(Role.USER.name())

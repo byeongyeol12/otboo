@@ -10,6 +10,13 @@ import org.springframework.data.jpa.repository.Query;
 import com.codeit.otboo.domain.dm.entity.Dm;
 
 public interface DmRepository extends JpaRepository<Dm, UUID> {
+	/**
+	 * DM 조회/저장 (커서 기반 페이지네이션)
+	 * @param userId
+	 * @param idAfter
+	 * @param pageable
+	 * @return
+	 */
 	@Query("SELECT m FROM Dm m WHERE (m.sender.id = :userId OR m.receiver.id = :userId) "
 		+ "AND (:idAfter IS NULL OR m.id > :idAfter) "
 		+ "ORDER BY m.createdAt ASC")
