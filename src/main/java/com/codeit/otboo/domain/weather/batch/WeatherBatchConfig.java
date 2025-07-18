@@ -177,8 +177,6 @@ public class WeatherBatchConfig {
                     .flatMap(List::stream)
                     .collect(Collectors.toList());
             weatherRepository.saveAll(weathersToSave);
-
-            // ✨ WeatherAlertService 호출로 변경하여 로직 위임
             weatherAlertService.generateWeatherAlerts(weathersToSave);
         };
     }

@@ -1,11 +1,12 @@
 package com.codeit.otboo.domain.notification.service;
 
-import com.codeit.otboo.domain.notification.entity.Notification;
-import com.codeit.otboo.domain.notification.repository.NotificationRepository;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.domain.weather.entity.Weather;
-import com.codeit.otboo.domain.weather.entity.vo.*;
+import com.codeit.otboo.domain.weather.entity.vo.LocationInfo;
+import com.codeit.otboo.domain.weather.entity.vo.PrecipitationType;
+import com.codeit.otboo.domain.weather.entity.vo.TemperatureInfo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,10 +14,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import java.util.UUID;
+
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -26,25 +28,22 @@ class WeatherAlertServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
     @Mock
-    private NotificationRepository notificationRepository;
+    private NotificationService notificationService; // ✨ Mock 대상을 NotificationRepository -> NotificationService로 변경
 
     @InjectMocks
     private WeatherAlertService weatherAlertService;
 
     @Test
-    @DisplayName("오늘 맑음, 내일 비 예보 시 사용자에게 알림을 생성한다")
-    void generateWeatherAlerts_whenRainIsForecasted_createsNotification() {
+    @DisplayName("오늘 맑음, 내일 비 예보 시 NotificationService를 호출하여 알림을 요청한다")
+    void generateWeatherAlerts_whenRainIsForecasted_requestsNotificationCreation() {
         // given (상황 설정)
         LocationInfo location = new LocationInfo(37.0, 127.0, 60, 127);
 
-        // User 엔티티를 직접 생성하여 테스트에 필요한 값을 설정
         User mockUser = new User();
         mockUser.setId(UUID.randomUUID());
-        mockUser.setEmail("test@test.com");
-        mockUser.setName("테스터");
 
-        // 오늘 날씨: 맑음
         Weather todayWeather = Weather.builder()
                 .location(location)
                 .forecastAt(LocalDate.now(ZoneId.of("Asia/Seoul")).atStartOfDay(ZoneId.of("Asia/Seoul")).toInstant())
@@ -52,7 +51,6 @@ class WeatherAlertServiceTest {
                 .temperature(new TemperatureInfo(25, 20, 30, 0))
                 .build();
 
-        // 내일 날씨: 비
         Weather tomorrowWeather = Weather.builder()
                 .location(location)
                 .forecastAt(LocalDate.now(ZoneId.of("Asia/Seoul")).plusDays(1).atStartOfDay(ZoneId.of("Asia/Seoul")).toInstant())
@@ -68,11 +66,12 @@ class WeatherAlertServiceTest {
         weatherAlertService.generateWeatherAlerts(weathers);
 
         // then (결과 검증)
-        ArgumentCaptor<List<Notification>> captor = ArgumentCaptor.forClass(List.class);
-        verify(notificationRepository, times(1)).saveAll(captor.capture());
+        // ✨ notificationService.createAndSend()가 호출되었는지, 어떤 DTO가 전달되었는지 검증
+        ArgumentCaptor<NotificationDto> captor = ArgumentCaptor.forClass(NotificationDto.class);
+        verify(notificationService, times(1)).createAndSend(captor.capture());
 
-        List<Notification> savedNotifications = captor.getValue();
-        assertThat(savedNotifications).hasSize(1);
-        assertThat(savedNotifications.get(0).getContent()).contains("비 또는 눈 소식");
+        NotificationDto createdDto = captor.getValue();
+        assertThat(createdDto.receiverId()).isEqualTo(mockUser.getId());
+        assertThat(createdDto.content()).contains("비 또는 눈 소식");
     }
 }
