@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.user.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
