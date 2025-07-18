@@ -14,6 +14,8 @@ public interface UserRepository extends JpaRepository<User, UUID>, UserSearchRep
 
 	User getUserById(UUID followeeId);
 
+	List<User> findByProfileXAndProfileY(int x, int y);
+
 	User findByName(String name);
 }
 

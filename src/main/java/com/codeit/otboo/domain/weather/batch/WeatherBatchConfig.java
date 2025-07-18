@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.weather.batch;
 
+import com.codeit.otboo.domain.notification.service.WeatherAlertService;
 import com.codeit.otboo.domain.user.entity.Profile;
 import com.codeit.otboo.domain.user.repository.ProfileRepository;
 import com.codeit.otboo.domain.weather.component.KmaApiClient;
@@ -31,12 +32,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -53,6 +49,7 @@ public class WeatherBatchConfig {
     private final ProfileRepository profileRepository;
     private final PlatformTransactionManager transactionManager;
     private final JobLauncher jobLauncher;
+    private final WeatherAlertService weatherAlertService; // ✨ 의존성 변경
 
     @Bean
     public Job fetchWeatherJob() {
@@ -74,7 +71,6 @@ public class WeatherBatchConfig {
     @Bean
     @StepScope
     public ItemReader<LocationInfo> locationInfoItemReader() {
-        // (x, y) 좌표 기준으로 중복 위치를 제거
         Collection<Profile> distinctProfiles = profileRepository.findAll().stream()
                 .filter(p -> p.getX() != null && p.getY() != null)
                 .collect(Collectors.toMap(
@@ -122,7 +118,7 @@ public class WeatherBatchConfig {
 
                 double minTemp = parseKmaDouble(dailyValues.get("TMN"));
                 double maxTemp = parseKmaDouble(dailyValues.get("TMX"));
-                if (minTemp == 0.0 && maxTemp != 0.0) { minTemp = maxTemp; } // 최저/최고 둘 중 하나만 없을 때 보정
+                if (minTemp == 0.0 && maxTemp != 0.0) { minTemp = maxTemp; }
                 if (maxTemp == 0.0 && minTemp != 0.0) { maxTemp = minTemp; }
 
                 if (minTemp == 0.0 && maxTemp == 0.0) {
@@ -143,7 +139,7 @@ public class WeatherBatchConfig {
                 }
 
                 TemperatureInfo tempInfo = new TemperatureInfo(currentTemp, minTemp, maxTemp, tempDiff);
-                HumidityInfo humidityInfo = new HumidityInfo(currentHumidity, humDiff); // ✨ 버그 수정!
+                HumidityInfo humidityInfo = new HumidityInfo(currentHumidity, humDiff);
 
                 PrecipitationType pty = mapToPrecipitationType(dailyValues.getOrDefault("PTY", "0"));
                 SkyStatus sky = mapToSkyStatus(dailyValues.getOrDefault("SKY", "1"));
@@ -173,14 +169,15 @@ public class WeatherBatchConfig {
             return dailySummaries;
         };
     }
+
     @Bean
     public ItemWriter<List<Weather>> weatherListItemWriter() {
         return chunk -> {
             List<Weather> weathersToSave = chunk.getItems().stream()
                     .flatMap(List::stream)
                     .collect(Collectors.toList());
-            log.info("Saving {} weather entities to the database.", weathersToSave.size());
             weatherRepository.saveAll(weathersToSave);
+            weatherAlertService.generateWeatherAlerts(weathersToSave);
         };
     }
 

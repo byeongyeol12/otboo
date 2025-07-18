@@ -2,12 +2,13 @@ spring:
   application:
     name: otboo
   profiles:
+    # 환경 변수가 없으면 기본으로 'dev' 프로필을 사용하도록 설정
     active: ${SPRING_PROFILES_ACTIVE:dev}
-
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
 
+# logging과 jwt는 spring 하위가 아닌, 최상위 레벨의 설정입니다.
 logging:
   level:
     org.springframework.web.reactive.function.client: DEBUG
