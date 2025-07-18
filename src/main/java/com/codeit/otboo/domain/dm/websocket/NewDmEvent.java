@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.dm.util;
+package com.codeit.otboo.domain.dm.websocket;
 
 import java.time.Instant;
 

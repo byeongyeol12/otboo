@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.dm.util;
+package com.codeit.otboo.domain.dm.websocket;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -6,6 +6,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
+import com.codeit.otboo.domain.dm.util.DmKeyUtil;
 import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
 
 import lombok.RequiredArgsConstructor;

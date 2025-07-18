@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.websocket;
+package com.codeit.otboo.domain.dm.websocket;
 
 import java.util.Optional;
 import java.util.UUID;

@@ -13,7 +13,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import com.codeit.otboo.domain.websocket.WebSocketAuthInterceptor;
+import com.codeit.otboo.domain.dm.websocket.WebSocketAuthInterceptor;
 import com.codeit.otboo.global.config.jwt.JwtTokenProvider;
 import com.codeit.otboo.global.enumType.Role;
 

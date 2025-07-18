@@ -20,7 +20,7 @@ import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
 import com.codeit.otboo.domain.dm.redis.RedisPublisher;
 import com.codeit.otboo.domain.dm.repository.DmRepository;
 import com.codeit.otboo.domain.dm.util.DmKeyUtil;
-import com.codeit.otboo.domain.dm.util.NewDmEvent;
+import com.codeit.otboo.domain.dm.websocket.NewDmEvent;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
