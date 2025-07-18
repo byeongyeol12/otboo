@@ -73,16 +73,20 @@ public class WeatherAlertService {
     }
 
     private String checkSpecialWeather(Weather today, Weather tomorrow) {
-        if (today.getPrecipitationType() == PrecipitationType.NONE &&
-                (tomorrow.getPrecipitationType() == PrecipitationType.RAIN || tomorrow.getPrecipitationType() == PrecipitationType.SNOW)) {
-            return "내일은 비 또는 눈 소식이 있어요. 외출 시 우산을 챙겨주세요! ☂️";
+        // 1. 내일 비/눈 예보가 있으면, 오늘의 날씨와 상관없이 무조건 알림을 보냅니다.
+        if (tomorrow.getPrecipitationType() == PrecipitationType.RAIN || tomorrow.getPrecipitationType() == PrecipitationType.SNOW) {
+            return "내일 비 또는 눈 소식이 있어요. 외출 시 우산을 챙겨주세요! ☂️";
         }
+
+        // 2. 강수 예보가 없을 경우에만, 기온 변화를 체크합니다. (중복 알림 방지)
         double tempDiff = tomorrow.getTemperature().max() - today.getTemperature().max();
         if (tempDiff >= 5.0) {
             return "내일은 오늘보다 5도 이상 더워요! 시원하게 입으세요. ☀️";
         } else if (tempDiff <= -5.0) {
             return "내일은 오늘보다 5도 이상 추워져요! 따뜻하게 챙겨입으세요. ❄️";
         }
+
+        // 위 조건에 모두 해당하지 않으면 알림을 보내지 않음
         return null;
     }
 }
