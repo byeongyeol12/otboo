@@ -50,13 +50,12 @@ public class CommentServiceImpl implements CommentService {
 		feedCommentRepository.save(comment);
 
 		// 피드에 댓글 등록시 알림 발생
-		User user = userRepository.findByFeedId(feedId);
-		log.info("피드에 좋아요 알림");
+		log.info("피드에 댓글 알림");
 		notificationService.createAndSend(
 			new NotificationDto(
 				UUID.randomUUID(),
 				Instant.now(),
-				user.getId(),
+				feed.getUser().getId(),
 				"Feed_Comment",
 				"["+author.getName()+"] 님이 피드 에 댓글["+comment.getContent()+"] 을 등록했습니다.",
 				NotificationLevel.INFO

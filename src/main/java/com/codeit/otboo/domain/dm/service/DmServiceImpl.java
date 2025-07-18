@@ -88,6 +88,8 @@ public class DmServiceImpl implements DmService {
 			throw new CustomException(ErrorCode.DM_Redis_MESSAGE_ERROR, e.getMessage());
 		}
 
+		eventPublisher.publishEvent(new NewDmEvent(directMessageDto));
+
 		// 알림 전송
 		try {
 			notificationService.createAndSend(
@@ -106,7 +108,6 @@ public class DmServiceImpl implements DmService {
 			throw new CustomException(ErrorCode.NOTIFICATION_CREATE_FAILED);
 		}
 
-		eventPublisher.publishEvent(new NewDmEvent(directMessageDto));
 		return directMessageDto;
 	}
 
