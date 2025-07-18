@@ -4,8 +4,10 @@ import static com.codeit.otboo.global.error.ErrorCode.*;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +24,13 @@ import com.codeit.otboo.domain.feed.entity.Feed;
 import com.codeit.otboo.domain.feed.repository.FeedLikeRepository;
 import com.codeit.otboo.domain.feed.repository.FeedRepository;
 import com.codeit.otboo.domain.feed.service.FeedService;
+import com.codeit.otboo.domain.follow.entity.Follow;
+import com.codeit.otboo.domain.follow.repository.FollowRepository;
+import com.codeit.otboo.domain.follow.service.FollowService;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
+import com.codeit.otboo.domain.user.entity.Profile;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.domain.weather.entity.Weather;
@@ -31,15 +40,13 @@ import com.codeit.otboo.domain.weather.repository.WeatherRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.config.security.UserPrincipal;
 import com.codeit.otboo.global.error.ErrorCode;
-import com.codeit.otboo.domain.user.entity.Profile;
-import java.time.OffsetDateTime;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FeedServiceImpl implements FeedService {
 
 	private final FeedRepository feedRepository;
@@ -47,6 +54,9 @@ public class FeedServiceImpl implements FeedService {
 	private final WeatherRepository weatherRepository;
 	private final ClothesRepository clothesRepository;
 	private final FeedLikeRepository feedLikeRepository;
+	private final NotificationService notificationService;
+	private final FollowService followService;
+	private final FollowRepository followRepository;
 
 	private UUID getCurrentUserId() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -98,6 +108,30 @@ public class FeedServiceImpl implements FeedService {
 
 		// 6) 저장
 		feed = feedRepository.save(feed);
+
+		// 팔로우한 사용자가 피드 등록시 알림 발생(피드 작성한 사람 : 팔로이)
+		log.info("팔로우한 사용자가 피드를 등록 알림");
+		List<Follow> followers = followRepository.findAllByFolloweeId(author.getId());
+
+		// 팔로워가 있을 때만 알림 전송
+		for (Follow follow : followers) {
+			UUID followerId = follow.getFollower().getId(); // 팔로워 유저의 ID
+			try {
+				notificationService.createAndSend(
+					new NotificationDto(
+						UUID.randomUUID(),
+						Instant.now(),
+						followerId,
+						"Feed_Create",
+						"[" + author.getName() + "] 님이 새 피드를 등록했습니다.",
+						NotificationLevel.INFO
+					)
+				);
+				log.info("[createFeed] 팔로워 알림 전송 성공: followerId={}", followerId);
+			} catch (Exception e) {
+				log.error("[createFeed] 팔로워 알림 전송 실패: followerId={}, error={}", followerId, e.getMessage(), e);
+			}
+		}
 
 		// 7) DTO로 변환
 		return FeedDto.fromEntity(feed, false);
