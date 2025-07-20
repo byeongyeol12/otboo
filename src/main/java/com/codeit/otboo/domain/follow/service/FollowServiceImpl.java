@@ -26,9 +26,11 @@ import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FollowServiceImpl implements FollowService {
 
 	private final FollowRepository followRepository;
@@ -66,12 +68,13 @@ public class FollowServiceImpl implements FollowService {
 		followRepository.save(follow);
 
 		//3. 알림 이벤트 발생
+		log.info("팔로우 생성 알림");
 		notificationService.createAndSend(
 			new NotificationDto(
 				UUID.randomUUID(),
 				Instant.now(),
 				followeeId,
-				"팔로우",
+				"Follow",
 				"새 팔로워 ["+follower.getName()+"] 님이 [" +followee.getName()+ "] 님을 팔로우 했습니다.",
 				NotificationLevel.INFO
 			)

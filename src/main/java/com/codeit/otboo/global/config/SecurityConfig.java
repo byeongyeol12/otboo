@@ -52,7 +52,8 @@ public class SecurityConfig {
 					"/api/users/**",
 					"/api/sse",
 					"/h2-console/**",
-					"/uploads/**"// 테스트를 위해 임시로 추가
+					"/uploads/**",// 테스트를 위해 임시로 추가
+					"/ws/**"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
