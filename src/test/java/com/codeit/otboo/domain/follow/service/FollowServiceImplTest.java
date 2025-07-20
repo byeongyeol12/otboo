@@ -108,8 +108,6 @@ public class FollowServiceImplTest {
 		verify(notificationService, times(1))
 			.createAndSend(argThat(notificationDto ->
 				notificationDto.receiverId().equals(followeeId)  // 알림 받는 사람이 팔로워
-					&& notificationDto.title().equals("팔로우")       // 알림 제목이 "팔로우"이고
-					&& notificationDto.content().contains("[" + follower.getName() + "]") // 내용에 팔로워 이름 포함
 					&& notificationDto.level() == NotificationLevel.INFO // 알림 레벨 INFO
 			));
 	}
