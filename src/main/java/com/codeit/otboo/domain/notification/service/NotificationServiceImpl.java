@@ -1,6 +1,6 @@
 package com.codeit.otboo.domain.notification.service;
 
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -73,35 +73,39 @@ public class NotificationServiceImpl implements NotificationService {
 	// 알림 조회
 	@Override
 	public NotificationDtoCursorResponse getNotifications(UUID receiverId, String cursor, UUID idAfter, int limit) {
-		// 커서 변환
-		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank()) ? UUID.fromString(cursor) : idAfter;
-
-		// pageable
-		Pageable pageable = PageRequest.of(0,limit+1, Sort.Direction.DESC, "createdAt");
-
-		// repository 조회
-		List<Notification> list = new ArrayList<>();
-		if(effectiveIdAfter != null) {
-			list = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(receiverId,effectiveIdAfter,pageable);
-		}else{
-			list = notificationRepository.findByReceiverIdAndConfirmedFalse(receiverId,pageable);
+		Instant effectiveCreatedAt = null;
+		if (cursor != null && !cursor.isBlank()) {
+			effectiveCreatedAt = Instant.parse(cursor);
 		}
 
-		// hasNext,nextCursor,nextIdAfter
+		Pageable pageable = PageRequest.of(0, limit + 1, Sort.Direction.DESC, "createdAt");
+
+		List<Notification> list;
+		if (effectiveCreatedAt != null) {
+			// 읽지 않은 알림 중 커서(createdAt) 이전만
+			list = notificationRepository.findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc(
+				receiverId, effectiveCreatedAt, pageable
+			);
+		} else {
+			// 첫 페이지: 읽지 않은 알림 최신순
+			list = notificationRepository.findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc(
+				receiverId, pageable
+			);
+		}
+
 		boolean hasNext = list.size() > limit;
-		List<Notification> pageList = hasNext ? list.subList(0,limit) : list;
+		List<Notification> pageList = hasNext ? list.subList(0, limit) : list;
 		List<NotificationDto> notificationDtoList = notificationMapper.toNotificationDtoList(pageList);
 
-		UUID nextIdAfter = hasNext && !notificationDtoList.isEmpty() ? notificationDtoList.get(notificationDtoList.size()-1).id() : null;
+		// 커서 값: 마지막 데이터의 createdAt
+		Instant nextCreatedAt = hasNext && !pageList.isEmpty() ? pageList.get(pageList.size() - 1).getCreatedAt() : null;
+		String nextCursor = (nextCreatedAt != null) ? nextCreatedAt.toString() : null;
 
-		String nextCursor = nextIdAfter!= null ? nextIdAfter.toString() : null;
+		// 읽지 않은 알림 총 개수
+		long totalCount = notificationRepository.countByReceiverIdAndConfirmedFalse(receiverId);
 
-		// 전체 건수
-		long totalCount = notificationRepository.countByReceiverId(receiverId);
-
-		// 반환
 		return new NotificationDtoCursorResponse(
-			notificationDtoList,nextCursor,nextIdAfter,hasNext,totalCount,"createdAt","DESCENDING"
+			notificationDtoList, nextCursor, null, hasNext, totalCount, "createdAt", "DESCENDING"
 		);
 	}
 	// 알림 읽음

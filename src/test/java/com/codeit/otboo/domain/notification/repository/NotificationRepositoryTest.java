@@ -3,6 +3,8 @@ package com.codeit.otboo.domain.notification.repository;
 import static com.codeit.otboo.domain.notification.entity.NotificationLevel.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -80,19 +82,26 @@ public class NotificationRepositoryTest {
 	@DisplayName("findByReceiverIdAndIdGreaterThanOrderByCreatedAt - 페이징 정렬 성공")
 	void findByReceiverIdGreaterThanOrderByCreatedAt_success() {
 		//given
-		Notification first = notificationRepository.findAll()
-			.stream()
+		// given: user1의 알림 중 첫 번째 알림을 커서로 삼는다
+		List<Notification> allNoti = notificationRepository.findAll();
+		Notification cursor = allNoti.stream()
 			.filter(n -> n.getReceiver().getId().equals(user1.getId()))
+			.sorted(Comparator.comparing(Notification::getCreatedAt)) // 생성순으로 정렬
 			.findFirst()
-			.orElse(null);
+			.orElseThrow();
 		Pageable pageable = PageRequest.of(0, 10);
 
-		//when
-		List<Notification> result = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(user1.getId(),first.getId(), pageable);
+		// when: 커서 알림 id 이후(user1만!) 알림 조회
+		List<Notification> result = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(
+			user1.getId(), cursor.getId(), pageable);
 
-		//then
+		// then: 모두 user1의 알림이고, 커서 id 이후만 조회됨
+		assertThat(result).isNotEmpty(); // 비어있지 않아야 함
 		assertThat(result)
-			.allMatch(n->n.getReceiver().getId().equals(user1.getId()) && n.getId().compareTo(first.getId())>0);
+			.allMatch(n -> n.getReceiver().getId().equals(user1.getId()) && n.getId().compareTo(cursor.getId()) > 0);
+		// 생성순 정렬 확인
+		List<Instant> createdAtList = result.stream().map(Notification::getCreatedAt).toList();
+		assertThat(createdAtList).isSorted();
 	}
 
 	@Test
