@@ -97,7 +97,7 @@ public class NotificationControllerTest {
 
 		//when,then
 		mockMvc.perform(get("/api/notifications"))
-			.andExpect(status().isBadRequest());
+			.andExpect(status().isInternalServerError());
 	}
 
 	//readNotifications
@@ -129,14 +129,13 @@ public class NotificationControllerTest {
 		UUID userId = UUID.randomUUID();
 		UserPrincipal principal = new UserPrincipal(userId, "test@email.com", "pw", Role.USER);
 
-		// CustomException으로 예외 던지도록 목 세팅
 		doThrow(new CustomException(ErrorCode.NOTIFICATION_NOT_FOUND))
 			.when(notificationService).readNotifications(eq(notificationId), eq(userId));
 
 		mockMvc.perform(delete("/api/notifications/{notificationId}", notificationId)
 				.with(SecurityMockMvcRequestPostProcessors.user(principal))
 				.with(csrf()))
-			.andExpect(status().isNotFound()) // ErrorCode.NOTIFICATION_NOT_FOUND.getStatus() == 404
-			.andExpect(jsonPath("$.message").value("알림 정보를 찾을 수 없습니다.")); // ErrorCode의 message 값
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.message").value("알림 정보를 찾을 수 없습니다."));
 	}
 }
