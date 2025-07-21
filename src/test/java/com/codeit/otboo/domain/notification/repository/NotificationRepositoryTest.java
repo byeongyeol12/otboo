@@ -1,11 +1,11 @@
 package com.codeit.otboo.domain.notification.repository;
 
-import static com.codeit.otboo.domain.notification.entity.NotificationLevel.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +20,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.codeit.otboo.domain.notification.entity.Notification;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.global.config.QueryDslConfig;
@@ -59,75 +60,107 @@ public class NotificationRepositoryTest {
 		user2.setField("T2");
 		userRepository.save(user2);
 
-		// 알림 데이터
+		// 알림 데이터 생성: user1(읽음 2, 안읽음 3), user2(안읽음 1)
 		for (int i = 0; i < 5; i++) {
+			boolean confirmed = (i < 2); // 0,1번은 읽음(true), 2,3,4는 안읽음(false)
 			notificationRepository.save(Notification.builder()
 				.receiver(user1)
-				.title("알림 " + i)
-				.content("내용 " + i)
-				.level(INFO)
-				.confirmed(i % 2 == 0)
+				.title("user1 알림 " + i)
+				.content("user1 내용 " + i)
+				.level(NotificationLevel.INFO)
+				.confirmed(confirmed)
 				.build());
 		}
 		notificationRepository.save(Notification.builder()
 			.receiver(user2)
-			.title("다른 사용자 알림")
-			.content("다른 내용")
-			.level(WARNING)
+			.title("user2 알림")
+			.content("user2 내용")
+			.level(NotificationLevel.WARNING)
 			.confirmed(false)
 			.build());
 	}
 
 	@Test
-	@DisplayName("findByReceiverIdAndIdGreaterThanOrderByCreatedAt - 페이징 정렬 성공")
-	void findByReceiverIdGreaterThanOrderByCreatedAt_success() {
-		//given
-		// given: user1의 알림 중 첫 번째 알림을 커서로 삼는다
-		List<Notification> allNoti = notificationRepository.findAll();
-		Notification cursor = allNoti.stream()
-			.filter(n -> n.getReceiver().getId().equals(user1.getId()))
-			.sorted(Comparator.comparing(Notification::getCreatedAt)) // 생성순으로 정렬
-			.findFirst()
-			.orElseThrow();
+	@DisplayName("findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc - 페이징 정렬 성공")
+	void findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc_success() {
+		// given
 		Pageable pageable = PageRequest.of(0, 10);
 
-		// when: 커서 알림 id 이후(user1만!) 알림 조회
-		List<Notification> result = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(
-			user1.getId(), cursor.getId(), pageable);
-
-		// then: 모두 user1의 알림이고, 커서 id 이후만 조회됨
-		assertThat(result).isNotEmpty(); // 비어있지 않아야 함
-		assertThat(result)
-			.allMatch(n -> n.getReceiver().getId().equals(user1.getId()) && n.getId().compareTo(cursor.getId()) > 0);
-		// 생성순 정렬 확인
-		List<Instant> createdAtList = result.stream().map(Notification::getCreatedAt).toList();
-		assertThat(createdAtList).isSorted();
-	}
-
-	@Test
-	@DisplayName("findByReceiverIdAndConfirmedFalse - 확인하지 않은 알림 조회")
-	void findByReceiverIdAndConfirmedFalse_success() {
-		//given
-		Pageable pageable = PageRequest.of(0, 10);
-
-		//when
+		// when
 		List<Notification> result = notificationRepository
-			.findByReceiverIdAndConfirmedFalse(user1.getId(), pageable);
+			.findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc(user1.getId(), pageable);
 
-		//then
-		assertThat(result)
-			.allMatch(n -> !n.isConfirmed() && n.getReceiver().getId().equals(user1.getId()));
+		// then
+		assertThat(result).hasSize(3); // user1 읽지 않은 알림 3개
+		assertThat(result).allMatch(n -> n.getReceiver().getId().equals(user1.getId()) && !n.isConfirmed());
+		// 최신순 검증
+		List<Instant> createdAtList = result.stream().map(Notification::getCreatedAt).toList();
+		assertThat(createdAtList).isSortedAccordingTo(Comparator.reverseOrder());
 	}
 
 	@Test
-	@DisplayName("countByReceiverId - 사용자의 전체 알림 개수 반환")
-	void countByReceiverId_success() {
-		//given
-		long count1 = notificationRepository.countByReceiverId(user1.getId());
-		long count2 = notificationRepository.countByReceiverId(user2.getId());
+	@DisplayName("findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc - 읽지 않은 알림, 커서(createdAt) 기준 다음 페이지 조회")
+	void findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc_success() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		List<Notification> firstPage = notificationRepository
+			.findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc(user1.getId(), PageRequest.of(0, 1));
+		Instant cursor = firstPage.get(0).getCreatedAt();
 
-		//when,then
-		assertThat(count1).isEqualTo(5);
-		assertThat(count2).isEqualTo(1);
+		// when: 커서보다 과거(더 오래된) 알림 조회
+		List<Notification> result = notificationRepository
+			.findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc(
+				user1.getId(), cursor, pageable);
+
+		// then
+		assertThat(result).hasSize(2); // 남은 안읽음 2개
+		assertThat(result).allMatch(n -> n.getReceiver().getId().equals(user1.getId()) && !n.isConfirmed());
+		assertThat(result).allMatch(n -> n.getCreatedAt().isBefore(cursor));
 	}
+
+	@Test
+	@DisplayName("findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc - 읽지 않은 알림이 없으면 빈 리스트")
+	void findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc_empty() {
+		// given: 존재하지 않는 유저
+		Pageable pageable = PageRequest.of(0, 10);
+
+		// when
+		List<Notification> result = notificationRepository
+			.findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc(UUID.randomUUID(), pageable);
+
+		// then
+		assertThat(result).isEmpty();
+	}
+
+
+	@Test
+	@DisplayName("findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc - 읽지 않은 알림 커서 조회 : 데이터가 없으면 빈 리스트")
+	void findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc_empty() {
+		// given: 과거 시간 커서
+		Pageable pageable = PageRequest.of(0, 10);
+		Instant oldCursor = Instant.now().minusSeconds(3600 * 24);
+
+		// when
+		List<Notification> result = notificationRepository
+			.findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc(
+				user1.getId(), oldCursor, pageable);
+
+		// then
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	@DisplayName("countByReceiverIdAndConfirmedFalse - 읽지 않은 알림 개수 카운트")
+	void countByReceiverIdAndConfirmedFalse_success() {
+		// when
+		long countUser1 = notificationRepository.countByReceiverIdAndConfirmedFalse(user1.getId());
+		long countUser2 = notificationRepository.countByReceiverIdAndConfirmedFalse(user2.getId());
+		long countNotExist = notificationRepository.countByReceiverIdAndConfirmedFalse(UUID.randomUUID());
+
+		// then
+		assertThat(countUser1).isEqualTo(3);
+		assertThat(countUser2).isEqualTo(1);
+		assertThat(countNotExist).isZero();
+	}
+
 }

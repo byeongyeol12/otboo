@@ -116,61 +116,68 @@ public class NotificationServiceImplTest {
 
 	//getNotifications
 	@Test
-	@DisplayName("getNotifications - 커서,idAfter 모두 없는 경우, 미확인 알림 반환")
-	void getNotifications_noCursor_noIdAfter_unconfirmed(){
-		//given
+	@DisplayName("getNotifications - 커서/createdAt 없는 경우, 읽지 않은 최신 알림 반환")
+	void getNotifications_noCursor_unconfirmed(){
+		// given
 		List<Notification> notifications = List.of(notification);
-		when(notificationRepository.findByReceiverIdAndConfirmedFalse(eq(user.getId()),any(Pageable.class))).thenReturn(notifications);
-		when(notificationRepository.countByReceiverId(eq(user.getId()))).thenReturn(1L);
+		when(notificationRepository.findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc(eq(user.getId()), any(Pageable.class)))
+			.thenReturn(notifications);
+		when(notificationRepository.countByReceiverIdAndConfirmedFalse(eq(user.getId()))).thenReturn(1L);
 		when(notificationMapper.toNotificationDtoList(anyList())).thenReturn(List.of(notificationDto));
 
-		//when
+		// when
 		NotificationDtoCursorResponse result = notificationService.getNotifications(
-			user.getId(),null,null,1
+			user.getId(), null, null, 1
 		);
 
-		//then
+		// then
 		assertThat(result.data()).hasSize(1);
 		assertThat(result.totalCount()).isEqualTo(1);
 		assertThat(result.nextCursor()).isNull();
+		verify(notificationRepository, times(1)).findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc(eq(user.getId()), any(Pageable.class));
 	}
 
 	@Test
-	@DisplayName("getNotifications - 커서 or idAfter 있는 경우, 해당 이후 알림 반환")
-	void getNotifications_usedCursorOrIdAfter(){
-		//given
+	@DisplayName("getNotifications - createdAt 커서(타임스탬프) 있을 때, 그 이전 읽지 않은 알림 반환")
+	void getNotifications_withCursor(){
+		// given
+		String cursor = Instant.now().toString(); // e.g. "2024-07-21T12:00:00Z"
 		List<Notification> notifications = List.of(notification);
-		when(notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(eq(user.getId()),any(UUID.class),any(Pageable.class))).thenReturn(notifications);
-		when(notificationRepository.countByReceiverId(eq(user.getId()))).thenReturn(1L);
+		when(notificationRepository.findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc(
+			eq(user.getId()), any(Instant.class), any(Pageable.class)))
+			.thenReturn(notifications);
+		when(notificationRepository.countByReceiverIdAndConfirmedFalse(eq(user.getId()))).thenReturn(1L);
 		when(notificationMapper.toNotificationDtoList(anyList())).thenReturn(List.of(notificationDto));
 
-		//when
+		// when
 		NotificationDtoCursorResponse result = notificationService.getNotifications(
-			user.getId(),null,UUID.randomUUID(),1
+			user.getId(), cursor, null, 1
 		);
 
-		//then
+		// then
 		assertThat(result.data()).hasSize(1);
 		assertThat(result.totalCount()).isEqualTo(1);
+		verify(notificationRepository, times(1)).findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc(
+			eq(user.getId()), any(Instant.class), any(Pageable.class));
 	}
 
 	@Test
-	@DisplayName("getNotifications - 커서 , idAfter 있는 경우, 해당 이후 알림 반환")
-	void getNotifications_usedCursorAllIdAfter(){
-		//given
-		List<Notification> notifications = List.of(notification);
-		when(notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(eq(user.getId()),any(UUID.class),any(Pageable.class))).thenReturn(notifications);
-		when(notificationRepository.countByReceiverId(eq(user.getId()))).thenReturn(1L);
-		when(notificationMapper.toNotificationDtoList(anyList())).thenReturn(List.of(notificationDto));
+	@DisplayName("getNotifications - 읽지 않은 알림이 없으면 빈 리스트 반환")
+	void getNotifications_noUnread() {
+		// given
+		when(notificationRepository.findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc(eq(user.getId()), any(Pageable.class)))
+			.thenReturn(List.of());
+		when(notificationRepository.countByReceiverIdAndConfirmedFalse(eq(user.getId()))).thenReturn(0L);
+		when(notificationMapper.toNotificationDtoList(anyList())).thenReturn(List.of());
 
-		//when
+		// when
 		NotificationDtoCursorResponse result = notificationService.getNotifications(
-			user.getId(),UUID.randomUUID().toString(),UUID.randomUUID(),1
+			user.getId(), null, null, 1
 		);
 
-		//then
-		assertThat(result.data()).hasSize(1);
-		assertThat(result.totalCount()).isEqualTo(1);
+		// then
+		assertThat(result.data()).isEmpty();
+		assertThat(result.totalCount()).isZero();
 	}
 
 	//readNotification
