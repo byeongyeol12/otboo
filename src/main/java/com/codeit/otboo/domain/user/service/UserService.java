@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.codeit.otboo.domain.auth.service.TokenCacheService;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.user.dto.request.PasswordRequest;
 import com.codeit.otboo.domain.user.dto.request.ProfileUpdateRequest;
 import com.codeit.otboo.domain.user.dto.request.UserCreateRequest;
@@ -33,10 +36,12 @@ import com.codeit.otboo.global.enumType.Role;
 import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class UserService {
 
 	private final UserRepository userRepository;
@@ -47,6 +52,7 @@ public class UserService {
 	private final TokenCacheService tokenCacheService;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final ImageStorageService imageStorageService;
+	private final NotificationService notificationService;
 
 	@Transactional
 	public UserDto create(UserCreateRequest request) {
@@ -115,6 +121,18 @@ public class UserService {
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 		user.updateRole(request.role());
 
+		// 권한 변경 시 알림 발생
+		log.info("옷 생성 알림");
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				userId,
+				"User_Role",
+				"권한 ["+request.role()+"] 로 변경되었습니다.",
+				NotificationLevel.INFO
+			)
+		);
 		tokenCacheService.invalidateRefreshToken(user.getId());
 		return userMapper.toDto(user);
 	}

@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.clothes.service;
 
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -17,18 +18,27 @@ import com.codeit.otboo.domain.clothes.dto.response.ClothesAttributeDefDtoCursor
 import com.codeit.otboo.domain.clothes.entity.AttributeDef;
 import com.codeit.otboo.domain.clothes.repository.AttributeDefRepository;
 import com.codeit.otboo.domain.clothes.repository.ClothesRepository;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
+import com.codeit.otboo.domain.user.entity.User;
+import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class AdminClothesService {
 
 	private final AttributeDefRepository attributeDefRepository;
 	private final ClothesRepository clothesRepository;
+	private final NotificationService notificationService;
+	private final UserRepository userRepository;
 
 	@Transactional
 	public ClothesAttributeDefDto createAttributeDef(ClothesAttributeDefCreateRequest request) {
@@ -38,6 +48,20 @@ public class AdminClothesService {
 
 		AttributeDef newDef = new AttributeDef(request.name(), request.selectableValues());
 		AttributeDef savedDef = attributeDefRepository.save(newDef);
+
+		User user = userRepository.findByName(request.name());
+		// 의상 속성 추가 시 알림 발생
+		log.info("의상 생성 알림");
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				user.getId(),
+				"ClothesAttributeDef",
+				"의상 속성 ["+request.name()+"] 이 추가되었습니다.",
+				NotificationLevel.INFO
+			)
+		);
 
 		return new ClothesAttributeDefDto(
 			savedDef.getId(),

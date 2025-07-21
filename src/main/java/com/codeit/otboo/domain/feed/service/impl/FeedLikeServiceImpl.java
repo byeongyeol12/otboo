@@ -2,6 +2,7 @@ package com.codeit.otboo.domain.feed.service.impl;
 
 import static com.codeit.otboo.global.error.ErrorCode.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -12,19 +13,25 @@ import com.codeit.otboo.domain.feed.entity.FeedLike;
 import com.codeit.otboo.domain.feed.repository.FeedLikeRepository;
 import com.codeit.otboo.domain.feed.repository.FeedRepository;
 import com.codeit.otboo.domain.feed.service.FeedLikeService;
+import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.notification.entity.NotificationLevel;
+import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FeedLikeServiceImpl implements FeedLikeService {
 
 	private final UserRepository userRepository;
 	private final FeedLikeRepository feedLikeRepository;
 	private final FeedRepository feedRepository;
+	private final NotificationService notificationService;
 
 	@Transactional
 	@Override
@@ -43,6 +50,19 @@ public class FeedLikeServiceImpl implements FeedLikeService {
 		feedLikeRepository.save(feedLike);
 		feed.like();
 		if (feed.getUser() == user) feed.likedByMe();
+
+		// 내 피드에 좋아요 시 알림 발생
+		log.info("피드에 좋아요 알림");
+		notificationService.createAndSend(
+			new NotificationDto(
+				UUID.randomUUID(),
+				Instant.now(),
+				myUSerId,
+				"Feed_Like",
+				"["+user.getName()+"] 님이 피드 에 좋아요를 눌렀습니다.",
+				NotificationLevel.INFO
+			)
+		);
 	}
 
 	@Transactional

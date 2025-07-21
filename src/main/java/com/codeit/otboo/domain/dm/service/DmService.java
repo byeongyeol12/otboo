@@ -9,5 +9,5 @@ import com.codeit.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
 public interface DmService {
 	DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest);
 
-	DirectMessageDtoCursorResponse getDms(UUID userId, String cursor, UUID idAfter, int limit);
+	DirectMessageDtoCursorResponse getDms(UUID userId,UUID otherId,String cursor, UUID idAfter, int limit);
 }

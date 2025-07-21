@@ -65,8 +65,10 @@ public enum ErrorCode {
 	NOTIFICATION_CREATE_FAILED(400, "N003", "알림 생성 실패했습니다."),
 
 	// SSE
-	SSE_HANDLER_FAILED(400, "S001", "SSE 알림 전송 실패"),
+	SSE_HANDLER_FAILED(400, "S001", "SSE 알림 전송 실패했습니다."),
 
+	//WEBSOCKET
+	WEBSOCKET_INVALID_TOKEN(400,"W001","웹 소켓 토큰 인증 실패했습니다."),
 	// RECOMMENDATION
 	RECOMMENDATION_NOT_FOUND(404, "R001", "추천 정보를 찾을 수 없습니다."),
 
