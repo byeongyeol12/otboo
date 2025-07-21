@@ -57,11 +57,6 @@
 //
 // 	@MockBean
 // 	private FollowService followService;
-// 	@MockBean
-// 	private EntityManagerFactory entityManagerFactory;
-//
-// 	@MockBean
-// 	private PlatformTransactionManager transactionManager;
 //
 // 	private UserPrincipal userPrincipal;
 //
