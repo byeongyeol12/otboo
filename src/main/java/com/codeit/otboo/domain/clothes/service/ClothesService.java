@@ -39,13 +39,14 @@ public class ClothesService {
 
 	private final ClothesRepository clothesRepository;
 	private final AttributeDefRepository attributeDefRepository;
-	private final LocalImageUploadService localImageUploadService;
+	// private final LocalImageUploadService localImageUploadService;
+	private final S3ImageUploadService s3ImageUploadService;
 	private final NotificationService notificationService;
 
 	@Transactional
 	public ClothesDto createClothes(ClothesCreateRequest request, MultipartFile image) {
 		UUID ownerId = request.ownerId();
-		String imageUrl = localImageUploadService.upload(image);
+		String imageUrl = s3ImageUploadService.upload(image);
 
 		Clothes newClothes = Clothes.builder()
 			.ownerId(ownerId)
@@ -72,7 +73,7 @@ public class ClothesService {
 				Instant.now(),
 				ownerId,
 				"Cloth",
-				"옷 ["+request.name()+"] 등록 했습니다.",
+				"옷 [" + request.name() + "] 등록 했습니다.",
 				NotificationLevel.INFO
 			)
 		);
@@ -115,7 +116,7 @@ public class ClothesService {
 
 		String imageUrl = clothesToUpdate.getImageUrl();
 		if (image != null && !image.isEmpty()) {
-			imageUrl = localImageUploadService.upload(image);
+			imageUrl = s3ImageUploadService.upload(image);
 		}
 
 		clothesToUpdate.update(request.name(), convertToClothesType(request.type()), imageUrl);
