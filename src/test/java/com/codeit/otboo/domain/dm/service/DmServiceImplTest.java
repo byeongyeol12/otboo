@@ -246,7 +246,7 @@ public class DmServiceImplTest {
 
 	@Test
 	@DisplayName("getDms - 커서 O, idAfter O")
-	void getDms_bothCursorAndIdAfter() {
+	void getDms_usedCursorAndIdAfter() {
 		// given
 		String cursor = UUID.randomUUID().toString();
 		UUID idAfter = UUID.randomUUID();
@@ -266,7 +266,7 @@ public class DmServiceImplTest {
 
 	@Test
 	@DisplayName("getDms - 커서 X, idAfter X")
-	void getDms_bothNull() {
+	void getDms_noCursorIdAfter() {
 		// given
 		String cursor = null;
 		UUID idAfter = null;
