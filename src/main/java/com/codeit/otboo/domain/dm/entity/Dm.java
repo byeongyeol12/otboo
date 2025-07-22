@@ -50,8 +50,8 @@ public class Dm {
 	private String content;
 
 	@Builder
-	public Dm(User sender, User receiver, String content) {
-		this.id = UUID.randomUUID();
+	public Dm(UUID id, User sender, User receiver, String content) {
+		this.id = (id != null) ? id : UUID.randomUUID();
 		this.createdAt = Instant.now();
 		this.sender   = sender;
 		this.receiver = receiver;
