@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.notification.repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,11 +10,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.codeit.otboo.domain.notification.entity.Notification;
 
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
-	// 페이징/정렬
-	List<Notification> findByReceiverIdAndIdGreaterThanOrderByCreatedAt(UUID receiverId, UUID idAfter, Pageable pageable);
-	List<Notification> findByReceiverIdAndConfirmedFalse(UUID receiverId, Pageable pageable);
 
-	// 전체 개수
-	long countByReceiverId(UUID receiverId);
+	List<Notification> findByReceiverIdAndConfirmedFalseAndCreatedAtLessThanOrderByCreatedAtDesc(UUID receiverId, Instant createdAtIsLessThan, Pageable attr0);
 
+	List<Notification> findByReceiverIdAndConfirmedFalseOrderByCreatedAtDesc(UUID receiverId, Pageable attr0);
+
+	long countByReceiverIdAndConfirmedFalse(UUID receiverId);
 }
