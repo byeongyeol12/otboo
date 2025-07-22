@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
@@ -57,7 +60,7 @@ public class DmServiceImplTest {
 	private User sender, receiver;
 	private Dm dm;
 	private DirectMessageDto dmDto;
-	private UserSummaryDto senderSummary,receiverSummary;
+	private UserSummaryDto senderSummary, receiverSummary;
 
 	@BeforeEach
 	void setUp() {
@@ -86,7 +89,7 @@ public class DmServiceImplTest {
 			receiver.getId(), receiver.getName(), null
 		);
 
-		dm = new Dm(UUID.randomUUID(), sender, receiver, "content",Instant.now());
+		dm = new Dm(UUID.randomUUID(), sender, receiver, "content", Instant.now());
 		dmDto = new DirectMessageDto(
 			dm.getId(),
 			Instant.now(),
@@ -94,6 +97,16 @@ public class DmServiceImplTest {
 			receiverSummary,
 			dm.getContent()
 		);
+	}
+
+	private List<Dm> makeDmList(int count) {
+		List<Dm> dmList = new ArrayList<>();
+		for (int i = 0; i < count; i++) {
+			dmList.add(new Dm(
+				UUID.randomUUID(),sender,receiver,"msg"+i,Instant.now().plusSeconds(i)
+			));
+		}
+		return dmList;
 	}
 
 	//sendDirectMessage
@@ -125,7 +138,7 @@ public class DmServiceImplTest {
 
 	@Test
 	@DisplayName("sendDirectMessage - 발신자 없음으로 실패")
-	void sendDirectMessage_senderNotFound(){
+	void sendDirectMessage_senderNotFound() {
 		//given
 		DirectMessageCreateRequest dmRequest = new DirectMessageCreateRequest(
 			receiver.getId(), sender.getId(), "content"
@@ -137,6 +150,7 @@ public class DmServiceImplTest {
 			.isInstanceOf(CustomException.class)
 			.hasMessageContaining("발신자를 찾을 수 없습니다.");
 	}
+
 	@Test
 	@DisplayName("sendDirectMessage - 수신자 없음으로 실패")
 	void sendDirectMessage_receiverNotFound() {
@@ -152,11 +166,13 @@ public class DmServiceImplTest {
 			.isInstanceOf(CustomException.class)
 			.hasMessageContaining("수신자를 찾을 수 없습니다.");
 	}
+
 	@Test
 	@DisplayName("sendDirectMessage - Redis publish 예외 발생")
 	void sendDirectMessage_redisPublishExcpetion() throws Exception {
 		// given
-		DirectMessageCreateRequest dmRequest = new DirectMessageCreateRequest(sender.getId(), receiver.getId(), "hello");
+		DirectMessageCreateRequest dmRequest = new DirectMessageCreateRequest(sender.getId(), receiver.getId(),
+			"hello");
 		when(userRepository.findById(sender.getId())).thenReturn(Optional.of(sender));
 		when(userRepository.findById(receiver.getId())).thenReturn(Optional.of(receiver));
 		when(dmRepository.save(any(Dm.class))).thenReturn(dm);
@@ -168,11 +184,13 @@ public class DmServiceImplTest {
 			.isInstanceOf(CustomException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.DM_Redis_MESSAGE_ERROR);
 	}
+
 	@Test
 	@DisplayName("sendDirectMessage - 알림 발송 실패")
 	void sendDirectMessage_notificationFailed() throws Exception {
 		// given
-		DirectMessageCreateRequest dmRequest = new DirectMessageCreateRequest(sender.getId(), receiver.getId(), "hello");
+		DirectMessageCreateRequest dmRequest = new DirectMessageCreateRequest(sender.getId(), receiver.getId(),
+			"hello");
 		when(userRepository.findById(sender.getId())).thenReturn(Optional.of(sender));
 		when(userRepository.findById(receiver.getId())).thenReturn(Optional.of(receiver));
 		when(dmRepository.save(any(Dm.class))).thenReturn(dm);
@@ -187,22 +205,82 @@ public class DmServiceImplTest {
 	}
 
 	//getDms
-	// @Test
-	// @DisplayName("getDms - 커서 기반 DM 목록 조회")
-	// void getDms_cursorPaging(){
-	// 	//given
-	// 	List<Dm> dms = new ArrayList<>();
-	// 	for(int i=0; i<4; i++){
-	// 		Dm dm = new Dm(UUID.randomUUID(),sender,receiver,"msg"+i,Instant.now().plusSeconds(i));
-	// 		dms.add(dm);
-	// 	}
-	// 	when(dmRepository.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()),eq(receiver.getId()),any(),any(Pageable.class)))
-	// 		.thenReturn(dms);
-	//
-	// 	when(directMessageMapper.toDirectMessageDto(any(Dm.class)))
-	// 		.thenAnswer(invocation ->{
-	// 			Dm argument = invocation.getArgument(0);
-	// 			return new DirectMessageDto(argument.getId(),argument.getCreatedAt(),senderSummary(argument.getSender()),argument.getReceiver().getId(),argument.getContent())
-	// 		})
-	// }
+	@Test
+	@DisplayName("getDms - 커서 O, idAfter X")
+	void getDms_cursorOnly(){
+		//given
+		String cursor = UUID.randomUUID().toString();
+		UUID idAfter = UUID.randomUUID();
+		List<Dm> dms = makeDmList(2);
+		when(dmRepository.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()), eq(receiver.getId()), eq(UUID.fromString(cursor)), any(Pageable.class)))
+			.thenReturn(dms);
+		when(directMessageMapper.toDirectMessageDto(any(Dm.class))).thenReturn(dmDto);
+
+		//when
+		dmService.getDms(sender.getId(), receiver.getId(), cursor, idAfter, 5);
+
+		//then
+		verify(dmRepository,times(1))
+			.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()), eq(receiver.getId()), eq(UUID.fromString(cursor)), any(Pageable.class));
+	}
+
+	@Test
+	@DisplayName("getDms - 커서 X, idAfter O")
+	void getDms_idAfterOnly() {
+		// given
+		String cursor = null;
+		UUID idAfter = UUID.randomUUID();
+		List<Dm> dms = makeDmList(1);
+		when(dmRepository.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()), eq(receiver.getId()),
+			eq(idAfter), any(Pageable.class))).thenReturn(dms);
+		when(directMessageMapper.toDirectMessageDto(any(Dm.class)))
+			.thenReturn(dmDto);
+
+		// when
+		dmService.getDms(sender.getId(), receiver.getId(), cursor, idAfter, 5);
+
+		// then
+		verify(dmRepository, times(1))
+			.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()), eq(receiver.getId()), eq(idAfter), any(Pageable.class));
+	}
+
+	@Test
+	@DisplayName("getDms - 커서 O, idAfter O")
+	void getDms_bothCursorAndIdAfter() {
+		// given
+		String cursor = UUID.randomUUID().toString();
+		UUID idAfter = UUID.randomUUID();
+		List<Dm> dms = makeDmList(2);
+		when(dmRepository.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()), eq(receiver.getId()),
+			eq(UUID.fromString(cursor)), any(Pageable.class))).thenReturn(dms);
+		when(directMessageMapper.toDirectMessageDto(any(Dm.class)))
+			.thenReturn(dmDto);
+
+		// when
+		dmService.getDms(sender.getId(), receiver.getId(), cursor, idAfter, 10);
+
+		// then
+		verify(dmRepository, times(1))
+			.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()), eq(receiver.getId()), eq(UUID.fromString(cursor)), any(Pageable.class));
+	}
+
+	@Test
+	@DisplayName("getDms - 커서 X, idAfter X")
+	void getDms_bothNull() {
+		// given
+		String cursor = null;
+		UUID idAfter = null;
+		List<Dm> dms = makeDmList(3);
+		when(dmRepository.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()), eq(receiver.getId()),
+			eq(null), any(Pageable.class))).thenReturn(dms);
+		when(directMessageMapper.toDirectMessageDto(any(Dm.class)))
+			.thenReturn(dmDto);
+
+		// when
+		dmService.getDms(sender.getId(), receiver.getId(), cursor, idAfter, 3);
+
+		// then
+		verify(dmRepository, times(1))
+			.findAllByUserIdAndOtherIdAfterCursor(eq(sender.getId()), eq(receiver.getId()), eq(null), any(Pageable.class));
+	}
 }
