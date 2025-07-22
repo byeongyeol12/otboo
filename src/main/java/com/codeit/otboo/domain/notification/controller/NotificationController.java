@@ -46,6 +46,6 @@ public class NotificationController {
 		UUID userId = userPrincipal.getId();
 		notificationService.readNotifications(notificationId,userId);
 
-		return ResponseEntity.noContent().build();
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}
 }
