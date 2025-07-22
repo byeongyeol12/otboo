@@ -14,6 +14,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Redis 구독 채널에서 메시지 수신 시 실시간으로 웹소켓 push
+ */
 @RequiredArgsConstructor
 @Service
 @Slf4j
@@ -22,25 +25,35 @@ public class RedisSubscriber implements MessageListener {
 	private final SimpMessageSendingOperations messagingTemplate; //WebSocket 메시지 push
 	private final ObjectMapper objectMapper; // JSON 직렬화 및 역직렬화
 
+	/**
+	 * 메시지 직렬화 -> DM Key 재구성 -> STOMP 구독 채널로 push
+	 * @param message
+	 * @param pattern
+	 */
 	@Override
 	public void onMessage(Message message, byte[] pattern) {
+		log.info("[RedisSubscriber] onMessage 진입: {}", new String(message.getBody()));
 		try{
-			// 1. Redis에서 받은 메시지는 직렬화된 JSON 문자열
+			// Redis에서 받은 메시지는 직렬화된 JSON 문자열
 			String json = new String(message.getBody());
 
-			// 2. DirectMessageDto 로 역직렬화
+			// DirectMessageDto 로 역직렬화
 			DirectMessageDto dmMessage = objectMapper.readValue(json, DirectMessageDto.class);
 
-			// 3. DM Key 생성(= 방 역할)
+			// DM Key 생성(= 방 역할)
 			String dmKey = DmKeyUtil.makeDmKey(dmMessage.sender().id(),dmMessage.receiver().id());
+			String destination = "/sub/direct-messages_" + dmKey;
 
-			// 4. 웹소켓으로 연결된 구독자에게 실시간 전송
-			messagingTemplate.convertAndSend("/sub/direct-messages_"+dmKey,dmMessage);
+			log.info("[RedisSubscriber] destination: {}", destination);
+
+
+			// 웹소켓으로 연결된 구독자에게 실시간 전송
+			messagingTemplate.convertAndSend(destination,dmMessage);
 			log.info("[RedisSubscriber] Message received : dmKey = {} ", dmKey);
 
 		} catch (Exception e) {
 			log.error("[RedisSubscriber] 메시지 처리 중 오류 : ", e.getMessage());
-			throw new CustomException(ErrorCode.DM_Redis_MESSAGE_ERROR,e.getMessage());
+			throw new CustomException(ErrorCode.DM_Redis_MESSAGE_ERROR);
 		}
 	}
 }

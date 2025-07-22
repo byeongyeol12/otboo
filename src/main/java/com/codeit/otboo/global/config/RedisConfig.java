@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
@@ -30,12 +30,11 @@ public class RedisConfig {
 	@Bean
 	public RedisMessageListenerContainer redisMessageListenerContainer(
 		RedisConnectionFactory redisConnectionFactory,
-		MessageListenerAdapter listenerAdapter,
-		ChannelTopic channelTopic
+		MessageListenerAdapter listenerAdapter
 	){
 		RedisMessageListenerContainer container = new RedisMessageListenerContainer();
 		container.setConnectionFactory(redisConnectionFactory);
-		container.addMessageListener(listenerAdapter, channelTopic);
+		container.addMessageListener(listenerAdapter, new PatternTopic("dm:*"));
 		return container;
 	}
 
@@ -49,12 +48,6 @@ public class RedisConfig {
 	@Bean
 	public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber){
 		return new MessageListenerAdapter(subscriber,"onMessage");
-	}
-
-	// Redis 의 pub/sub 메시징을 위한 채널 토픽을 설정
-	@Bean
-	public ChannelTopic channelTopic() {
-		return new ChannelTopic("chatRoom");
 	}
 
 	// Redis에 채팅방/메시지/기타 객체를 저장, 조회, 수정, 삭제할 때 사용

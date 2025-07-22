@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -12,61 +13,60 @@ import org.springframework.stereotype.Service;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
 import com.codeit.otboo.domain.notification.entity.Notification;
-import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.mapper.NotificationMapper;
 import com.codeit.otboo.domain.notification.repository.NotificationRepository;
-import com.codeit.otboo.domain.sse.service.SseEmitterServiceImpl;
+import com.codeit.otboo.domain.sse.util.NotificationCreatedEvent;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
 	private final NotificationRepository notificationRepository;
 	private final NotificationMapper notificationMapper;
 	private final UserRepository userRepository;
-	private final SseEmitterServiceImpl sseEmitterServiceImpl;
-
-	//마지막 알림 이후 미확인 알림 반환
-	public List<NotificationDto> findUnreceived(UUID receiverId, UUID lastEventId) {
-		List<Notification> list = new ArrayList<>();
-		if(lastEventId != null) {
-			// 마지막 알림 ID가 있으면, 이후 알림만 가져옴
-			list = notificationRepository.findByReceiverIdAndIdGreaterThanOrderByCreatedAt(receiverId,lastEventId);
-		}else{
-			// 마지막 알림 ID 가 없으면, 아직 읽지 않은 모든 알림을 가져옴
-			list = notificationRepository.findByReceiverIdAndConfirmedFalse(receiverId);
-		}
-		return notificationMapper.toNotificationDtoList(list);
-	}
+	private final ApplicationEventPublisher eventPublisher;
 
 	// 알림 생성 + 전송
 	@Override
 	public NotificationDto createAndSend(NotificationDto request) {
-		// 알림 받는 사람, 알림 생성
-		User receiver = userRepository.findById(request.receiverId()).orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND,"알림 받는 유저를 찾을 수 없습니다."));
+		log.info("[알림 생성] createAndSend 시작 : receiverId={}, title={}, content={}", request.receiverId(), request.title(), request.content());
+		try{
+			// 알림 받을 유저 조회
+			User receiver = userRepository.findById(request.receiverId()).orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND,"알림 받는 유저를 찾을 수 없습니다."));
 
-		Notification notification = new Notification(
-			receiver,
-			request.title(),
-			request.content(),
-			request.level(),
-			false
-		);
+			// 알림 엔티티 생성
+			Notification notification = Notification.builder()
+				.receiver(receiver)
+				.title(request.title())
+				.content(request.content())
+				.level(request.level())
+				.confirmed(false)
+				.build();
+			// 알림 DB 에 저장
+			Notification saved = notificationRepository.save(notification);
 
-		NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
-		// 알림 저장
-		notificationRepository.save(notification);
+			log.info("[알림 생성] DB 저장 : receiverId={}, title={}, content={}", saved.getReceiver().getId(), saved.getTitle(), saved.getContent());
 
-		// 알림 전송
-		sseEmitterServiceImpl.send(request.receiverId(),"notifications",notificationDto);
+			// DTO 변환
+			NotificationDto notificationDto = notificationMapper.toNotificationDto(notification);
 
-		//반환
-		return notificationDto;
+			// 알림 이벤트 발행 -> SseHandler 가 구독
+			log.info("[알림 생성] 알림 이벤트 발행 notificationId={}, receiverId={}", notificationDto.id(), notificationDto.receiverId());
+			eventPublisher.publishEvent(new NotificationCreatedEvent(notificationDto));
+
+			// 반환
+			return notificationDto;
+		} catch (Exception e) {
+			log.error("[알림 생성 실패] receiverId={}, title={}, content={}, error={}", request.receiverId(), request.title(), request.content(),e.getMessage(),e);
+			throw new CustomException(ErrorCode.NOTIFICATION_CREATE_FAILED);
+		}
 	}
 
 
