@@ -8,7 +8,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
@@ -41,7 +40,6 @@ public class DmServiceImpl implements DmService {
 	private final NotificationService notificationService;
 	private final DirectMessageMapper directMessageMapper;
 	private final DmRepository dmRepository;
-	private final RedisTemplate redisTemplate;
 	private final ObjectMapper objectMapper;
 	private final RedisPublisher redisPublisher;
 	private final ApplicationEventPublisher eventPublisher;
