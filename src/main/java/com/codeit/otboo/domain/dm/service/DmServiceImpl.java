@@ -66,7 +66,7 @@ public class DmServiceImpl implements DmService {
 			});
 
 		//dm 생성 및 저장
-		Dm dm = new Dm(UUID.randomUUID(),sender,receiver,directMessageCreateRequest.content());
+		Dm dm = new Dm(UUID.randomUUID(),sender,receiver,directMessageCreateRequest.content(),Instant.now());
 		dmRepository.save(dm);
 		log.info("[sendDirectMessage] DM 저장 완료 : dmId={}, senderId={}, receiverId={}", dm.getId(), sender.getId(), receiver.getId());
 
