@@ -38,6 +38,7 @@ public class WebsocketHandlerTest {
 		DirectMessageDto messageDto = new DirectMessageDto(
 			UUID.randomUUID(), Instant.now(),sender,receiver,"test-content"
 		);
+
 		NewDmEvent event = new NewDmEvent(messageDto);
 
 		String dmKey = DmKeyUtil.makeDmKey(senderId, receiverId);
