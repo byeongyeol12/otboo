@@ -43,13 +43,13 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 		log.info("[WebSocketAuthInterceptor] preSend 진입: {}", accessor != null ? accessor.getCommand() : "Accessor null");
 
 		if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-			// 1. 전체 헤더 로그
 			log.info("[WebSocketAuthInterceptor] CONNECT NativeHeaders: {}", accessor.toNativeHeaderMap()); // 클라이언트가 보낸 header 확인
-			// 2. AccessToken 추출 시도
+
+			//AccessToken 추출 시도
 			String accessToken = resolveAccessToken(accessor).orElse(null);
 			log.info("[WebSocketAuthInterceptor] AccessToken 추출 결과: {}", accessToken);
 
-			// 3. 블랙리스트 체크
+			//블랙리스트 체크
 			if (accessToken == null) {
 				log.warn("[WebSocketAuthInterceptor] 토큰이 없어 연결 거부");
 				throw new CustomException(ErrorCode.WEBSOCKET_INVALID_TOKEN, "accessToken 이 없습니다.");
@@ -59,7 +59,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 				throw new CustomException(ErrorCode.WEBSOCKET_INVALID_TOKEN, "블랙리스트 체크를 통과하지 못했습니다.");
 			}
 
-			// 4. 토큰 검증
+			//토큰 검증
 			if (jwtTokenProvider.validateToken(accessToken)) {
 				log.info("[WebSocketAuthInterceptor] 토큰 검증 성공");
 				Claims claims = jwtTokenProvider.getClaims(accessToken);
@@ -69,7 +69,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 				Role role = Role.valueOf(roleStr); // enum 변환
 
 				log.info("[WebSocketAuthInterceptor] 인증 성공: userId={}, email={}, role={}", userId, email, role);
-				// 인증 객체 생성 및 세션에 심기
+				//인증 객체 생성 및 세션에 심기
 				UserPrincipal userPrincipal = new UserPrincipal(userId, email, null, role);
 				UsernamePasswordAuthenticationToken authenticationToken =
 					new UsernamePasswordAuthenticationToken(
@@ -89,7 +89,6 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
 	/**
 	 * 헤더/쿼리/세션 등 다양한 경로에서 토큰 추출
-	 *
 	 */
 	private Optional<String> resolveAccessToken(StompHeaderAccessor accessor) {
 		String prefix = "Bearer ";
