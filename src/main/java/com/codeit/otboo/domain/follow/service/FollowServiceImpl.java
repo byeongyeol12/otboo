@@ -110,8 +110,7 @@ public class FollowServiceImpl implements FollowService {
 		);
 	}
 
-
-	// 내가 팔로우 하는 사람들 목록 조회(상대방 입장 : 내가 팔로워)
+	// 유저가 팔로우 하는 사람들 목록 조회(팔로우 클릭)
 	@Override
 	public FollowListResponse getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
 		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
@@ -120,12 +119,13 @@ public class FollowServiceImpl implements FollowService {
 			: idAfter;
 
 		//2. 정렬
-		Sort.Direction direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+		Sort.Direction direction =
+			"DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		String sort = (sortBy != null && !sortBy.isBlank()) ? sortBy : "id";
-		Pageable pageable = PageRequest.of(0, limit+1, Sort.by(direction, sort));
+		Pageable pageable = PageRequest.of(0, limit + 1, Sort.by(direction, sort));
 
 		//3. repository query
-		List<Follow> follows = followRepository.findFollowees(followerId,effectiveIdAfter,nameLike,pageable);
+		List<Follow> follows = followRepository.findFollowees(followerId, effectiveIdAfter, nameLike, pageable);
 
 		//4. hasNext, nextCursor
 		boolean hasNext = follows.size() > limit;
@@ -138,7 +138,7 @@ public class FollowServiceImpl implements FollowService {
 		long totalCount = followRepository.countByFollowerId(followerId);
 
 		//6. dto 변환
-		List<FollowDto> dtoList = followMapper.toFollowDtoList(follows);
+		List<FollowDto> dtoList = followMapper.toFollowDtoList(pagedList);
 
 		//7. return
 		return new FollowListResponse(
@@ -152,21 +152,23 @@ public class FollowServiceImpl implements FollowService {
 		);
 	}
 
-	// 나를 팔로우 하는 사람들 목록 조회
+	// 유저를 팔로우 하는 사람들 목록 조회(팔로워 클릭)
 	@Override
-	public FollowListResponse getFollowers(UUID followeeId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
+	public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike,
+		String sortBy, String sortDirection) {
 		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
 
 		//2. 정렬
-		Sort.Direction direction = "DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
+		Sort.Direction direction =
+			"DESCENDING".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
 		String sort = (sortBy != null && !sortBy.isBlank()) ? sortBy : "id";
-		Pageable pageable = PageRequest.of(0, limit+1, Sort.by(direction, sort));
+		Pageable pageable = PageRequest.of(0, limit + 1, Sort.by(direction, sort));
 
 		//3. repository query
-		List<Follow> follows = followRepository.findFollowers(followeeId,effectiveIdAfter,nameLike,pageable);
+		List<Follow> follows = followRepository.findFollowers(followeeId, effectiveIdAfter, nameLike, pageable);
 
 		//4. hasNext, nextCursor
 		boolean hasNext = follows.size() > limit;
