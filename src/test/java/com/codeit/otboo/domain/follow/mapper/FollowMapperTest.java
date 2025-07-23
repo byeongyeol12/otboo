@@ -29,7 +29,7 @@ import com.codeit.otboo.global.enumType.Role;
 @Import(QueryDslConfig.class)
 @EnableJpaAuditing
 public class FollowMapperTest {
-	// MapStruct가 구현체를 생성
+
 	private final FollowMapper followMapper = Mappers.getMapper(FollowMapper.class);
 
 	@Autowired
