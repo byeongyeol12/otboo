@@ -24,7 +24,6 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.codeit.otboo.domain.dm.websocket.WebSocketAuthInterceptor;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.config.jwt.JwtTokenProvider;
 import com.codeit.otboo.global.config.security.UserPrincipal;

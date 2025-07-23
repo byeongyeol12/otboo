@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.dm.websocket;
+package com.codeit.otboo.domain.websocket.listener;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;

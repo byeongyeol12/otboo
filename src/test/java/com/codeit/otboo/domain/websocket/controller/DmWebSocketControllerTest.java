@@ -18,7 +18,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
 import com.codeit.otboo.domain.dm.service.DmService;
-import com.codeit.otboo.domain.dm.websocket.DmWebSocketController;
 import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
 
 @ExtendWith(SpringExtension.class)

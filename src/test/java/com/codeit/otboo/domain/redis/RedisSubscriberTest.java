@@ -18,7 +18,6 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
-import com.codeit.otboo.domain.dm.redis.RedisSubscriber;
 import com.codeit.otboo.domain.dm.util.DmKeyUtil;
 import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
 import com.codeit.otboo.exception.CustomException;

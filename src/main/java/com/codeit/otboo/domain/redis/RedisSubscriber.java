@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.dm.redis;
+package com.codeit.otboo.domain.redis;
 
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
