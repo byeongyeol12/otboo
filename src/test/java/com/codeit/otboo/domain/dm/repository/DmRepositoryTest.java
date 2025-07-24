@@ -16,6 +16,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.codeit.otboo.domain.dm.entity.Dm;
 import com.codeit.otboo.domain.user.entity.User;
@@ -23,12 +28,31 @@ import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.global.config.QueryDslConfig;
 import com.codeit.otboo.global.enumType.Role;
 
+@Testcontainers
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @DataJpaTest
 @Import(QueryDslConfig.class)
 @EnableJpaAuditing
 public class DmRepositoryTest {
+
+	@Container
+	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+		.withDatabaseName("test-db")
+		.withUsername("test-user")
+		.withPassword("test-pass");
+
+	@DynamicPropertySource
+	static void overrideProps(DynamicPropertyRegistry registry) {
+		registry.add("spring.datasource.url", postgres::getJdbcUrl);
+		registry.add("spring.datasource.username", postgres::getUsername);
+		registry.add("spring.datasource.password", postgres::getPassword);
+		registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
+
+		// (필요시) Redis 정보도 동적으로 주입
+		// registry.add("spring.data.redis.host", redis::getHost);
+		// registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+	}
 
 	@Autowired
 	private DmRepository dmRepository;
