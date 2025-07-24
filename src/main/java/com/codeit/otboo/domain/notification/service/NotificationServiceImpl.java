@@ -15,7 +15,7 @@ import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
 import com.codeit.otboo.domain.notification.entity.Notification;
 import com.codeit.otboo.domain.notification.mapper.NotificationMapper;
 import com.codeit.otboo.domain.notification.repository.NotificationRepository;
-import com.codeit.otboo.domain.sse.event.listener.NotificationCreatedEvent;
+import com.codeit.otboo.domain.sse.event.NotificationCreatedEvent;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
