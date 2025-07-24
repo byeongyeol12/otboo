@@ -71,8 +71,8 @@ dependencies {
     //websocket
     implementation 'org.springframework.security:spring-security-messaging'
 //	// AWS
-//	implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0")
-//	implementation 'io.awspring.cloud:spring-cloud-aws-s3'
+    implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0")
+    implementation 'io.awspring.cloud:spring-cloud-aws-s3'
 //	implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
 //	implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
 
