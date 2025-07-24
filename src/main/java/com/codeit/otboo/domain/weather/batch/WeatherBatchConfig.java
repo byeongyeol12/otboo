@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
-@EnableBatchProcessing
+//@EnableBatchProcessing
 @EnableScheduling
 @RequiredArgsConstructor
 public class WeatherBatchConfig {

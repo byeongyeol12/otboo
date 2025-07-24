@@ -11,12 +11,14 @@ import jakarta.persistence.PersistenceContext;
 @Configuration
 public class QueryDslConfig {
 
-	@PersistenceContext
-	private EntityManager entityManager;
+	private final EntityManager entityManager;
+
+	public QueryDslConfig(EntityManager entityManager) {
+		this.entityManager = entityManager;
+	}
 
 	@Bean
 	public JPAQueryFactory jpaQueryFactory() {
 		return new JPAQueryFactory(entityManager);
 	}
-
 }
