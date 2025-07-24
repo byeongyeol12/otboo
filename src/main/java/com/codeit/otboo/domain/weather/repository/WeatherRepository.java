@@ -14,7 +14,6 @@ import java.util.UUID;
 @Repository
 public interface WeatherRepository extends JpaRepository<Weather, UUID> {
 
-    // 이 메서드는 더 이상 WeatherServiceImpl에서 사용하지 않으므로 삭제하거나 유지해도 괜찮습니다.
     @Query(value = "SELECT w.* FROM weathers w " +
             "WHERE CAST(w.location ->> 'x' AS INTEGER) = :x " +
             "AND CAST(w.location ->> 'y' AS INTEGER) = :y " +
