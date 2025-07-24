@@ -12,15 +12,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.codeit.otboo.domain.TestApplication;
+import com.codeit.otboo.TestApplication;
 import com.codeit.otboo.domain.follow.dto.FollowCreateRequest;
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowListResponse;
@@ -45,7 +45,7 @@ class FollowControllerTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
-	@MockitoBean
+	@MockBean
 	private FollowService followService;
 
 	//createFollow
@@ -119,6 +119,7 @@ class FollowControllerTest {
 			)
 			.andExpect(status().isNotFound());
 	}
+
 	@Test
 	@DisplayName("createFollow - 미인증 사용자는 401 반환 실패")
 	void createFollow_unauthenticated() throws Exception {
@@ -199,6 +200,7 @@ class FollowControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data[0].follower.id").value(followerId.toString()));
 	}
+
 	@Test
 	@WithMockUser
 	@DisplayName("getFollowings - 팔로잉 목록 followerId 누락 시 실패")
@@ -239,6 +241,7 @@ class FollowControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data[0].followee.id").value(followeeId.toString()));
 	}
+
 	@Test
 	@WithMockUser
 	@DisplayName("getFollowers - 팔로우 목록 followeeId 누락 시 실패")

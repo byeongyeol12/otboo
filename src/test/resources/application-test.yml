@@ -26,9 +26,9 @@ spring:
         format_sql: true
 
 api:
-    kma:
-      base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
-      service-key: "${API_KMA_SERVICE_KEY}"
-    kakao:
-      rest-key: "${API_KAKAO_REST_KEY}"
+  kma:
+    base-url: "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0"
+    service-key: "${API_KMA_SERVICE_KEY}"
+  kakao:
+    rest-key: "${API_KAKAO_REST_KEY}"
 
