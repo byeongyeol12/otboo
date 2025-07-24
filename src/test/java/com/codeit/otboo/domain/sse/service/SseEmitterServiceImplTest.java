@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.sse.controller;
+package com.codeit.otboo.domain.sse.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.codeit.otboo.domain.sse.repository.SseEmitterRepository;
 import com.codeit.otboo.domain.sse.repository.SseMessageRepository;
-import com.codeit.otboo.domain.sse.service.SseEmitterServiceImpl;
 import com.codeit.otboo.domain.sse.util.SseMessage;
 
 @ExtendWith(MockitoExtension.class)

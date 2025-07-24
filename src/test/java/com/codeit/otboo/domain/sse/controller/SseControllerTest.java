@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.sse;
+package com.codeit.otboo.domain.sse.controller;
 
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -20,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.codeit.otboo.domain.TestApplication;
-import com.codeit.otboo.domain.sse.controller.SseController;
 import com.codeit.otboo.domain.sse.service.SseEmitterService;
 import com.codeit.otboo.global.config.security.UserPrincipal;
 import com.codeit.otboo.global.enumType.Role;
