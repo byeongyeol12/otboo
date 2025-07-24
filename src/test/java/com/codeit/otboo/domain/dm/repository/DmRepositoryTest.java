@@ -49,7 +49,6 @@ public class DmRepositoryTest {
 		registry.add("spring.datasource.password", postgres::getPassword);
 		registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
 
-		// (필요시) Redis 정보도 동적으로 주입
 		// registry.add("spring.data.redis.host", redis::getHost);
 		// registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
 	}
