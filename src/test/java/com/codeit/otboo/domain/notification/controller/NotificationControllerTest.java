@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.codeit.otboo.domain.TestApplication;
@@ -38,7 +38,7 @@ public class NotificationControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
 
-	@MockitoBean
+	@MockBean
 	private NotificationServiceImpl notificationService;
 
 	@Test
