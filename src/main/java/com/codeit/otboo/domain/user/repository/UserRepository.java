@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.codeit.otboo.domain.user.entity.User;
+import com.codeit.otboo.global.enumType.Role;
 
 public interface UserRepository extends JpaRepository<User, UUID>, UserSearchRepository {
 	Optional<User> findByEmail(String email);
@@ -18,5 +19,11 @@ public interface UserRepository extends JpaRepository<User, UUID>, UserSearchRep
 	List<User> findByProfileXAndProfileY(int x, int y);
 
 	User findByName(String name);
+
+	List<User> findByRole(Role role);
+
+	List<User> findByEmailContaining(String alice);
+
+	List<User> findByLockedFalse();
 }
 
