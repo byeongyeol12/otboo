@@ -1,8 +1,7 @@
-package com.codeit.otboo.domain;
+package com.codeit.otboo;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * OtbooApplication 이 항상 테스트 컨텍스트에 포함돼
