@@ -15,26 +15,27 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.codeit.otboo.domain.TestApplication;
+import com.codeit.otboo.domain.auth.service.JwtBlacklistService;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
 import com.codeit.otboo.domain.dm.service.DmService;
+import com.codeit.otboo.global.config.jwt.JwtTokenProvider;
 import com.codeit.otboo.global.config.security.UserPrincipal;
 import com.codeit.otboo.global.enumType.Role;
 import com.codeit.otboo.global.error.GlobalExceptionHandler;
 
 @WebMvcTest(controllers = DmController.class)
-@ContextConfiguration(classes = TestApplication.class)
 @Import(GlobalExceptionHandler.class)
 public class DmControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
-
 	@MockBean
 	private DmService dmService;
-
+	@MockBean
+	private JwtTokenProvider jwtTokenProvider;
+	@MockBean
+	private JwtBlacklistService jwtBlacklistService;
 	//getDms
 	@Test
 	@WithMockUser
