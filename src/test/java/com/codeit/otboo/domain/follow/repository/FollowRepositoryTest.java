@@ -49,9 +49,6 @@ public class FollowRepositoryTest {
 		registry.add("spring.datasource.username", postgres::getUsername);
 		registry.add("spring.datasource.password", postgres::getPassword);
 		registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
-
-		// registry.add("spring.data.redis.host", redis::getHost);
-		// registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
 	}
 
 	@Autowired

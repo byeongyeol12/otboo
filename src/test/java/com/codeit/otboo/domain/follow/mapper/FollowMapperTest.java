@@ -14,6 +14,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.entity.Follow;
@@ -23,6 +28,7 @@ import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.global.config.QueryDslConfig;
 import com.codeit.otboo.global.enumType.Role;
 
+@Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 @DataJpaTest
@@ -30,6 +36,19 @@ import com.codeit.otboo.global.enumType.Role;
 @EnableJpaAuditing
 public class FollowMapperTest {
 
+	@Container
+	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+		.withDatabaseName("test-db")
+		.withUsername("test-user")
+		.withPassword("test-pass");
+
+	@DynamicPropertySource
+	static void overrideProps(DynamicPropertyRegistry registry) {
+		registry.add("spring.datasource.url", postgres::getJdbcUrl);
+		registry.add("spring.datasource.username", postgres::getUsername);
+		registry.add("spring.datasource.password", postgres::getPassword);
+		registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
+	}
 	private final FollowMapper followMapper = Mappers.getMapper(FollowMapper.class);
 
 	@Autowired
