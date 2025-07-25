@@ -53,7 +53,10 @@ public class SecurityConfig {
 					"/api/sse",
 					"/h2-console/**",
 					"/uploads/**",// 테스트를 위해 임시로 추가
-					"/ws/**"
+					"/ws/**",
+						"/swagger-ui.html",
+						"/swagger-ui/**",
+						"/v3/api-docs/**"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
