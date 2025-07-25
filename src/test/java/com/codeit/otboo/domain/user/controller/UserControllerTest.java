@@ -6,7 +6,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.security.Principal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,23 +21,31 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.codeit.otboo.TestApplication;
+import com.codeit.otboo.domain.location.dto.response.LocationResponse;
+import com.codeit.otboo.domain.user.dto.request.PasswordRequest;
+import com.codeit.otboo.domain.user.dto.request.ProfileUpdateRequest;
 import com.codeit.otboo.domain.user.dto.request.UserCreateRequest;
 import com.codeit.otboo.domain.user.dto.request.UserLockRequest;
 import com.codeit.otboo.domain.user.dto.request.UserRoleUpdateRequest;
+import com.codeit.otboo.domain.user.dto.response.LocationDto;
+import com.codeit.otboo.domain.user.dto.response.ProfileDto;
 import com.codeit.otboo.domain.user.dto.response.UserDto;
 import com.codeit.otboo.domain.user.dto.response.UserDtoCursorResponse;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.service.UserService;
+import com.codeit.otboo.global.enumType.Gender;
 import com.codeit.otboo.global.enumType.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @WebMvcTest(UserController.class)
-@ContextConfiguration(classes = TestApplication.class)
+@ContextConfiguration
 @Import(UserControllerTest.MockConfig.class)
 class UserControllerTest {
 
@@ -50,7 +60,6 @@ class UserControllerTest {
 	@Test
 	@DisplayName("회원가입 성공")
 	@WithMockUser
-		// 🔧 수정됨
 	void signup_success() throws Exception {
 		UserCreateRequest request = new UserCreateRequest("홍길동", "test@test.com", "Password123!");
 		UserDto userDto = new UserDto(
@@ -66,7 +75,7 @@ class UserControllerTest {
 		when(userService.create(any())).thenReturn(userDto);
 
 		mockMvc.perform(post("/api/users")
-				.with(csrf()) // 🔧 수정됨
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isCreated())
@@ -77,17 +86,9 @@ class UserControllerTest {
 	@Test
 	@DisplayName("유저 목록 조회 성공")
 	@WithMockUser(roles = "ADMIN")
-		// 🔧 수정됨
 	void getAllUsers_success() throws Exception {
 		UserDtoCursorResponse response = new UserDtoCursorResponse(
-			List.of(),
-			null,
-			null,
-			false,
-			0L,
-			"createdAt",
-			"desc"
-		);
+			List.of(), null, null, false, 0L, "createdAt", "desc");
 
 		when(userService.searchUsers(any())).thenReturn(response);
 
@@ -96,9 +97,27 @@ class UserControllerTest {
 	}
 
 	@Test
+	@DisplayName("비밀번호 변경 성공")
+	@WithMockUser
+	void changePassword_success() throws Exception {
+		UUID userId = UUID.randomUUID();
+		PasswordRequest request = new PasswordRequest("newPass123!");
+
+		Principal principal = mock(Principal.class);
+
+		doNothing().when(userService).changePassword(eq(userId), any(), any());
+
+		mockMvc.perform(patch("/api/users/" + userId + "/password")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request))
+				.principal(principal))
+			.andExpect(status().isNoContent());
+	}
+
+	@Test
 	@DisplayName("권한 수정 성공")
 	@WithMockUser(roles = "ADMIN")
-		// 🔧 수정됨
 	void updateUserRole_success() throws Exception {
 		UUID userId = UUID.randomUUID();
 		UserRoleUpdateRequest request = new UserRoleUpdateRequest(Role.ADMIN);
@@ -115,7 +134,7 @@ class UserControllerTest {
 		when(userService.updateUserRole(eq(userId), any())).thenReturn(updatedUser);
 
 		mockMvc.perform(patch("/api/users/" + userId + "/role")
-				.with(csrf()) // 🔧 수정됨
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
@@ -125,11 +144,9 @@ class UserControllerTest {
 	@Test
 	@DisplayName("계정 잠금 상태 수정 성공")
 	@WithMockUser(roles = "ADMIN")
-		// 🔧 수정됨
 	void updateUserLock_success() throws Exception {
 		UUID userId = UUID.randomUUID();
-		User user = new User(); // 기본 생성자 사용
-
+		User user = new User();
 		user.setId(userId);
 		user.setEmail("test@test.com");
 		user.setName("홍길동");
@@ -142,12 +159,74 @@ class UserControllerTest {
 		when(userService.updateUserLock(eq(userId), eq(true), anyString())).thenReturn(user);
 
 		mockMvc.perform(patch("/api/users/" + userId + "/lock")
-				.with(csrf()) // 🔧 수정됨
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.header("Authorization", "Bearer token")
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.userId").value(userId.toString()));
+	}
+
+	@Test
+	@DisplayName("프로필 조회 성공")
+	@WithMockUser
+	void getProfile_success() throws Exception {
+		UUID userId = UUID.randomUUID();
+		LocationDto locationDto = new LocationDto(37.5, 127.0, 60, 127, List.of("서울특별시", "강남구"));
+		ProfileDto dto = new ProfileDto(userId, "홍길동", Gender.MALE, LocalDate.of(2000, 1, 1), locationDto, 3,
+			"http://image.com/profile.jpg");
+
+		when(userService.getProfile(eq(userId))).thenReturn(dto);
+
+		mockMvc.perform(get("/api/users/" + userId + "/profiles"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.userId").value(userId.toString()))
+			.andExpect(jsonPath("$.name").value("홍길동"));
+	}
+
+	@Test
+	@DisplayName("프로필 수정 성공")
+	@WithMockUser
+	void updateProfile_success() throws Exception {
+		UUID userId = UUID.randomUUID();
+
+		ObjectMapper mapper = new ObjectMapper()
+			.registerModule(new JavaTimeModule())
+			.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+		LocationResponse location = new LocationResponse(37.5, 127.0, 60, 127, List.of("서울특별시", "강남구"));
+		ProfileUpdateRequest updateRequest = new ProfileUpdateRequest(
+			"newNick", Gender.FEMALE, LocalDate.of(2000, 1, 1), location, 4
+		);
+
+		MockMultipartFile image = new MockMultipartFile(
+			"image", "profile.jpg", MediaType.IMAGE_JPEG_VALUE, "fake-image".getBytes()
+		);
+
+		MockMultipartFile requestPart = new MockMultipartFile(
+			"request", "", MediaType.APPLICATION_JSON_VALUE, mapper.writeValueAsBytes(updateRequest)
+		);
+
+		LocationDto locationDto = new LocationDto(37.5, 127.0, 60, 127, List.of("서울특별시", "강남구"));
+		ProfileDto response = new ProfileDto(
+			userId, "newNick", Gender.FEMALE, LocalDate.of(2000, 1, 1), locationDto, 4,
+			"http://image.url/updated.jpg"
+		);
+
+		when(userService.updateProfile(eq(userId), any(), any())).thenReturn(response);
+
+		mockMvc.perform(multipart("/api/users/{userId}/profiles", userId)
+				.file(requestPart)
+				.file(image)
+				.with(csrf())
+				.with(request -> {
+					request.setMethod("PATCH"); // ⚠️ multipart는 기본적으로 POST이므로 PATCH로 수동 설정
+					return request;
+				})
+				.contentType(MediaType.MULTIPART_FORM_DATA))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.name").value("newNick"))
+			.andExpect(jsonPath("$.temperatureSensitivity").value(4));
 	}
 
 	@TestConfiguration
