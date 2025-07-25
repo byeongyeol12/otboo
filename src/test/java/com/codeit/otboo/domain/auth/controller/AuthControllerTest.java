@@ -28,7 +28,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.codeit.otboo.TestApplication;
 import com.codeit.otboo.domain.auth.dto.request.LoginRequest;
 import com.codeit.otboo.domain.auth.dto.response.LoginResponse;
 import com.codeit.otboo.domain.auth.service.AuthService;
@@ -47,7 +46,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 @WebMvcTest(AuthController.class)
-@ContextConfiguration(classes = TestApplication.class)
+@ContextConfiguration
 @TestPropertySource(properties = {
 	"jwt.refresh-token-validity-in-ms=604800000",
 	"jwt.secret=MySuperSecretJwtKeyThatShouldBeLongEnough123",
@@ -145,6 +144,35 @@ class AuthControllerTest {
 				.with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.accessToken").value(accessToken));
+	}
+
+	@Test
+	@DisplayName("CSRF 토큰 반환")
+	void getCsrfToken_success() throws Exception {
+		mockMvc.perform(get("/api/auth/csrf-token").with(csrf()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.headerName").exists())
+			.andExpect(jsonPath("$.parameterName").exists())
+			.andExpect(jsonPath("$.token").exists());
+	}
+
+	@Test
+	@DisplayName("리프레시 토큰 추출 실패 - 쿠키 없음")
+	void refreshAccessToken_noCookies() throws Exception {
+		mockMvc.perform(post("/api/auth/refresh")
+				.with(csrf()))
+			.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	@DisplayName("리프레시 토큰 추출 실패 - 쿠키에 refreshToken 없음")
+	void refreshAccessToken_cookieWithoutRefreshToken() throws Exception {
+		Cookie dummyCookie = new Cookie("otherToken", "someValue");
+
+		mockMvc.perform(post("/api/auth/refresh")
+				.cookie(dummyCookie)
+				.with(csrf()))
+			.andExpect(status().isUnauthorized());
 	}
 
 	@TestConfiguration
