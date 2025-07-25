@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.dm.redis;
+package com.codeit.otboo.domain.redis;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;

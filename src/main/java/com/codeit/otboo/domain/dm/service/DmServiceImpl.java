@@ -8,7 +8,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
@@ -16,10 +15,10 @@ import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
 import com.codeit.otboo.domain.dm.entity.Dm;
 import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
-import com.codeit.otboo.domain.dm.redis.RedisPublisher;
+import com.codeit.otboo.domain.redis.RedisPublisher;
 import com.codeit.otboo.domain.dm.repository.DmRepository;
 import com.codeit.otboo.domain.dm.util.DmKeyUtil;
-import com.codeit.otboo.domain.dm.websocket.NewDmEvent;
+import com.codeit.otboo.domain.websocket.listener.NewDmEvent;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
@@ -41,7 +40,6 @@ public class DmServiceImpl implements DmService {
 	private final NotificationService notificationService;
 	private final DirectMessageMapper directMessageMapper;
 	private final DmRepository dmRepository;
-	private final RedisTemplate redisTemplate;
 	private final ObjectMapper objectMapper;
 	private final RedisPublisher redisPublisher;
 	private final ApplicationEventPublisher eventPublisher;
@@ -68,7 +66,7 @@ public class DmServiceImpl implements DmService {
 			});
 
 		//dm 생성 및 저장
-		Dm dm = new Dm(sender,receiver,directMessageCreateRequest.content());
+		Dm dm = new Dm(UUID.randomUUID(),sender,receiver,directMessageCreateRequest.content(),Instant.now());
 		dmRepository.save(dm);
 		log.info("[sendDirectMessage] DM 저장 완료 : dmId={}, senderId={}, receiverId={}", dm.getId(), sender.getId(), receiver.getId());
 

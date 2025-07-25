@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.dm.websocket;
+package com.codeit.otboo.domain.websocket.controller;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
