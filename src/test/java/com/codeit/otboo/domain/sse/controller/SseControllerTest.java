@@ -15,18 +15,15 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.codeit.otboo.domain.TestApplication;
 import com.codeit.otboo.domain.sse.service.SseEmitterService;
 import com.codeit.otboo.global.config.security.UserPrincipal;
 import com.codeit.otboo.global.enumType.Role;
 import com.codeit.otboo.global.error.GlobalExceptionHandler;
 
 @WebMvcTest(controllers = SseController.class)
-@ContextConfiguration(classes = TestApplication.class)
 @Import(GlobalExceptionHandler.class)
 public class SseControllerTest {
 	@Autowired
