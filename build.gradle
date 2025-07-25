@@ -94,7 +94,7 @@ tasks.withType(JavaCompile).configureEach {
     options.generatedSourceOutputDirectory.set(file(querydslDir))
 }
 sourceSets {
-    main.java.srcDirs += [ querydslDir ]
+    main.java.srcDirs += [querydslDir]
 }
 
 // clean 시 QueryDSL 소스 삭제

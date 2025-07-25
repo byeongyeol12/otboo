@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.sse.util;
+package com.codeit.otboo.domain.sse.event;
 
 import java.time.Instant;
 
