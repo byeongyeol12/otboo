@@ -30,7 +30,7 @@ public record FeedDto(
 		@Schema(description = "날씨 정보")
 		WeatherForFeedDto weather,
 
-		@Schema(description = "OOTD(의상) 리스트")
+		@Schema(description = "OOTD(오늘의 의상) 리스트")
 		List<OotdDto> ootds,
 
 		@Schema(description = "피드 내용", example = "오늘은 맑고 선선해서 셔츠와 청바지를 입었어요!")
@@ -45,5 +45,69 @@ public record FeedDto(
 		@Schema(description = "내가 이 피드를 좋아요 했는지 여부", example = "false")
 		boolean likedByMe
 ) {
-	// ... fromEntity 및 withLikedByMe 메서드는 기존 그대로 사용
+	public static FeedDto fromEntity(Feed feed, boolean likedByMe) {
+		// Author
+		User authorEntity = feed.getUser();
+		AuthorDto authorDto = new AuthorDto(
+				authorEntity.getId(),
+				authorEntity.getName(),
+				authorEntity.getProfile() != null ? authorEntity.getProfile().getProfileImageUrl() : null
+		);
+
+		// Weather
+		Weather weatherEntity = feed.getWeather();
+		WeatherForFeedDto weatherDto = new WeatherForFeedDto(
+				weatherEntity.getId(),
+				weatherEntity.getSkyStatus(),
+				weatherEntity.getPrecipitation(),
+				weatherEntity.getTemperature()
+		);
+
+		// OOTDs
+		List<OotdDto> ootdList = feed.getClothesFeeds().stream()
+				.map(Ootd::getClothes)
+				.map(c -> new OotdDto(
+						c.getId(),
+						c.getName(),
+						c.getImageUrl(),
+						c.getType().name(),
+						c.getAttributes().stream()
+								.map(a -> new ClothesAttributeWithDefDto(
+										a.getAttributeDef().getId(),
+										a.getAttributeDef().getName(),
+										a.getAttributeDef().getSelectableValues(),
+										a.getValue()
+								))
+								.toList()
+				))
+				.toList();
+
+		return new FeedDto(
+				feed.getId(),
+				feed.getCreatedAt(),
+				feed.getUpdatedAt(),
+				authorDto,
+				weatherDto,
+				ootdList,
+				feed.getContent(),
+				feed.getLikeCount(),
+				feed.getCommentCount(),
+				likedByMe
+		);
+	}
+
+	public FeedDto withLikedByMe(boolean likedByMe) {
+		return new FeedDto(
+				this.id,
+				this.createdAt,
+				this.updatedAt,
+				this.author,
+				this.weather,
+				this.ootds,
+				this.content,
+				this.likeCount,
+				this.commentCount,
+				likedByMe
+		);
+	}
 }
