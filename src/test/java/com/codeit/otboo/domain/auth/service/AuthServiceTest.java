@@ -125,5 +125,59 @@ class AuthServiceTest {
 		verify(tokenCacheService).invalidateRefreshToken(user.getId());  // 기존 토큰 삭제 확인
 		verify(tokenCacheService).saveRefreshToken(eq(user.getId()), eq("refresh-token")); // 새 토큰 저장 확인
 	}
+
+	@Test
+	@DisplayName("로그아웃 성공 - 토큰 유효성 검사만 수행")
+	void logout_success() {
+		String accessToken = "valid-token";
+		given(jwtTokenProvider.validateToken(accessToken)).willReturn(true);
+
+		authService.logout(accessToken);
+
+		verify(jwtTokenProvider).validateToken(accessToken);  // 검증만 호출됨
+	}
+
+	@Test
+	@DisplayName("리프레시 토큰으로 액세스 토큰 재발급 성공")
+	void refreshAccessToken_success() {
+		String refreshToken = "refresh-token";
+		String userId = user.getId().toString();
+
+		given(jwtTokenProvider.validateToken(refreshToken)).willReturn(true);
+		given(jwtTokenProvider.getSubject(refreshToken)).willReturn(userId);
+		given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+		given(jwtTokenProvider.generateToken(any(), any(), any(), any())).willReturn("new-access-token");
+
+		String result = authService.refreshAccessToken(refreshToken);
+
+		assertThat(result).isEqualTo("new-access-token");
+	}
+
+	@Test
+	@DisplayName("리프레시 토큰 재발급 실패 - 토큰 유효하지 않음")
+	void refreshAccessToken_invalidToken() {
+		String refreshToken = "invalid-refresh-token";
+
+		given(jwtTokenProvider.validateToken(refreshToken)).willReturn(false);
+
+		assertThatThrownBy(() -> authService.refreshAccessToken(refreshToken))
+			.isInstanceOf(CustomException.class)
+			.hasMessageContaining(ErrorCode.INVALID_TOKEN.getMessage());
+	}
+
+	@Test
+	@DisplayName("리프레시 토큰 재발급 실패 - 사용자 없음")
+	void refreshAccessToken_userNotFound() {
+		String refreshToken = "refresh-token";
+		String unknownUserId = UUID.randomUUID().toString();
+
+		given(jwtTokenProvider.validateToken(refreshToken)).willReturn(true);
+		given(jwtTokenProvider.getSubject(refreshToken)).willReturn(unknownUserId);
+		given(userRepository.findById(UUID.fromString(unknownUserId))).willReturn(Optional.empty());
+
+		assertThatThrownBy(() -> authService.refreshAccessToken(refreshToken))
+			.isInstanceOf(CustomException.class)
+			.hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+	}
 }
 
