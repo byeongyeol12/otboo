@@ -17,10 +17,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.codeit.otboo.TestApplication;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
@@ -32,7 +30,6 @@ import com.codeit.otboo.global.error.ErrorCode;
 import com.codeit.otboo.global.error.GlobalExceptionHandler;
 
 @WebMvcTest(controllers = NotificationController.class)
-@ContextConfiguration(classes = TestApplication.class)
 @Import(GlobalExceptionHandler.class)
 public class NotificationControllerTest {
 	@Autowired

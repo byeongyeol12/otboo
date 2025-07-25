@@ -8,18 +8,18 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
 import com.codeit.otboo.domain.dm.entity.Dm;
 import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
-import com.codeit.otboo.domain.dm.redis.RedisPublisher;
+import com.codeit.otboo.domain.redis.RedisPublisher;
 import com.codeit.otboo.domain.dm.repository.DmRepository;
 import com.codeit.otboo.domain.dm.util.DmKeyUtil;
-import com.codeit.otboo.domain.dm.websocket.NewDmEvent;
+import com.codeit.otboo.domain.websocket.listener.NewDmEvent;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
@@ -41,7 +41,6 @@ public class DmServiceImpl implements DmService {
 	private final NotificationService notificationService;
 	private final DirectMessageMapper directMessageMapper;
 	private final DmRepository dmRepository;
-	private final RedisTemplate redisTemplate;
 	private final ObjectMapper objectMapper;
 	private final RedisPublisher redisPublisher;
 	private final ApplicationEventPublisher eventPublisher;
@@ -52,6 +51,7 @@ public class DmServiceImpl implements DmService {
 	 * @return
 	 */
 	@Override
+	@Transactional
 	public DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
 		log.info("[sendDirectMessage] 메시지 생성 시작 : request = {}", directMessageCreateRequest);
 
@@ -68,7 +68,7 @@ public class DmServiceImpl implements DmService {
 			});
 
 		//dm 생성 및 저장
-		Dm dm = new Dm(sender,receiver,directMessageCreateRequest.content());
+		Dm dm = new Dm(UUID.randomUUID(),sender,receiver,directMessageCreateRequest.content(),Instant.now());
 		dmRepository.save(dm);
 		log.info("[sendDirectMessage] DM 저장 완료 : dmId={}, senderId={}, receiverId={}", dm.getId(), sender.getId(), receiver.getId());
 
@@ -120,25 +120,26 @@ public class DmServiceImpl implements DmService {
 	 * @return
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public DirectMessageDtoCursorResponse getDms(UUID userId, UUID otherId, String cursor, UUID idAfter, int limit) {
-		// 1. 커서 변환
+		//커서 변환
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
-		// 2. 정렬(createdAt)
+		//정렬(createdAt)
 		Pageable pageable = PageRequest.of(0,limit+1, Sort.by("createdAt").ascending());
 
-		// 3. repository
+		//repository
 		List<Dm> dms = dmRepository.findAllByUserIdAndOtherIdAfterCursor(userId,otherId,effectiveIdAfter,pageable);
 
-		// 4. hasNext,nextCursor
+		//hasNext,nextCursor
 		boolean hasNext = dms.size() > limit;
 		List<Dm> pagedDms = hasNext ? dms.subList(0,limit) : dms;
 
-		String nextCusor = hasNext ? pagedDms.get(pagedDms.size() -1).getId().toString() : null;
+		String nextCursor = hasNext ? pagedDms.get(pagedDms.size() -1).getId().toString() : null;
 		UUID nextIdAfter = hasNext ? pagedDms.get(pagedDms.size() -1).getId() : null;
 
-		//5. dto 변환
+		//dto 변환
 		List<DirectMessageDto> directMessageDtoList = pagedDms.stream()
 			.map(dm->directMessageMapper.toDirectMessageDto(dm))
 			.toList();
@@ -147,7 +148,7 @@ public class DmServiceImpl implements DmService {
 
 		return new DirectMessageDtoCursorResponse(
 			directMessageDtoList,
-			nextCusor,
+			nextCursor,
 			nextIdAfter,
 			hasNext,
 			directMessageDtoList.size(),

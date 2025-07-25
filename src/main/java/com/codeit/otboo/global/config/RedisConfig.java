@@ -12,7 +12,7 @@ import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import com.codeit.otboo.domain.dm.redis.RedisSubscriber;
+import com.codeit.otboo.domain.redis.RedisSubscriber;
 
 @Configuration
 @EnableRedisRepositories

@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -31,6 +32,7 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 
 	//sse 를 통한 구독 기능 정의
 	@Override
+	@Transactional(readOnly = true)
 	public SseEmitter subscribe(UUID receiverId, UUID lastEventId) {
 		SseEmitter sseEmitter = new SseEmitter(timeout);
 
@@ -70,6 +72,7 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 
 	//1명에게 알림 전송
 	@Override
+	@Transactional
 	public void send(UUID receiverId, String eventName, Object data) {
 		sseEmitterRepository.findByReceiverId(receiverId)
 			.ifPresent(sseEmitters -> {
@@ -85,6 +88,8 @@ public class SseEmitterServiceImpl implements SseEmitterService {
 			});
 	}
 
+	@Override
+	@Transactional
 	public void send(SseMessage sseMessage) {
 		// 메모리 큐에 저장(재전송 대비)
 		sseMessageRepository.save(sseMessage);
