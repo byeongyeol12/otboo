@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.dto.NotificationDtoCursorResponse;
@@ -35,6 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	// 알림 생성 + 전송
 	@Override
+	@Transactional
 	public NotificationDto createAndSend(NotificationDto request) {
 		log.info("[알림 생성] createAndSend 시작 : receiverId={}, title={}, content={}", request.receiverId(), request.title(), request.content());
 		try{
@@ -72,6 +74,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	// 알림 조회
 	@Override
+	@Transactional(readOnly = true)
 	public NotificationDtoCursorResponse getNotifications(UUID receiverId, String cursor, UUID idAfter, int limit) {
 		Instant effectiveCreatedAt = null;
 		if (cursor != null && !cursor.isBlank()) {
@@ -110,6 +113,7 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 	// 알림 읽음
 	@Override
+	@Transactional
 	public void readNotifications(UUID notificationId, UUID receiverId) {
 		// 해당 알림 찾음
 		Notification notification = notificationRepository.findById(notificationId).orElseThrow(

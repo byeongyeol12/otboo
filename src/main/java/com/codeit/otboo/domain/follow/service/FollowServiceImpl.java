@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codeit.otboo.domain.follow.dto.FollowDto;
 import com.codeit.otboo.domain.follow.dto.FollowListResponse;
@@ -41,6 +42,7 @@ public class FollowServiceImpl implements FollowService {
 
 	//팔로우 생성
 	@Override
+	@Transactional
 	public FollowDto createFollow(UUID myUserId,UUID followeeId) {
 		//1. 팔로우, 팔로워 조회 및 예외 처리
 		// 팔로워(=나) 조회
@@ -86,6 +88,7 @@ public class FollowServiceImpl implements FollowService {
 
 	// 팔로우 요약 정보 조회
 	@Override
+	@Transactional(readOnly = true)
 	public FollowSummaryDto getFollowSummary(UUID followeeId, UUID myUserId) {
 		//1. 유저 정보 조회
 		User user = userRepository.getUserById(followeeId); // 요약 정보를 조회할 대상
@@ -112,6 +115,7 @@ public class FollowServiceImpl implements FollowService {
 
 	// 유저가 팔로우 하는 사람들 목록 조회(팔로우 클릭)
 	@Override
+	@Transactional(readOnly = true)
 	public FollowListResponse getFollowings(UUID followerId,String cursor,UUID idAfter,int limit,String nameLike,String sortBy,String sortDirection) {
 		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
@@ -154,6 +158,7 @@ public class FollowServiceImpl implements FollowService {
 
 	// 유저를 팔로우 하는 사람들 목록 조회(팔로워 클릭)
 	@Override
+	@Transactional(readOnly = true)
 	public FollowListResponse getFollowers(UUID followeeId, String cursor, UUID idAfter, int limit, String nameLike,
 		String sortBy, String sortDirection) {
 		// 1. 커서 변환(cursor 값이 있으면 우선 적용 없으면 idAfter 사용)
@@ -196,6 +201,8 @@ public class FollowServiceImpl implements FollowService {
 	}
 
 	// 팔로우 취소(매개변수 : 취소 하려는 팔로우의 PK , 현재 로그인한 유저의 ID)
+	@Override
+	@Transactional
 	public void cancelFollow(UUID followId, UUID loginUserId) {
 		// 1. 팔로우 존재 여부 확인
 		Follow follow = followRepository.findById(followId)

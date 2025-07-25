@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codeit.otboo.domain.dm.dto.DirectMessageCreateRequest;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
@@ -50,6 +51,7 @@ public class DmServiceImpl implements DmService {
 	 * @return
 	 */
 	@Override
+	@Transactional
 	public DirectMessageDto sendDirectMessage(DirectMessageCreateRequest directMessageCreateRequest) {
 		log.info("[sendDirectMessage] 메시지 생성 시작 : request = {}", directMessageCreateRequest);
 
@@ -118,25 +120,26 @@ public class DmServiceImpl implements DmService {
 	 * @return
 	 */
 	@Override
+	@Transactional(readOnly = true)
 	public DirectMessageDtoCursorResponse getDms(UUID userId, UUID otherId, String cursor, UUID idAfter, int limit) {
-		// 1. 커서 변환
+		//커서 변환
 		UUID effectiveIdAfter = (cursor != null && !cursor.isBlank())
 			? UUID.fromString(cursor)
 			: idAfter;
-		// 2. 정렬(createdAt)
+		//정렬(createdAt)
 		Pageable pageable = PageRequest.of(0,limit+1, Sort.by("createdAt").ascending());
 
-		// 3. repository
+		//repository
 		List<Dm> dms = dmRepository.findAllByUserIdAndOtherIdAfterCursor(userId,otherId,effectiveIdAfter,pageable);
 
-		// 4. hasNext,nextCursor
+		//hasNext,nextCursor
 		boolean hasNext = dms.size() > limit;
 		List<Dm> pagedDms = hasNext ? dms.subList(0,limit) : dms;
 
-		String nextCusor = hasNext ? pagedDms.get(pagedDms.size() -1).getId().toString() : null;
+		String nextCursor = hasNext ? pagedDms.get(pagedDms.size() -1).getId().toString() : null;
 		UUID nextIdAfter = hasNext ? pagedDms.get(pagedDms.size() -1).getId() : null;
 
-		//5. dto 변환
+		//dto 변환
 		List<DirectMessageDto> directMessageDtoList = pagedDms.stream()
 			.map(dm->directMessageMapper.toDirectMessageDto(dm))
 			.toList();
@@ -145,7 +148,7 @@ public class DmServiceImpl implements DmService {
 
 		return new DirectMessageDtoCursorResponse(
 			directMessageDtoList,
-			nextCusor,
+			nextCursor,
 			nextIdAfter,
 			hasNext,
 			directMessageDtoList.size(),
