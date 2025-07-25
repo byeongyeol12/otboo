@@ -40,7 +40,7 @@ import com.codeit.otboo.global.enumType.Role;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class NotificationIntergrationTest {
+public class NotificationIntegrationTest {
 	@Container
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
 		.withDatabaseName("test-db")

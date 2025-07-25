@@ -40,7 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class FollowIntergrationTest {
+public class FollowIntegrationTest {
 
 	@Container
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
