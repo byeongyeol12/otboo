@@ -1,4 +1,4 @@
-package com.codeit.otboo.domain.sse.util;
+package com.codeit.otboo.domain.sse.event.listener;
 
 import java.util.UUID;
 
@@ -7,7 +7,9 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
+import com.codeit.otboo.domain.sse.event.NotificationCreatedEvent;
 import com.codeit.otboo.domain.sse.service.SseEmitterService;
+import com.codeit.otboo.domain.sse.util.SseMessage;
 import com.codeit.otboo.exception.CustomException;
 import com.codeit.otboo.global.error.ErrorCode;
 
