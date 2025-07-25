@@ -1,8 +1,9 @@
-package com.codeit.otboo.domain.follow.mapper;
+package com.codeit.otboo.domain.dm.mapper;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.List;
+import java.time.Instant;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,8 +21,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.codeit.otboo.domain.follow.dto.FollowDto;
-import com.codeit.otboo.domain.follow.entity.Follow;
+import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
+import com.codeit.otboo.domain.dm.entity.Dm;
+import com.codeit.otboo.domain.dm.repository.DmRepository;
 import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
@@ -34,7 +36,7 @@ import com.codeit.otboo.global.enumType.Role;
 @DataJpaTest
 @Import(QueryDslConfig.class)
 @EnableJpaAuditing
-public class FollowMapperTest {
+public class DmMapperTest {
 
 	@Container
 	static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
@@ -49,78 +51,66 @@ public class FollowMapperTest {
 		registry.add("spring.datasource.password", postgres::getPassword);
 		registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
 	}
-	private final FollowMapper followMapper = Mappers.getMapper(FollowMapper.class);
+
+	private final DirectMessageMapper directMessageMapper = Mappers.getMapper(DirectMessageMapper.class);
+
+	@Autowired
+	DmRepository dmRepository;
 
 	@Autowired
 	UserRepository userRepository;
 
-	private User follower,followee;
+	private User sender;
+	private User receiver;
 
 	@BeforeEach
 	void setUp() {
-		follower = new User();
-		follower.setEmail("follower@example.com");
-		follower.setName("유저1");
-		follower.setPasswordHash("pw1");
-		follower.setRole(Role.USER);
-		follower.setField("IT");
-		userRepository.save(follower);
+		sender = new User();
+		sender.setName("sender");
+		sender.setEmail("sender@email.com");
+		sender.setPasswordHash("pw1");
+		sender.setRole(Role.USER);
+		sender.setField("T1");
+		userRepository.save(sender);
 
-		followee = new User();
-		followee.setEmail("followee@example.com");
-		followee.setName("유저2");
-		followee.setPasswordHash("pw2");
-		followee.setRole(Role.USER);
-		followee.setField("MKT");
-		userRepository.save(followee);
+		receiver = new User();
+		receiver.setName("receiver");
+		receiver.setEmail("receiver@email.com");
+		receiver.setPasswordHash("pw2");
+		receiver.setRole(Role.USER);
+		receiver.setField("T2");
+		userRepository.save(receiver);
 	}
 
 	@Test
-	@DisplayName("toFollowDto - 엔티티 -> dto 정상 변환")
-	void toFollowDto_success() {
+	@DisplayName("toDirectMessageDto - 엔티티 -> dto 정상 변환")
+	void toDirectMessageDto_success() {
 		//given
-		Follow follow = Follow.builder()
-			.follower(follower)
-			.followee(followee)
-			.build();
-
+		Dm dm = new Dm(
+			UUID.randomUUID(),sender,receiver,"content", Instant.now()
+		);
 		//when
-		FollowDto followDto = followMapper.toFollowDto(follow);
+		DirectMessageDto directMessageDto = directMessageMapper.toDirectMessageDto(dm);
 
 		//then
-		assertThat(followDto.follower().id()).isEqualTo(follower.getId());
-		assertThat(followDto.followee().id()).isEqualTo(followee.getId());
+		assertThat(directMessageDto).isNotNull();
+		assertThat(directMessageDto.content()).isEqualTo("content");
 	}
-
 	@Test
-	@DisplayName("toFollowDtoList - 엔티티 -> dto 정상 변환")
-	void toFollowDtoList_success() {
+	@DisplayName("toUserSummary - User -> UserSummaryDto 정상 변환")
+	void toUserSummary_success() {
 		//given
-		Follow follow = Follow.builder()
-			.follower(follower)
-			.followee(followee)
-			.build();
+		User user = new User();
+		user.setName("user");
+		user.setEmail("user@email.com");
+		user.setPasswordHash("pw1");
+		user.setRole(Role.USER);
 
 		//when
-		List<FollowDto> followDtoList = followMapper.toFollowDtoList(List.of(follow));
+		UserSummaryDto userSummaryDto = directMessageMapper.toUserSummary(user);
 
 		//then
-		assertThat(followDtoList.get(0).follower().id()).isEqualTo(follower.getId());
-		assertThat(followDtoList.get(0).followee().id()).isEqualTo(followee.getId());
+		assertThat(userSummaryDto.id()).isEqualTo(user.getId());
+		assertThat(userSummaryDto.name()).isEqualTo(user.getName());
 	}
-
-	@Test
-	@DisplayName("toUserSummary - 유저 프로필이 null 일 때도 정상 동작")
-	void toUserSummary_nullProfile_success() {
-		//given
-
-		//when
-		UserSummaryDto summaryDto = followMapper.toUserSummary(follower);
-
-		//then
-		assertThat(summaryDto.name()).isEqualTo(follower.getName());
-		assertThat(summaryDto.profileImageUrl()).isNull();
-	}
-
-
 }
