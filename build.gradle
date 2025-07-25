@@ -5,8 +5,6 @@ plugins {
     id 'jacoco'
 }
 
-import org.gradle.testing.jacoco.tasks.JacocoReport
-
 group = 'com.codeit'
 version = '0.0.1-SNAPSHOT'
 
@@ -96,7 +94,7 @@ tasks.withType(JavaCompile).configureEach {
     options.generatedSourceOutputDirectory.set(file(querydslDir))
 }
 sourceSets {
-    main.java.srcDirs += [ querydslDir ]
+    main.java.srcDirs += [querydslDir]
 }
 
 // clean 시 QueryDSL 소스 삭제
