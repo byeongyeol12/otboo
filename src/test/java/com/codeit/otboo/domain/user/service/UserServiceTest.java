@@ -65,7 +65,7 @@ class UserServiceTest {
 	@Mock
 	private NotificationService notificationService;
 	@Mock
-	private ImageStorageService imageStorageService;
+	private UserImageStorageService imageStorageService;
 
 	@Mock
 	private JwtTokenProvider jwtTokenProvider;

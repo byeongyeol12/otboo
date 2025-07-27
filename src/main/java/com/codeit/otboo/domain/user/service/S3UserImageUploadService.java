@@ -14,14 +14,14 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Service
-public class S3ImageUploadService implements ImageStorageService {
+public class S3UserImageUploadService implements UserImageStorageService {
 
 	private final S3Client s3Client;
 
 	@Value("${cloud.aws.s3.bucket}")
 	private String bucketName;
 
-	public S3ImageUploadService(S3Client s3Client) {
+	public S3UserImageUploadService(S3Client s3Client) {
 		this.s3Client = s3Client;
 	}
 

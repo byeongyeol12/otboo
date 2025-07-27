@@ -51,7 +51,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final TokenCacheService tokenCacheService;
 	private final JwtTokenProvider jwtTokenProvider;
-	private final ImageStorageService imageStorageService;
+	private final UserImageStorageService imageStorageService;
 	private final NotificationService notificationService;
 
 	@Transactional

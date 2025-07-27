@@ -27,7 +27,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 class S3ImageUploadServiceTest {
 
 	@InjectMocks
-	private S3ImageUploadService s3ImageUploadService;
+	private S3UserImageUploadService s3ImageUploadService;
 
 	@Mock
 	private S3Client s3Client;
@@ -35,7 +35,7 @@ class S3ImageUploadServiceTest {
 	@BeforeEach
 	void setUp() {
 		MockitoAnnotations.openMocks(this);
-		s3ImageUploadService = new S3ImageUploadService(s3Client);
+		s3ImageUploadService = new S3UserImageUploadService(s3Client);
 		ReflectionTestUtils.setField(s3ImageUploadService, "bucketName", "test-bucket");
 	}
 
