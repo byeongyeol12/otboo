@@ -176,7 +176,41 @@ public class SseEmitterServiceImplTest {
 		verify(emitter1, times(1)).send(anySet());
 		verify(emitter2, times(1)).send(anySet());
 	}
+	@Test
+	@DisplayName("send(SseMessage) - broadcast에서 IOException 발생 시 예외처리")
+	void send_broadcast_ioexception() throws IOException {
+		// given
+		SseMessage msg = SseMessage.create(UUID.randomUUID(), "event", "data");
+		msg.setBroadcast(true);
 
+		SseEmitter emitter = mock(SseEmitter.class);
+		when(sseEmitterRepository.findAll()).thenReturn(List.of(emitter));
+		doThrow(new IOException("fail")).when(emitter).send(anySet());
+
+		// when
+		sseEmitterService.send(msg);
+
+		// then
+		verify(emitter, times(1)).send(anySet());
+	}
+
+	@Test
+	@DisplayName("send(SseMessage) - 개별 전송에서 IOException 발생 시 예외처리")
+	void send_individual_ioexception() throws IOException {
+		// given
+		Set<UUID> receivers = Set.of(UUID.randomUUID());
+		SseMessage msg = makeSseMessageForTest(receivers, false, "event", "data");
+
+		SseEmitter emitter = mock(SseEmitter.class);
+		when(sseEmitterRepository.findAllByReceiverIdsIn(receivers)).thenReturn(List.of(emitter));
+		doThrow(new IOException("fail")).when(emitter).send(anySet());
+
+		// when
+		sseEmitterService.send(msg);
+
+		// then
+		verify(emitter, times(1)).send(anySet());
+	}
 
 	@Test
 	@DisplayName("ping - 모든 emitter에게 ping 이벤트 전송")
