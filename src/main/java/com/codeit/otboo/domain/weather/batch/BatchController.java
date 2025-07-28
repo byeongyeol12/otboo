@@ -1,5 +1,6 @@
 package com.codeit.otboo.domain.weather.batch;
 
+import com.codeit.otboo.domain.weather.scheduler.WeatherDataCleanupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +25,7 @@ public class BatchController {
 
     private final JobLauncher jobLauncher;
     private final Job fetchWeatherJob;
+    private final WeatherDataCleanupService weatherDataCleanupService; // ✨ 의존성 추가
 
     @Operation(summary = "날씨 수집 배치 수동 실행", description = "날씨 예보를 수집하는 배치 작업을 강제로 실행시킵니다. 테스트 및 긴급 상황용입니다.")
     @ApiResponse(responseCode = "200", description = "배치 작업 실행 요청 성공")
@@ -38,5 +40,14 @@ public class BatchController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Failed to start batch job: " + e.getMessage());
         }
+    }
+
+    // ✨ 아래 API 메서드를 새로 추가합니다.
+    @Operation(summary = "오래된 날씨 데이터 삭제 작업 수동 실행", description = "생성된 지 2일이 지난 날씨 예보 데이터를 즉시 삭제합니다.")
+    @ApiResponse(responseCode = "200", description = "삭제 작업 실행 성공")
+    @PostMapping("/run-cleanup-job")
+    public ResponseEntity<String> runCleanupJob() {
+        weatherDataCleanupService.cleanupOldWeatherData();
+        return ResponseEntity.ok("Weather data cleanup job has been executed successfully.");
     }
 }

@@ -1,5 +1,3 @@
-// WeatherServiceImpl.java 파일
-
 package com.codeit.otboo.domain.weather.service;
 
 import com.codeit.otboo.domain.weather.component.LocationConverter;
@@ -11,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -26,10 +27,17 @@ public class WeatherServiceImpl implements WeatherService {
         // 1. 위도/경도를 격자 좌표로 변환
         LocationInfo loc = locationConverter.toGrid(latitude, longitude);
 
-        // 2. DB에서 해당 위치의 모든 일별 데이터를 조회
-        List<Weather> dailyWeathers = weatherRepository.findByLocationXAndLocationYOrderByForecastAtAsc(loc.x(), loc.y());
+        // 2. '오늘' 날짜의 시작 시각을 계산
+        Instant startOfToday = LocalDate.now(ZoneId.of("Asia/Seoul"))
+                .atStartOfDay(ZoneId.of("Asia/Seoul"))
+                .toInstant();
 
-        // 3. 조회된 엔티티 목록을 DTO 목록으로 변환하여 반환
+        // 3. DB에서 해당 위치의 '오늘 이후' 데이터만 조회
+        List<Weather> dailyWeathers = weatherRepository.findFutureWeatherByLocation(
+                loc.x(), loc.y(), startOfToday
+        );
+
+        // 4. 조회된 엔티티 목록을 DTO 목록으로 변환하여 반환
         return dailyWeathers.stream()
                 .map(this::mapToWeatherDto)
                 .toList();
