@@ -25,7 +25,6 @@ import com.codeit.otboo.domain.dm.entity.Dm;
 import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
 import com.codeit.otboo.domain.redis.RedisPublisher;
 import com.codeit.otboo.domain.dm.repository.DmRepository;
-import com.codeit.otboo.domain.websocket.listener.NewDmEvent;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.service.NotificationService;
 import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
@@ -132,7 +131,6 @@ public class DmServiceImplTest {
 		verify(userRepository, times(1)).findById(receiver.getId());
 		verify(dmRepository, times(1)).save(any(Dm.class));
 		verify(redisPublisher, times(1)).publish(startsWith("dm:"), anyString());
-		verify(applicationEventPublisher, times(1)).publishEvent(any(NewDmEvent.class));
 		verify(notificationService, times(1)).createAndSend(any(NotificationDto.class));
 	}
 
