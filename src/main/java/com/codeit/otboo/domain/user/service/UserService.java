@@ -51,7 +51,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final TokenCacheService tokenCacheService;
 	private final JwtTokenProvider jwtTokenProvider;
-	private final ImageStorageService imageStorageService;
+	private final UserImageStorageService imageStorageService;
 	private final NotificationService notificationService;
 
 	@Transactional
@@ -129,7 +129,7 @@ public class UserService {
 				Instant.now(),
 				userId,
 				"User_Role",
-				"권한 ["+request.role()+"] 로 변경되었습니다.",
+				"권한 [" + request.role() + "] 로 변경되었습니다.",
 				NotificationLevel.INFO
 			)
 		);
@@ -157,21 +157,21 @@ public class UserService {
 	@Transactional
 	public ProfileDto updateProfile(UUID userId, ProfileUpdateRequest request, MultipartFile profileImage) {
 		Profile profile = profileRepository.findByUserId(userId)
-				.orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+			.orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
 
 		String imageUrl = profile.getProfileImageUrl();
 		if (profileImage != null && !profileImage.isEmpty()) {
-			imageUrl = imageStorageService.upload(profileImage);
+			imageUrl = imageStorageService.upload(profileImage, "profiles");
 		}
 
 		String nickname = request.nickname() != null ? request.nickname() : profile.getNickname();
 		Gender gender = request.gender() != null ? request.gender() : profile.getGender();
 		Integer temperatureSensitivity = request.temperatureSensitivity() != null
-				? request.temperatureSensitivity()
-				: profile.getTemperatureSensitivity();
+			? request.temperatureSensitivity()
+			: profile.getTemperatureSensitivity();
 		Instant birthDateInstant = request.birthDate() != null
-				? request.birthDate().atStartOfDay(ZoneOffset.UTC).toInstant()
-				: profile.getBirthDate();
+			? request.birthDate().atStartOfDay(ZoneOffset.UTC).toInstant()
+			: profile.getBirthDate();
 
 		// Location 정보가 있으면 updateLocation 호출
 		if (request.location() != null) {
@@ -186,12 +186,12 @@ public class UserService {
 
 		// locationNames는 updateLocation에서 이미 갱신됨, 중복 방지
 		profile.updateProfile(
-				nickname,
-				gender,
-				birthDateInstant,
-				profile.getLocationNames(), // 현재 profile 객체의 값 사용
-				temperatureSensitivity,
-				imageUrl
+			nickname,
+			gender,
+			birthDateInstant,
+			profile.getLocationNames(), // 현재 profile 객체의 값 사용
+			temperatureSensitivity,
+			imageUrl
 		);
 
 		return profileMapper.toDto(profile);

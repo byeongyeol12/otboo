@@ -25,9 +25,9 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER:   ci_user
+          POSTGRES_USER: ci_user
           POSTGRES_PASSWORD: ci_pass
-          POSTGRES_DB:     ci_db
+          POSTGRES_DB: ci_db
         ports:
           - 5432:5432
         options: >-
@@ -47,7 +47,7 @@ jobs:
 
     env:
       SPRING_PROFILES_ACTIVE: test
-      DB_URL:      jdbc:postgresql://localhost:5432/ci_db
+      DB_URL: jdbc:postgresql://localhost:5432/ci_db
       DB_USERNAME: ci_user
       DB_PASSWORD: ci_pass
       API_KMA_SERVICE_KEY: ${{ secrets.API_KMA_SERVICE_KEY }}
@@ -83,6 +83,9 @@ jobs:
   dependency-submission:
 
     runs-on: ubuntu-latest
+
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
     permissions:
       contents: write
 
