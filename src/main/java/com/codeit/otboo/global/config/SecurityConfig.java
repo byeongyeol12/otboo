@@ -29,49 +29,49 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
-			.cors(Customizer.withDefaults())
-			.csrf(csrf -> csrf.disable()) // ✅ CSRF 완전히 끔
+				.cors(Customizer.withDefaults())
+				.csrf(csrf -> csrf.disable()) // ✅ CSRF 완전히 끔
 
-			.sessionManagement(session ->
-				session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-			)
+				.sessionManagement(session ->
+						session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+				)
 
-			//  H2 콘솔 등 iframe 접근 허용
-			.headers(headers ->
-				headers.frameOptions(frame -> frame.sameOrigin())
-			)
+				//  H2 콘솔 등 iframe 접근 허용
+				.headers(headers ->
+						headers.frameOptions(frame -> frame.sameOrigin())
+				)
 
-			//  요청 인증/인가 설정
-			.authorizeHttpRequests(auth -> auth
-				.requestMatchers(
-					"/", "/index.html", "/favicon.ico",
-					"/assets/**",
-					"/api/auth/**",
-					"/api/weathers/**",
-					"/api/batch/**",
-					"/api/users/**",
-					"/api/sse",
-					"/h2-console/**",
-					"/uploads/**",// 테스트를 위해 임시로 추가
-					"/ws/**",
-						"/swagger-ui.html",
-						"/swagger-ui/**",
-						"/v3/api-docs/**"
-				).permitAll()
-				.anyRequest().authenticated()
-			)
+				//  요청 인증/인가 설정
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers(
+								"/", "/index.html", "/favicon.ico",
+								"/assets/**",
+								"/api/auth/**",
+								"/api/weathers/**",
+								"/api/batch/**",
+								"/api/users/**",
+								"/api/sse",
+								"/h2-console/**",
+								"/uploads/**",// 테스트를 위해 임시로 추가
+								"/ws/**",
+								"/swagger-ui.html",
+								"/swagger-ui/**",
+								"/v3/api-docs/**"
+						).permitAll()
+						.anyRequest().authenticated()
+				)
 
-			.addFilterBefore(
-				new JwtAuthenticationFilter(jwtTokenProvider),
-				UsernamePasswordAuthenticationFilter.class
-			);
+				.addFilterBefore(
+						new JwtAuthenticationFilter(jwtTokenProvider),
+						UsernamePasswordAuthenticationFilter.class
+				);
 
 		return http.build();
 	}
 
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
-		throws Exception {
+			throws Exception {
 		return configuration.getAuthenticationManager();
 	}
 
@@ -87,4 +87,3 @@ public class SecurityConfig {
 		return repo;
 	}
 }
-

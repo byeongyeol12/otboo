@@ -24,7 +24,6 @@ public class Weather {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
     private UUID id;
 
     @Column(name = "forecasted_at", nullable = false)
@@ -45,7 +44,6 @@ public class Weather {
     @Column(name = "precipitation", columnDefinition = "json")
     private PrecipitationInfo precipitation;
 
-    // ★ DB 컬럼 매핑 (JPA, JPQL/HQL 조건에 쓸 수 있음)
     @Enumerated(EnumType.STRING)
     @Column(name = "precipitation_type", nullable = false)
     private PrecipitationType precipitationType;
@@ -72,15 +70,9 @@ public class Weather {
 
     @Builder
     public Weather(
-            Instant forecastedAt,
-            Instant forecastAt,
-            SkyStatus skyStatus,
-            LocationInfo location,
-            PrecipitationInfo precipitation,
-            HumidityInfo humidity,
-            TemperatureInfo temperature,
-            WindSpeedInfo windSpeed,
-            PrecipitationType precipitationType // ★ builder에도 포함
+            Instant forecastedAt, Instant forecastAt, SkyStatus skyStatus, LocationInfo location,
+            PrecipitationInfo precipitation, HumidityInfo humidity, TemperatureInfo temperature,
+            WindSpeedInfo windSpeed, PrecipitationType precipitationType
     ) {
         this.forecastedAt = forecastedAt;
         this.forecastAt = forecastAt;
@@ -93,4 +85,16 @@ public class Weather {
         this.precipitationType = precipitationType;
     }
 
+    /**
+     * ✨ 기존 데이터를 새로운 데이터로 갱신하는 메서드
+     */
+    public void updateData(Weather newData) {
+        this.temperature = newData.getTemperature();
+        this.humidity = newData.getHumidity();
+        this.skyStatus = newData.getSkyStatus();
+        this.precipitation = newData.getPrecipitation();
+        this.windSpeed = newData.getWindSpeed();
+        this.precipitationType = newData.getPrecipitationType();
+        this.forecastedAt = Instant.now(); // 갱신 시각을 현재로 변경
+    }
 }
