@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq; // ✨ eq를 사용하기 위해 import 추가
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,8 +40,8 @@ class WeatherServiceImplTest {
         Weather mockWeather = Weather.builder().build();
 
         when(locationConverter.toGrid(lat, lon)).thenReturn(location);
-        // ✨ 호출하는 메서드 이름을 findFutureWeatherByLocation으로 변경하고, any(Instant.class)를 추가합니다.
-        when(weatherRepository.findFutureWeatherByLocation(60, 127, any(Instant.class)))
+
+        when(weatherRepository.findFutureWeatherByLocation(eq(60), eq(127), any(Instant.class)))
                 .thenReturn(List.of(mockWeather));
 
         // when
