@@ -12,9 +12,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq; // ✨ eq를 사용하기 위해 import 추가
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,10 +37,11 @@ class WeatherServiceImplTest {
         // given
         double lat = 37.0, lon = 127.0;
         LocationInfo location = new LocationInfo(lat, lon, 60, 127);
-        Weather mockWeather = Weather.builder().build(); // 테스트용 가짜 날씨
+        Weather mockWeather = Weather.builder().build();
 
         when(locationConverter.toGrid(lat, lon)).thenReturn(location);
-        when(weatherRepository.findByLocationXAndLocationYOrderByForecastAtAsc(60, 127))
+
+        when(weatherRepository.findFutureWeatherByLocation(eq(60), eq(127), any(Instant.class)))
                 .thenReturn(List.of(mockWeather));
 
         // when

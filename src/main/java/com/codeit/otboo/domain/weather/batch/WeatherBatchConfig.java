@@ -9,10 +9,10 @@ import com.codeit.otboo.domain.weather.dto.KmaWeatherResponse;
 import com.codeit.otboo.domain.weather.entity.Weather;
 import com.codeit.otboo.domain.weather.entity.vo.*;
 import com.codeit.otboo.domain.weather.repository.WeatherRepository;
+import com.codeit.otboo.domain.weather.scheduler.WeatherDataCleanupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -32,12 +32,12 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
-//@EnableBatchProcessing
 @EnableScheduling
 @RequiredArgsConstructor
 public class WeatherBatchConfig {
@@ -49,7 +49,8 @@ public class WeatherBatchConfig {
     private final ProfileRepository profileRepository;
     private final PlatformTransactionManager transactionManager;
     private final JobLauncher jobLauncher;
-    private final WeatherAlertService weatherAlertService; // ✨ 의존성 변경
+    private final WeatherAlertService weatherAlertService;
+    private final WeatherDataCleanupService weatherDataCleanupService;
 
     @Bean
     public Job fetchWeatherJob() {
@@ -93,7 +94,9 @@ public class WeatherBatchConfig {
         return locationInfo -> {
             String rawData = kmaApiClient.fetchWeatherForecast(locationInfo.x(), locationInfo.y());
             List<KmaWeatherResponse.Item> items = weatherParser.parse(rawData);
-            if (items.isEmpty()) return null;
+            if (items.isEmpty()) {
+                return null;
+            }
 
             Map<String, List<KmaWeatherResponse.Item>> itemsByDate = items.stream()
                     .collect(Collectors.groupingBy(KmaWeatherResponse.Item::getFcstDate));
@@ -102,10 +105,11 @@ public class WeatherBatchConfig {
             Collections.sort(sortedDates);
 
             List<Weather> dailySummaries = new ArrayList<>();
-            Optional<Weather> yesterdayWeatherOpt = weatherRepository.findLatestWeatherByLocation(locationInfo.x(), locationInfo.y());
+            // 주의: 이 Optional은 배치 청크 내에서만 유효하며, 날짜별 비교에만 사용됩니다.
+            Optional<Weather> previousDayWeatherOpt = weatherRepository.findLatestWeatherByLocation(locationInfo.x(), locationInfo.y());
 
-            Double prevDayMaxTemp = yesterdayWeatherOpt.map(w -> w.getTemperature().max()).orElse(null);
-            Double prevDayHumidity = yesterdayWeatherOpt.map(w -> w.getHumidity().current()).orElse(null);
+            Double prevDayMaxTemp = previousDayWeatherOpt.map(w -> w.getTemperature().max()).orElse(null);
+            Double prevDayHumidity = previousDayWeatherOpt.map(w -> w.getHumidity().current()).orElse(null);
 
             for (String forecastDateStr : sortedDates) {
                 List<KmaWeatherResponse.Item> dailyItems = itemsByDate.get(forecastDateStr);
@@ -118,9 +122,8 @@ public class WeatherBatchConfig {
 
                 double minTemp = parseKmaDouble(dailyValues.get("TMN"));
                 double maxTemp = parseKmaDouble(dailyValues.get("TMX"));
-                if (minTemp == 0.0 && maxTemp != 0.0) { minTemp = maxTemp; }
-                if (maxTemp == 0.0 && minTemp != 0.0) { maxTemp = minTemp; }
-
+                if (minTemp == 0.0 && maxTemp != 0.0) minTemp = maxTemp;
+                if (maxTemp == 0.0 && minTemp != 0.0) maxTemp = minTemp;
                 if (minTemp == 0.0 && maxTemp == 0.0) {
                     minTemp = dailyItems.stream().filter(it -> "TMP".equals(it.getCategory())).mapToDouble(it -> parseKmaDouble(it.getFcstValue())).min().orElse(0.0);
                     maxTemp = dailyItems.stream().filter(it -> "TMP".equals(it.getCategory())).mapToDouble(it -> parseKmaDouble(it.getFcstValue())).max().orElse(0.0);
@@ -128,26 +131,24 @@ public class WeatherBatchConfig {
 
                 double currentTemp = parseKmaDouble(dailyValues.getOrDefault("TMP", String.valueOf(maxTemp)));
                 double currentHumidity = parseKmaDouble(dailyValues.get("REH"));
-
                 double tempDiff = 0.0;
-                double humDiff = 0.0;
                 if (prevDayMaxTemp != null && maxTemp != 0.0) {
                     tempDiff = maxTemp - prevDayMaxTemp;
                 }
+                double humDiff = 0.0;
                 if (prevDayHumidity != null && currentHumidity != 0.0) {
                     humDiff = currentHumidity - prevDayHumidity;
                 }
 
                 TemperatureInfo tempInfo = new TemperatureInfo(currentTemp, minTemp, maxTemp, tempDiff);
                 HumidityInfo humidityInfo = new HumidityInfo(currentHumidity, humDiff);
-
                 PrecipitationType pty = mapToPrecipitationType(dailyValues.getOrDefault("PTY", "0"));
                 SkyStatus sky = mapToSkyStatus(dailyValues.getOrDefault("SKY", "1"));
                 double pcp = parseKmaDouble(dailyValues.get("PCP"));
                 double pop = parseKmaDouble(dailyValues.get("POP"));
                 double wsd = parseKmaDouble(dailyValues.get("WSD"));
-
                 LocalDate forecastDate = LocalDate.parse(forecastDateStr, DateTimeFormatter.ofPattern("yyyyMMdd"));
+                Instant forecastAt = forecastDate.atStartOfDay(ZoneId.of("Asia/Seoul")).toInstant();
 
                 Weather dailyWeather = Weather.builder()
                         .location(locationInfo)
@@ -158,10 +159,24 @@ public class WeatherBatchConfig {
                         .windSpeed(new WindSpeedInfo(wsd, mapToWindSpeedAsWord(wsd)))
                         .precipitationType(pty)
                         .forecastedAt(Instant.now())
-                        .forecastAt(forecastDate.atStartOfDay(ZoneId.of("Asia/Seoul")).toInstant())
+                        .forecastAt(forecastAt)
                         .build();
 
-                dailySummaries.add(dailyWeather);
+                // ✨ --- Upsert 로직 시작 --- ✨
+                Optional<Weather> existingWeatherOpt = weatherRepository.findByLocationAndForecastAt(
+                        locationInfo.x(), locationInfo.y(), forecastAt
+                );
+
+                if (existingWeatherOpt.isPresent()) {
+                    // 데이터가 있으면, 기존 엔티티를 가져와 갱신
+                    Weather existingWeather = existingWeatherOpt.get();
+                    existingWeather.updateData(dailyWeather);
+                    dailySummaries.add(existingWeather);
+                } else {
+                    // 데이터가 없으면, 새로 만든 엔티티를 추가
+                    dailySummaries.add(dailyWeather);
+                }
+                // ✨ --- Upsert 로직 끝 --- ✨
 
                 if (maxTemp != 0.0) prevDayMaxTemp = maxTemp;
                 if (currentHumidity != 0.0) prevDayHumidity = currentHumidity;
@@ -192,6 +207,11 @@ public class WeatherBatchConfig {
         } catch (Exception e) {
             log.error("Failed to run scheduled weather fetch job", e);
         }
+    }
+
+    @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Seoul")
+    public void runCleanupOldWeatherDataJob() {
+        weatherDataCleanupService.cleanupOldWeatherData();
     }
 
     // --- Helper Methods ---
