@@ -16,13 +16,12 @@ import com.codeit.otboo.domain.dm.dto.DirectMessageDto;
 import com.codeit.otboo.domain.dm.dto.DirectMessageDtoCursorResponse;
 import com.codeit.otboo.domain.dm.entity.Dm;
 import com.codeit.otboo.domain.dm.mapper.DirectMessageMapper;
-import com.codeit.otboo.domain.redis.RedisPublisher;
 import com.codeit.otboo.domain.dm.repository.DmRepository;
 import com.codeit.otboo.domain.dm.util.DmKeyUtil;
-import com.codeit.otboo.domain.websocket.listener.NewDmEvent;
 import com.codeit.otboo.domain.notification.dto.NotificationDto;
 import com.codeit.otboo.domain.notification.entity.NotificationLevel;
 import com.codeit.otboo.domain.notification.service.NotificationService;
+import com.codeit.otboo.domain.redis.RedisPublisher;
 import com.codeit.otboo.domain.user.entity.User;
 import com.codeit.otboo.domain.user.repository.UserRepository;
 import com.codeit.otboo.exception.CustomException;
@@ -87,8 +86,6 @@ public class DmServiceImpl implements DmService {
 			log.error("[sendDirectMessage] Redis publish 실패 : dmKey={}, error={}", dmKey, e.getMessage(), e);
 			throw new CustomException(ErrorCode.DM_Redis_MESSAGE_ERROR, e.getMessage());
 		}
-
-		eventPublisher.publishEvent(new NewDmEvent(directMessageDto));
 
 		// 알림 전송
 		try {
