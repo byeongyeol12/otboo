@@ -3,6 +3,7 @@ package com.codeit.otboo.domain.follow.mapper;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +22,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.codeit.otboo.domain.follow.dto.FollowDto;
+import com.codeit.otboo.domain.follow.dto.FollowSummaryDto;
 import com.codeit.otboo.domain.follow.entity.Follow;
 import com.codeit.otboo.domain.user.dto.response.UserSummaryDto;
 import com.codeit.otboo.domain.user.entity.User;
@@ -122,5 +124,33 @@ public class FollowMapperTest {
 		assertThat(summaryDto.profileImageUrl()).isNull();
 	}
 
+	@Test
+	@DisplayName("toFollowSummaryDto - 요약 정보 정상 변환")
+	void toFollowSummaryDto_success() {
+		// given
+		UUID followeeId = UUID.randomUUID();
+		long followerCount = 5L;
+		long followingCount = 3L;
+		boolean followedByMe = true;
+		UUID followedByMeId = UUID.randomUUID();
+		boolean followingMe = false;
 
+		// when
+		FollowSummaryDto summaryDto = followMapper.toFollowSummaryDto(
+			followeeId,
+			followerCount,
+			followingCount,
+			followedByMe,
+			followedByMeId,
+			followingMe
+		);
+
+		// then
+		assertThat(summaryDto.followeeId()).isEqualTo(followeeId);
+		assertThat(summaryDto.followerCount()).isEqualTo(followerCount);
+		assertThat(summaryDto.followingCount()).isEqualTo(followingCount);
+		assertThat(summaryDto.followedByMe()).isTrue();
+		assertThat(summaryDto.followedByMeId()).isEqualTo(followedByMeId);
+		assertThat(summaryDto.followingMe()).isFalse();
+	}
 }
