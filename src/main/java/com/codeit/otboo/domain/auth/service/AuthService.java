@@ -30,6 +30,10 @@ public class AuthService {
 		User user = userRepository.findByEmail(request.getEmail())
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+		if (user.isLocked()) {
+			throw new CustomException(ErrorCode.FORBIDDEN);
+		}
+
 		if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
 			throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
 		}

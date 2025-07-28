@@ -126,6 +126,10 @@ public class User {
 		this.field = field;
 	}
 
+	public void setProfile(Profile profile) {
+		this.profile = profile;
+	}
+
 	public boolean isLocked() {
 		return locked;
 	}

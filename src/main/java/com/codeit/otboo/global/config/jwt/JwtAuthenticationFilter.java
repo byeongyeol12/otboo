@@ -33,6 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		FilterChain filterChain
 	) throws ServletException, IOException {
 
+		String uri = request.getRequestURI();
+		// 로그인, 회원가입, 토큰 재발급 등은 JWT 없이 접근 허용
+		if (uri.startsWith("/api/auth/")) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 		System.out.println("🔍 [JWT 필터] 요청 URI: " + request.getRequestURI());
 
 		String token = null;

@@ -36,10 +36,12 @@ public class JwtTokenProvider {
 	public JwtTokenProvider(
 		@Value("${jwt.secret}") String secret,
 		@Value("${jwt.expiration}") long tokenValidityInMilliseconds,
+		@Value("${jwt.refresh-token-validity-in-ms}") long refreshTokenValidityInMilliseconds,
 		JwtBlacklistService blacklistService
 	) {
 		this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 		this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
+		this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds;
 		this.blacklistService = blacklistService;
 	}
 
@@ -126,4 +128,5 @@ public class JwtTokenProvider {
 	public boolean isBlacklisted(String token) {
 		return blacklistService.isBlacklisted(token);
 	}
+
 }
