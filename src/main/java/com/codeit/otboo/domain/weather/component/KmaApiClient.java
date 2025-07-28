@@ -36,13 +36,17 @@ public class KmaApiClient {
     }
 
     /**
-     * 기상청 단기예보 API를 호출하여 원본 응답 문자열을 반환합니다.
-     * @param nx 예보지점 X 좌표
-     * @param ny 예보지점 Y 좌표
-     * @return 기상청 API 응답 결과 (JSON 문자열)
+     * ✨ 실제 운영 환경에서 사용하는 메서드. 현재 시간을 사용합니다.
      */
     public String fetchWeatherForecast(int nx, int ny) {
-        BaseDateTime bdt = calculateBaseDateTime(LocalDate.now(), LocalTime.now());
+        return fetchWeatherForecast(nx, ny, LocalDate.now(), LocalTime.now());
+    }
+
+    /**
+     * ✨ 테스트 코드에서 사용할 메서드. 시간을 직접 주입받을 수 있습니다.
+     */
+    public String fetchWeatherForecast(int nx, int ny, LocalDate date, LocalTime time) {
+        BaseDateTime bdt = calculateBaseDateTime(date, time);
 
         String encodedKey;
         try {
@@ -55,7 +59,7 @@ public class KmaApiClient {
         URI uri = UriComponentsBuilder
                 .fromUriString(baseUrl)
                 .path("/getVilageFcst")
-                .queryParam("ServiceKey", encodedKey) // 파라미터 이름은 'ServiceKey' (대문자 S)
+                .queryParam("ServiceKey", encodedKey)
                 .queryParam("pageNo", 1)
                 .queryParam("numOfRows", 1000)
                 .queryParam("dataType", "JSON")
@@ -69,21 +73,16 @@ public class KmaApiClient {
         try {
             return webClient.get()
                     .uri(uri)
-                    .header(HttpHeaders.USER_AGENT,
-                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
+                    .header(HttpHeaders.USER_AGENT, "Mozilla/5.0")
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
         } catch (WebClientResponseException e) {
-            log.error("KMA API Error: status={}, body={}",
-                    e.getRawStatusCode(), e.getResponseBodyAsString());
+            log.error("KMA API Error: status={}, body={}", e.getRawStatusCode(), e.getResponseBodyAsString());
             throw e;
         }
     }
 
-    /**
-     * 현재 시각을 기준으로 기상청 API 요청에 필요한 base_date와 base_time을 계산합니다.
-     */
     private BaseDateTime calculateBaseDateTime(LocalDate date, LocalTime time) {
         LocalTime baseTime;
         if (time.isBefore(LocalTime.of(2, 10))) {
