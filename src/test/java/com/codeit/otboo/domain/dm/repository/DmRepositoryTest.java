@@ -104,37 +104,37 @@ public class DmRepositoryTest {
 
 	//findAllByUserIdAndOtherIdAfterCursor
 	@Test
-	@DisplayName("findAllByUserIdAndOtherIdAfterCursor - 모든 메시지 createdAt,오름차순 조회")
-	void findAllByUserIdAndOtherIdAfterCursor_usedCreatedAtASC() {
+	@DisplayName("findAllByUserIdAndOtherIdAfterCursor - 모든 메시지 createdAt,내림차순(DESC) 조회")
+	void findAllByUserIdAndOtherIdAfterCursor_usedCreatedAtDESC() {
 		//given
 		Pageable pageable = PageRequest.of(0, 10);
 
 		//when
-		List<Dm> result = dmRepository.findAllByUserIdAndOtherIdAfterCursor(sender.getId(), receiver.getId(), null,
-			pageable);
+		List<Dm> result = dmRepository.findAllByUserIdAndOtherIdAfterCursor(sender.getId(), receiver.getId(), null, pageable);
 
 		//then
 		assertThat(result).hasSize(3);
-		assertThat(result.get(0).getCreatedAt()).isBefore(result.get(1).getCreatedAt());
-		assertThat(result.get(1).getCreatedAt()).isBefore(result.get(2).getCreatedAt());
+		assertThat(result.get(0).getCreatedAt()).isAfter(result.get(1).getCreatedAt());
+		assertThat(result.get(1).getCreatedAt()).isAfter(result.get(2).getCreatedAt());
 	}
 
 	@Test
-	@DisplayName("findAllByUserIdAndOtherIdAfterCursor - idAfter 이후 데이터만 조회")
-	void findAllByUserIdAndOtherIdAfterCursor_usedIdAfter() {
+	@DisplayName("findAllByUserIdAndOtherIdAfterCursor - idAfter 이후 데이터만 조회 (내림차순 기준)")
+	void findAllByUserIdAndOtherIdAfterCursor_usedIdAfter_DESC() {
 		//given
 		Pageable pageable = PageRequest.of(0, 10);
-		List<Dm> all = dmRepository.findAllByUserIdAndOtherIdAfterCursor(sender.getId(), receiver.getId(), null,
-			pageable);
+
+		List<Dm> all = dmRepository.findAllByUserIdAndOtherIdAfterCursor(sender.getId(), receiver.getId(), null, pageable);
+		assertThat(all).hasSize(3);
+
 		UUID cursorId = all.get(0).getId();
 
 		//when
-		List<Dm> result = dmRepository.findAllByUserIdAndOtherIdAfterCursor(sender.getId(), receiver.getId(), cursorId,
-			pageable);
+		List<Dm> result = dmRepository.findAllByUserIdAndOtherIdAfterCursor(sender.getId(), receiver.getId(), cursorId, pageable);
 
 		//then
 		assertThat(result).hasSize(2);
-		assertThat(result.get(0).getId()).isNotEqualTo(cursorId);
+		assertThat(result.stream().anyMatch(dm -> dm.getId().equals(cursorId))).isFalse();
 	}
 
 	@Test
