@@ -127,7 +127,7 @@ public class DmServiceImpl implements DmService {
 			? UUID.fromString(cursor)
 			: idAfter;
 		//정렬(createdAt)
-		Pageable pageable = PageRequest.of(0,limit+1, Sort.by("createdAt").ascending());
+		Pageable pageable = PageRequest.of(0,limit+1, Sort.by("createdAt").descending());
 
 		//repository
 		List<Dm> dms = dmRepository.findAllByUserIdAndOtherIdAfterCursor(userId,otherId,effectiveIdAfter,pageable);
