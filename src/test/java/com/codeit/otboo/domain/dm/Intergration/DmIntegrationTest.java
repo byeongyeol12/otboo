@@ -129,12 +129,12 @@ public class DmIntegrationTest {
 				.with(SecurityMockMvcRequestPostProcessors.user(principal)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.length()").value(2))
-			.andExpect(jsonPath("$.data[0].content").value("A→B"))
-			.andExpect(jsonPath("$.data[1].content").value("B→A"))
-			.andExpect(jsonPath("$.data[0].sender.id").value(userA.getId().toString()))
-			.andExpect(jsonPath("$.data[0].receiver.id").value(userB.getId().toString()))
-			.andExpect(jsonPath("$.data[1].sender.id").value(userB.getId().toString()))
-			.andExpect(jsonPath("$.data[1].receiver.id").value(userA.getId().toString()));
+			.andExpect(jsonPath("$.data[0].content").value("B→A"))
+			.andExpect(jsonPath("$.data[1].content").value("A→B"))
+			.andExpect(jsonPath("$.data[0].sender.id").value(userB.getId().toString()))
+			.andExpect(jsonPath("$.data[0].receiver.id").value(userA.getId().toString()))
+			.andExpect(jsonPath("$.data[1].sender.id").value(userA.getId().toString()))
+			.andExpect(jsonPath("$.data[1].receiver.id").value(userB.getId().toString()));
 	}
 	@Test
 	@DisplayName("메시지 목록 조회 API 통합 테스트 - A,C 조회")
@@ -156,12 +156,12 @@ public class DmIntegrationTest {
 				.with(SecurityMockMvcRequestPostProcessors.user(principal)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.length()").value(2))
-			.andExpect(jsonPath("$.data[0].content").value("A→C"))
-			.andExpect(jsonPath("$.data[1].content").value("C→A"))
-			.andExpect(jsonPath("$.data[0].sender.id").value(userA.getId().toString()))
-			.andExpect(jsonPath("$.data[0].receiver.id").value(userC.getId().toString()))
-			.andExpect(jsonPath("$.data[1].sender.id").value(userC.getId().toString()))
-			.andExpect(jsonPath("$.data[1].receiver.id").value(userA.getId().toString()));
+			.andExpect(jsonPath("$.data[0].content").value("C→A"))
+			.andExpect(jsonPath("$.data[1].content").value("A→C"))
+			.andExpect(jsonPath("$.data[0].sender.id").value(userC.getId().toString()))
+			.andExpect(jsonPath("$.data[0].receiver.id").value(userA.getId().toString()))
+			.andExpect(jsonPath("$.data[1].sender.id").value(userA.getId().toString()))
+			.andExpect(jsonPath("$.data[1].receiver.id").value(userC.getId().toString()));
 	}
 
 	@Test
