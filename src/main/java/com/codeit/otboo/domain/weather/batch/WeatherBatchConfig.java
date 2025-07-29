@@ -72,8 +72,13 @@ public class WeatherBatchConfig {
     @Bean
     @StepScope
     public ItemReader<LocationInfo> locationInfoItemReader() {
-        Collection<Profile> distinctProfiles = profileRepository.findAll().stream()
-                .filter(p -> p.getX() != null && p.getY() != null)
+        List<Profile> allProfiles = profileRepository.findAll();
+
+        Collection<Profile> distinctProfiles = allProfiles.stream()
+                .filter(p -> p.getLatitude() != null &&
+                        p.getLongitude() != null &&
+                        p.getX() != null &&
+                        p.getY() != null)
                 .collect(Collectors.toMap(
                         p -> p.getX() + "," + p.getY(),
                         p -> p,
@@ -176,7 +181,6 @@ public class WeatherBatchConfig {
                     // 데이터가 없으면, 새로 만든 엔티티를 추가
                     dailySummaries.add(dailyWeather);
                 }
-                // ✨ --- Upsert 로직 끝 --- ✨
 
                 if (maxTemp != 0.0) prevDayMaxTemp = maxTemp;
                 if (currentHumidity != 0.0) prevDayHumidity = currentHumidity;
