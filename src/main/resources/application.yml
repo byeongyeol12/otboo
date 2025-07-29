@@ -18,9 +18,12 @@ jwt:
   expiration: ${JWT_EXPIRATION}
   refresh-token-validity-in-ms: ${JWT_REFRESH_TOKEN_VALIDITY}
 
-cloud: # 새로운 최상위 레벨 키
+cloud:
   aws:
     region:
       static: ${AWS_REGION:us-fake-1}
     s3:
       bucket: ${AWS_S3_BUCKET_NAME:fake-bucket-placeholder}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
