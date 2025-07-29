@@ -5,3 +5,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID:dummy}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:dummy}
+    region:
+      static: ${AWS_REGION:ap-northeast-2}
+    s3:
+      bucket: ${S3_BUCKET_NAME:dummy-bucket}
