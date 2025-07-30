@@ -13,9 +13,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 import com.codeit.otboo.global.config.jwt.JwtAuthenticationFilter;
 import com.codeit.otboo.global.config.jwt.JwtTokenProvider;
+import com.codeit.otboo.global.config.security.CsrfTokenFromCookieFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,49 +32,54 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
-				.cors(Customizer.withDefaults())
-				.csrf(csrf -> csrf.disable()) // ✅ CSRF 완전히 끔
+			.cors(Customizer.withDefaults())
+			.csrf(csrf -> csrf
+				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // XSRF-TOKEN 쿠키 발급
+				.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())     // 헤더 X-XSRF-TOKEN 읽기 설정
+				.ignoringRequestMatchers("/h2-console/**") // H2 콘솔은 제외
+			)
 
-				.sessionManagement(session ->
-						session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
-				)
+			.sessionManagement(session ->
+				session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
+			)
 
-				//  H2 콘솔 등 iframe 접근 허용
-				.headers(headers ->
-						headers.frameOptions(frame -> frame.sameOrigin())
-				)
+			//  H2 콘솔 등 iframe 접근 허용
+			.headers(headers ->
+				headers.frameOptions(frame -> frame.sameOrigin())
+			)
 
-				//  요청 인증/인가 설정
-				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(
-								"/", "/index.html", "/favicon.ico",
-								"/assets/**",
-								"/api/auth/**",
-								"/api/weathers/**",
-								"/api/batch/**",
-								"/api/users/**",
-								"/api/sse",
-								"/h2-console/**",
-								"/uploads/**",// 테스트를 위해 임시로 추가
-								"/ws/**",
-								"/swagger-ui.html",
-								"/swagger-ui/**",
-								"/v3/api-docs/**"
-						).permitAll()
-						.anyRequest().authenticated()
-				)
+			//  요청 인증/인가 설정
+			.authorizeHttpRequests(auth -> auth
+				.requestMatchers(
+					"/", "/index.html", "/favicon.ico",
+					"/assets/**",
+					"/api/auth/**",
+					"/api/weathers/**",
+					"/api/batch/**",
+					"/api/users/**",
+					"/api/sse",
+					"/h2-console/**",
+					"/uploads/**",// 테스트를 위해 임시로 추가
+					"/ws/**",
+					"/swagger-ui.html",
+					"/swagger-ui/**",
+					"/v3/api-docs/**"
+				).permitAll()
+				.anyRequest().authenticated()
+			)
 
-				.addFilterBefore(
-						new JwtAuthenticationFilter(jwtTokenProvider),
-						UsernamePasswordAuthenticationFilter.class
-				);
+			.addFilterBefore(
+				new JwtAuthenticationFilter(jwtTokenProvider),
+				UsernamePasswordAuthenticationFilter.class
+			)
+			.addFilterBefore(new CsrfTokenFromCookieFilter(), CsrfFilter.class);
 
 		return http.build();
 	}
 
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
-			throws Exception {
+		throws Exception {
 		return configuration.getAuthenticationManager();
 	}
 
@@ -84,6 +92,8 @@ public class SecurityConfig {
 	public CookieCsrfTokenRepository customCsrfTokenRepository() {
 		CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
 		repo.setCookiePath("/");
+		repo.setCookieName("XSRF-TOKEN"); // ✅ 쿠키 이름 명시
+		repo.setHeaderName("X-XSRF-TOKEN"); // ✅ 헤더 이름 명시
 		return repo;
 	}
 }

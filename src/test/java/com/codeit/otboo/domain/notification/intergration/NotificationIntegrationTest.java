@@ -151,7 +151,8 @@ public class NotificationIntegrationTest {
 
 		//when,then
 		mockMvc.perform(delete("/api/notifications/{notificationId}", saved.getId())
-				.with(user(userPrincipal)))
+				.with(user(userPrincipal))
+				.with(csrf()))
 			.andExpect(status().isNoContent());
 		assertThat(notificationRepository.findById(saved.getId()).orElseThrow().isConfirmed()).isTrue();
 	}
@@ -167,7 +168,8 @@ public class NotificationIntegrationTest {
 
 		//when,then
 		mockMvc.perform(delete("/api/notifications/{notificationId}", notExistId)
-				.with(user(userPrincipal)))
+				.with(user(userPrincipal))
+				.with(csrf()))
 			.andExpect(status().isNotFound());
 	}
 }
