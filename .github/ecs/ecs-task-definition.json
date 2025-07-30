@@ -1,0 +1,55 @@
+{
+  "family": "otboo-taskdef",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::740794032919:role/otboo_task_execution_role",
+  "taskRoleArn": "arn:aws:iam::740794032919:role/otboo_task_execution_role",
+  "containerDefinitions": [
+    {
+      "name": "otboo-app",
+      "image": "740794032919.dkr.ecr.ap-northeast-2.amazonaws.com/otboo-app:latest",
+      "cpu": 256,
+      "memory": 512,
+      "memoryReservation": 256,
+      "essential": true,
+      "portMappings": [
+        {
+          "name": "otboo-app-8080-tcp",
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "environment": [
+        { "name": "AWS_REGION",              "value": "ap-northeast-2" },
+        { "name": "SPRING_PROFILES_ACTIVE",  "value": "prod" }
+      ],
+      "secrets": [
+        { "name": "API_KAKAO_REST_KEY",               "valueFrom": "/prod/otboo/api/kakao/key" },
+        { "name": "API_KMA_SERVICE_KEY",              "valueFrom": "/prod/otboo/api/kma/key" },
+        { "name": "AWS_S3_BUCKET_NAME",               "valueFrom": "/prod/otboo/s3/bucket-name" },
+        { "name": "DB_HOST",                          "valueFrom": "/prod/otboo/db/host" },
+        { "name": "DB_PORT",                          "valueFrom": "/prod/otboo/db/port" },
+        { "name": "DB_USERNAME",                      "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:740794032919:secret:prod/otboo/postgresMasterUser-w8467y:username::" },
+        { "name": "DB_PASSWORD",                      "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:740794032919:secret:prod/otboo/postgresMasterUser-w8467y:password::" },
+        { "name": "JWT_SECRET",                       "valueFrom": "/prod/otboo/jwt/secret" },
+        { "name": "JWT_EXPIRATION",                   "valueFrom": "/prod/otboo/jwt/expiration" },
+        { "name": "JWT_REFRESH_TOKEN_VALIDITY",       "valueFrom": "/prod/otboo/jwt/refresh-validity" },
+        { "name": "REDIS_HOST",                       "valueFrom": "/prod/otboo/redis/host" },
+        { "name": "REDIS_PORT",                       "valueFrom": "/prod/otboo/redis/port" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/otboo-taskdef",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "volumes": []
+}

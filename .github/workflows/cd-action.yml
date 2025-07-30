@@ -1,0 +1,50 @@
+name: CD to ECS using ec2
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read        # for checkout
+  id-token: write       # for oidc token
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: get accessibility to aws
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::740794032919:role/otboo-github-actions-role
+          aws-region: ap-northeast-2
+          role-session-name: github-actions-ecs
+
+      - name: login to ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: application build & docker image creation
+        run: |
+          ./gradlew clean bootJar -x test
+          IMAGE_URI=740794032919.dkr.ecr.ap-northeast-2.amazonaws.com/otboo-app:latest
+          docker build \
+            --platform linux/amd64 \
+            -t $IMAGE_URI \
+            -f Dockerfile .
+          docker push $IMAGE_URI
+
+      - name: enroll ECS task definition
+        run: |
+          aws ecs register-task-definition \
+            --cli-input-json file://.github/ecs/ecs-task-definition.json
+
+      - name: ecs service rolling deploy
+        run: |
+          aws ecs update-service \
+            --cluster otboo-cluster \
+            --service otboo-service-prod \
+            --force-new-deployment
