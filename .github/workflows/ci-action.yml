@@ -46,10 +46,10 @@ jobs:
           --health-retries 5
 
     env:
-      SPRING_PROFILES_ACTIVE: test
-      DB_URL: jdbc:postgresql://localhost:5432/ci_db
-      DB_USERNAME: ci_user
-      DB_PASSWORD: ci_pass
+      SPRING_PROFILES_ACTIVE: test, ci
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ci_db
+      SPRING_DATASOURCE_USERNAME: ci_user
+      SPRING_DATASOURCE_PASSWORD: ci_pass
       API_KMA_SERVICE_KEY: ${{ secrets.API_KMA_SERVICE_KEY }}
       API_KAKAO_REST_KEY: ${{secrets.API_KAKAO_REST_KEY}}
       JWT_SECRET: ${{secrets.JWT_SECRET}}

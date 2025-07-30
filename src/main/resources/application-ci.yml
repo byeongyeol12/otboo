@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ci_db
+    username: ci_user
+    password: ci_pass
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+testcontainers:
+  enabled: false

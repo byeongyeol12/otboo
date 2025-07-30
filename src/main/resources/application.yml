@@ -2,8 +2,8 @@ spring:
   application:
     name: otboo
   profiles:
-    # 환경 변수가 없으면 기본으로 'dev' 프로필을 사용하도록 설정
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    # 로컬에서 돌릴 때 잘 안돌아가면, 직접 dev 환경변수를 추가해서 실행해주세요
+    active: ${SPRING_PROFILES_ACTIVE}
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -24,3 +24,9 @@ cloud: # 새로운 최상위 레벨 키
       static: ${AWS_REGION:us-fake-1}
     s3:
       bucket: ${AWS_S3_BUCKET_NAME:fake-bucket-placeholder}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health # health 엔드포인트를 노출
