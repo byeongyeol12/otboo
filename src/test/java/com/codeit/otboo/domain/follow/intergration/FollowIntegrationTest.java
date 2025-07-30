@@ -118,6 +118,7 @@ public class FollowIntegrationTest {
 		//when,then
 		mockMvc.perform(post("/api/follows")
 				.with(user(userPrincipal))
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isCreated())
@@ -145,6 +146,7 @@ public class FollowIntegrationTest {
 		//when,then
 		mockMvc.perform(post("/api/follows")
 				.with(user(userPrincipal))
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isBadRequest());
@@ -245,7 +247,8 @@ public class FollowIntegrationTest {
 
 		//when,then
 		mockMvc.perform(delete("/api/follows/{followId}", follow.id())
-				.with(user(userPrincipal)))
+				.with(user(userPrincipal))
+				.with(csrf()))
 			.andExpect(status().isNoContent());
 	}
 }
