@@ -36,7 +36,10 @@ public class SecurityConfig {
 			.csrf(csrf -> csrf
 				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // XSRF-TOKEN 쿠키 발급
 				.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())     // 헤더 X-XSRF-TOKEN 읽기 설정
-				.ignoringRequestMatchers("/h2-console/**") // H2 콘솔은 제외
+				.ignoringRequestMatchers(
+					"/h2-console/**",
+					"/actuator/health"
+				) // H2 콘솔은 제외
 			)
 
 			.sessionManagement(session ->
@@ -63,7 +66,8 @@ public class SecurityConfig {
 					"/ws/**",
 					"/swagger-ui.html",
 					"/swagger-ui/**",
-					"/v3/api-docs/**"
+					"/v3/api-docs/**",
+					"/actuator/health"
 				).permitAll()
 				.anyRequest().authenticated()
 			)
