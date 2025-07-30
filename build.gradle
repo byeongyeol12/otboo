@@ -73,8 +73,8 @@ dependencies {
     // AWS
     implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0")
     implementation 'io.awspring.cloud:spring-cloud-aws-s3'
-	implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
-	implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
 
     // Test Dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -82,7 +82,6 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    //testImplementation 'com.h2database:h2'
 
     //Health check
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
