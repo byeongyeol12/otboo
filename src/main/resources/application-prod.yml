@@ -1,10 +1,13 @@
 spring:
   datasource:
-    url: ${DB_URL}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/otboo-postgres
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-
+  config:
+    import:
+      - optional:aws-parameterstore:/prod/otboo/       # load from parameter store
+      - optional:aws-secretsmanager:/prod/otboo/       # load from secret manager
   sql:
     init:
       mode: never

@@ -24,3 +24,9 @@ cloud: # 새로운 최상위 레벨 키
       static: ${AWS_REGION:us-fake-1}
     s3:
       bucket: ${AWS_S3_BUCKET_NAME:fake-bucket-placeholder}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health # health 엔드포인트를 노출

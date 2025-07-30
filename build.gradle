@@ -70,11 +70,11 @@ dependencies {
     implementation 'org.springframework.security:spring-security-messaging'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 
-    // AWS
+	// AWS
     implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0")
     implementation 'io.awspring.cloud:spring-cloud-aws-s3'
-    //  implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
-    //  implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
+	implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store'
 
     // Test Dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -82,15 +82,15 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    //testImplementation 'com.h2database:h2'
+
+    //Health check
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 
     def testcontainersVersion = "1.19.8"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
-
-    // ✨ WebClient 테스트를 위한 MockWebServer 의존성 추가
-    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
-    testImplementation 'org.mockito:mockito-inline:5.2.0'
-
 }
 
 // QueryDSL generated sources
@@ -98,7 +98,7 @@ tasks.withType(JavaCompile).configureEach {
     options.generatedSourceOutputDirectory.set(file(querydslDir))
 }
 sourceSets {
-    main.java.srcDirs += [querydslDir]
+    main.java.srcDirs += [ querydslDir ]
 }
 
 // clean 시 QueryDSL 소스 삭제
@@ -111,27 +111,37 @@ jacoco {
     toolVersion = "0.8.12"
 }
 
-tasks.named('test') {
+// 테스트 실행과 동시에 리포트 생성
+tasks.named('test', Test) {
     useJUnitPlatform()
+    ignoreFailures = true
     finalizedBy 'jacocoTestReport'
 }
 
-tasks.named('jacocoTestReport') {
+// 기존에 생성된 jacocoTestReport 태스크를 커스터마이징
+tasks.named('jacocoTestReport', JacocoReport) {
     dependsOn tasks.named('test')
+
+    // 실행 데이터 위치
+    executionData.setFrom fileTree(buildDir).include('jacoco/*.exec', 'jacoco/*.exec')
+
+    // 소스 디렉토리
+    sourceDirectories.setFrom files('src/main/java')
+
+    // 클래스 디렉토리 (테스트 클래스와 Spring Boot 애플리케이션 클래스를 제외)
+    classDirectories.setFrom files([
+            fileTree(dir: "$buildDir/classes/java/main", exclude: [
+                    '**/*Test.*',
+                    '**/application*.class'
+            ]),
+            // QueryDSL 생성 클래스도 포함
+            fileTree(dir: querydslDir, include: '**/*.class')
+    ])
+
     reports {
-        html.required = true
-        xml.required = false
-        csv.required = false
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.dir('reports/jacoco/html'))
+        xml.required.set(false)
+        csv.required.set(false)
     }
-
-    def jacocoExcludes = [
-            '**/*Application.*',
-            '**/global/config/**',
-            '**/dto/**',
-            '**/Q*'
-    ]
-
-    classDirectories.setFrom(files(classDirectories.files.collect {
-        fileTree(dir: it, exclude: jacocoExcludes)
-    }))
 }
